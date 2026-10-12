@@ -968,7 +968,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: "COLORS.text",
+    color: COLORS.text,
     fontSize: 34,
     fontWeight: "800",
     letterSpacing: -1,
@@ -1026,7 +1026,7 @@ const styles = StyleSheet.create({
   },
 
   capacityTitle: {
-    color: "COLORS.text",
+    color: COLORS.text,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1095,7 +1095,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: 14,
     paddingHorizontal: 14,
-    color: "COLORS.text",
+    color: COLORS.text,
     fontSize: 15,
   },
 
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
   },
 
   scheduleTitle: {
-    color: "COLORS.text",
+    color: COLORS.text,
     fontSize: 18,
     fontWeight: "800",
   },

@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-
 import {
   Alert,
   Keyboard,
@@ -12,15 +11,20 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { COLORS } from "../../constants/colors";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
+  const { width } = useWindowDimensions();
+
+  const isDesktopWeb =
+    Platform.OS === "web" && width >= 900;
+
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,17 +33,30 @@ export default function LoginScreen() {
   const [reviewPassword, setReviewPassword] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  function showMessage(title: string, message: string) {
+    if (Platform.OS === "web") {
+      window.alert(`${title}\n\n${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  }
+
   async function handleContinue() {
     if (loading) return;
 
     let cleanPhone = phone.replace(/\D/g, "");
+
+    if (cleanPhone.startsWith("251")) {
+      cleanPhone = cleanPhone.slice(3);
+    }
 
     if (cleanPhone.startsWith("0")) {
       cleanPhone = cleanPhone.slice(1);
     }
 
     if (!/^9\d{8}$/.test(cleanPhone)) {
-      Alert.alert(
+      showMessage(
         "Invalid phone number",
         "Enter a valid Ethiopian mobile number.",
       );
@@ -52,15 +69,25 @@ export default function LoginScreen() {
       Keyboard.dismiss();
       setLoading(true);
 
+      console.log("Sending OTP to:", fullPhone);
+
       const { error } = await supabase.auth.signInWithOtp({
         phone: fullPhone,
       });
 
       if (error) {
         console.log("OTP error:", error);
-        Alert.alert("Could not send code", error.message);
+
+        showMessage(
+          "Could not send code",
+          error.message,
+        );
+
         return;
       }
+
+      console.log("OTP request successful");
+      console.log("Opening verify screen");
 
       router.push({
         pathname: "/verify",
@@ -68,12 +95,13 @@ export default function LoginScreen() {
           phone: fullPhone,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.log("Login error:", error);
 
-      Alert.alert(
+      showMessage(
         "Something went wrong",
-        "We couldn't send the verification code. Please try again.",
+        error?.message ||
+          "We couldn't send the verification code. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -86,7 +114,7 @@ export default function LoginScreen() {
     const email = reviewEmail.trim();
 
     if (!email || !reviewPassword) {
-      Alert.alert(
+      showMessage(
         "Missing information",
         "Enter the review email and password.",
       );
@@ -97,15 +125,16 @@ export default function LoginScreen() {
       Keyboard.dismiss();
       setReviewLoading(true);
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: reviewPassword,
-      });
+      const { error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password: reviewPassword,
+        });
 
       if (error) {
         console.log("Review login error:", error);
 
-        Alert.alert(
+        showMessage(
           "Login failed",
           "The review account email or password is incorrect.",
         );
@@ -114,12 +143,13 @@ export default function LoginScreen() {
       }
 
       router.replace("/");
-    } catch (error) {
+    } catch (error: any) {
       console.log("Review login error:", error);
 
-      Alert.alert(
+      showMessage(
         "Something went wrong",
-        "Unable to sign in. Please try again.",
+        error?.message ||
+          "Unable to sign in. Please try again.",
       );
     } finally {
       setReviewLoading(false);
@@ -127,7 +157,10 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["top", "bottom"]}
+    >
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -140,9 +173,18 @@ export default function LoginScreen() {
           keyboardDismissMode="none"
           contentInsetAdjustmentBehavior="automatic"
         >
-          <Pressable style={styles.content} onPress={Keyboard.dismiss}>
+          <View
+            style={[
+              styles.content,
+              isDesktopWeb && styles.contentDesktop,
+            ]}
+          >
             <View style={styles.logo}>
-              <Ionicons name="football" size={34} color={COLORS.primary} />
+              <Ionicons
+                name="football"
+                size={34}
+                color={COLORS.primary}
+              />
             </View>
 
             <Text style={styles.title}>Welcome</Text>
@@ -157,7 +199,9 @@ export default function LoginScreen() {
               <View style={styles.countryCode}>
                 <Text style={styles.flag}>🇪🇹</Text>
 
-                <Text style={styles.countryCodeText}>+251</Text>
+                <Text style={styles.countryCodeText}>
+                  +251
+                </Text>
               </View>
 
               <TextInput
@@ -176,7 +220,9 @@ export default function LoginScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.continueButton,
-                pressed && !loading && styles.continueButtonPressed,
+                pressed &&
+                  !loading &&
+                  styles.continueButtonPressed,
                 loading && styles.continueButtonDisabled,
               ]}
               onPress={handleContinue}
@@ -195,51 +241,66 @@ export default function LoginScreen() {
               style={styles.reviewToggle}
               onPress={() => {
                 Keyboard.dismiss();
-
-                setShowReviewLogin((current) => !current);
+                setShowReviewLogin(
+                  (current) => !current,
+                );
               }}
             >
               <Text style={styles.reviewToggleText}>
-                {showReviewLogin ? "Hide App Review Login" : "App Review Login"}
+                {showReviewLogin
+                  ? "Hide App Review Login"
+                  : "App Review Login"}
               </Text>
 
               <Ionicons
-                name={showReviewLogin ? "chevron-up" : "chevron-down"}
-                size={16}
+                name={
+                  showReviewLogin
+                    ? "chevron-up"
+                    : "chevron-down"
+                }
+                size={18}
                 color={COLORS.textMuted}
               />
             </Pressable>
 
             {showReviewLogin && (
               <View style={styles.reviewContainer}>
-                <Text style={styles.reviewTitle}>App Review</Text>
-
-                <Text style={styles.reviewDescription}>
-                  Sign in with the review account.
+                <Text style={styles.reviewTitle}>
+                  App Review Login
                 </Text>
+
+                <Text style={styles.reviewSubtitle}>
+                  Reviewer access only
+                </Text>
+
+                <Text style={styles.label}>Email</Text>
 
                 <TextInput
                   style={styles.reviewInput}
-                  placeholder="Email"
-                  placeholderTextColor={COLORS.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
                   value={reviewEmail}
                   onChangeText={setReviewEmail}
+                  placeholder="Email"
+                  placeholderTextColor={COLORS.textMuted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
                   editable={!reviewLoading}
                   returnKeyType="next"
                 />
 
+                <Text style={styles.label}>
+                  Password
+                </Text>
+
                 <TextInput
                   style={styles.reviewInput}
+                  value={reviewPassword}
+                  onChangeText={setReviewPassword}
                   placeholder="Password"
                   placeholderTextColor={COLORS.textMuted}
                   secureTextEntry
                   autoCapitalize="none"
                   autoCorrect={false}
-                  value={reviewPassword}
-                  onChangeText={setReviewPassword}
                   editable={!reviewLoading}
                   returnKeyType="done"
                   onSubmitEditing={handleReviewLogin}
@@ -248,19 +309,24 @@ export default function LoginScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.reviewButton,
-                    pressed && styles.reviewButtonPressed,
-                    reviewLoading && styles.continueButtonDisabled,
+                    pressed &&
+                      !reviewLoading &&
+                      styles.reviewButtonPressed,
+                    reviewLoading &&
+                      styles.reviewButtonDisabled,
                   ]}
                   onPress={handleReviewLogin}
                   disabled={reviewLoading}
                 >
                   <Text style={styles.reviewButtonText}>
-                    {reviewLoading ? "Signing in..." : "Sign In"}
+                    {reviewLoading
+                      ? "Signing in..."
+                      : "Sign In"}
                   </Text>
                 </Pressable>
               </View>
             )}
-          </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -293,21 +359,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
 
+  contentDesktop: {
+    maxWidth: 600,
+    alignSelf: "center",
+  },
+
   logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: COLORS.surfaceAlt,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 28,
+    marginBottom: 30,
   },
 
   title: {
     color: COLORS.text,
-    fontSize: 36,
+    fontSize: 38,
     fontWeight: "800",
     letterSpacing: -1,
   },
@@ -317,7 +388,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 25,
     marginTop: 8,
-    marginBottom: 36,
+    marginBottom: 32,
   },
 
   label: {
@@ -328,41 +399,42 @@ const styles = StyleSheet.create({
   },
 
   phoneContainer: {
-    height: 60,
+    height: 66,
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 16,
     backgroundColor: COLORS.surface,
-    flexDirection: "row",
-    alignItems: "center",
+    overflow: "hidden",
   },
 
   countryCode: {
     height: "100%",
-    paddingHorizontal: 16,
-    borderRightWidth: 1,
-    borderRightColor: COLORS.border,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    paddingHorizontal: 18,
+    borderRightWidth: 1,
+    borderRightColor: COLORS.border,
   },
 
   flag: {
-    fontSize: 22,
+    fontSize: 20,
+    marginRight: 8,
   },
 
   countryCodeText: {
     color: COLORS.text,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700",
   },
 
   input: {
     flex: 1,
     height: "100%",
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     color: COLORS.text,
-    fontSize: 17,
+    fontSize: 18,
   },
 
   continueButton: {
@@ -371,7 +443,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 20,
   },
 
   continueButtonPressed: {
@@ -379,7 +451,7 @@ const styles = StyleSheet.create({
   },
 
   continueButtonDisabled: {
-    opacity: 0.55,
+    opacity: 0.6,
   },
 
   continueText: {
@@ -390,32 +462,33 @@ const styles = StyleSheet.create({
 
   terms: {
     color: COLORS.textMuted,
-    textAlign: "center",
     fontSize: 13,
+    textAlign: "center",
     marginTop: 18,
   },
 
   reviewToggle: {
-    marginTop: 26,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
+    paddingVertical: 18,
+    marginTop: 4,
   },
 
   reviewToggleText: {
     color: COLORS.textMuted,
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   reviewContainer: {
-    marginTop: 18,
+    marginTop: 8,
     padding: 18,
-    backgroundColor: COLORS.surface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 18,
+    backgroundColor: COLORS.surface,
   },
 
   reviewTitle: {
@@ -424,35 +497,40 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  reviewDescription: {
-    color: COLORS.textSecondary,
+  reviewSubtitle: {
+    color: COLORS.textMuted,
     fontSize: 13,
     marginTop: 4,
-    marginBottom: 14,
+    marginBottom: 20,
   },
 
   reviewInput: {
-    height: 52,
+    height: 54,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 12,
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: COLORS.background,
     color: COLORS.text,
+    paddingHorizontal: 16,
     fontSize: 16,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+    marginBottom: 16,
   },
 
   reviewButton: {
-    height: 52,
+    height: 54,
     borderRadius: 12,
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 4,
   },
 
   reviewButtonPressed: {
     backgroundColor: COLORS.primaryPressed,
+  },
+
+  reviewButtonDisabled: {
+    opacity: 0.6,
   },
 
   reviewButtonText: {

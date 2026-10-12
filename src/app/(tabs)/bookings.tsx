@@ -10,10 +10,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -82,6 +84,9 @@ type Booking = {
 
 export default function BookingsScreen() {
   const { language, t } = useLanguage();
+  const { width } = useWindowDimensions();
+
+  const isDesktopWeb = Platform.OS === "web" && width >= 900;
 
   const dateLocale =
     language === "am"
@@ -778,9 +783,10 @@ games (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
         style={styles.container}
-
-        contentContainerStyle={styles.content}
-
+        contentContainerStyle={[
+          styles.content,
+          isDesktopWeb && styles.contentDesktop,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>{t("bookings.title")}</Text>
@@ -1541,6 +1547,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
 
     paddingTop: 14,
+  },
+  contentDesktop: {
+    width: "100%",
+    maxWidth: 1180,
+    alignSelf: "center",
+    paddingHorizontal: 28,
+    paddingTop: 24,
   },
 
   title: {

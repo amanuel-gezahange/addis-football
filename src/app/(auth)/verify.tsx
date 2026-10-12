@@ -4,10 +4,12 @@ import { useState } from "react";
 import {
   Alert,
   Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -16,6 +18,9 @@ import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyScreen() {
+  const { width } = useWindowDimensions();
+
+  const isDesktopWeb = Platform.OS === "web" && width >= 900;
   const { phone } = useLocalSearchParams<{ phone: string }>();
 
   const [otp, setOtp] = useState("");
@@ -114,7 +119,7 @@ export default function VerifyScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <View style={styles.container}>
+      <View style={[styles.container, isDesktopWeb && styles.containerDesktop]}>
         <Pressable
           style={({ pressed }) => [
             styles.backButton,
@@ -189,11 +194,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+  containerDesktop: {
+    width: "100%",
+    maxWidth: 600,
+    alignSelf: "center",
   },
 
   backButton: {

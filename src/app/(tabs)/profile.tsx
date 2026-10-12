@@ -8,11 +8,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -26,6 +28,9 @@ import { supabase } from "../../lib/supabase";
 const skillLevels = ["Beginner", "Intermediate", "Advanced"];
 
 export default function ProfileScreen() {
+  const { width } = useWindowDimensions();
+
+  const isDesktopWeb = Platform.OS === "web" && width >= 900;
   const [fullName, setFullName] = useState("");
 
   const [phone, setPhone] = useState("");
@@ -248,7 +253,10 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          isDesktopWeb && styles.contentDesktop,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
@@ -587,6 +595,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
 
     paddingTop: 14,
+  },
+  contentDesktop: {
+    width: "100%",
+    maxWidth: 900,
+    alignSelf: "center",
+    paddingHorizontal: 28,
+    paddingTop: 24,
   },
 
   loadingContainer: {
