@@ -3,8 +3,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Keyboard,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +13,7 @@ import {
 
 import { COLORS } from "../../constants/colors";
 import { supabase } from "../../lib/supabase";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -25,7 +26,7 @@ export default function VerifyScreen() {
     if (!phone) {
       Alert.alert(
         "Missing phone number",
-        "Please go back and enter your phone number again."
+        "Please go back and enter your phone number again.",
       );
       return;
     }
@@ -33,7 +34,7 @@ export default function VerifyScreen() {
     if (otp.length !== 6) {
       Alert.alert(
         "Invalid code",
-        "Please enter the 6-digit verification code."
+        "Please enter the 6-digit verification code.",
       );
       return;
     }
@@ -50,10 +51,7 @@ export default function VerifyScreen() {
       if (error) {
         console.log("OTP verification error:", error);
 
-        Alert.alert(
-          "Invalid code",
-          error.message
-        );
+        Alert.alert("Invalid code", error.message);
 
         return;
       }
@@ -61,7 +59,7 @@ export default function VerifyScreen() {
       if (!data.session) {
         Alert.alert(
           "Login failed",
-          "We couldn't create your login session. Please try again."
+          "We couldn't create your login session. Please try again.",
         );
         return;
       }
@@ -72,7 +70,7 @@ export default function VerifyScreen() {
 
       Alert.alert(
         "Something went wrong",
-        "We couldn't verify the code. Please try again."
+        "We couldn't verify the code. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -94,26 +92,20 @@ export default function VerifyScreen() {
       if (error) {
         console.log("Resend error:", error);
 
-        Alert.alert(
-          "Could not resend code",
-          error.message
-        );
+        Alert.alert("Could not resend code", error.message);
 
         return;
       }
 
       setOtp("");
 
-      Alert.alert(
-        "Code sent",
-        "A new verification code has been sent."
-      );
+      Alert.alert("Code sent", "A new verification code has been sent.");
     } catch (error) {
       console.log("Resend error:", error);
 
       Alert.alert(
         "Something went wrong",
-        "We couldn't resend the code. Please try again."
+        "We couldn't resend the code. Please try again.",
       );
     } finally {
       setResending(false);
@@ -121,7 +113,7 @@ export default function VerifyScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
         <Pressable
           style={({ pressed }) => [
@@ -130,16 +122,10 @@ export default function VerifyScreen() {
           ]}
           onPress={() => router.back()}
         >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={COLORS.text}
-          />
+          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
         </Pressable>
 
-        <Text style={styles.title}>
-          Verify your number
-        </Text>
+        <Text style={styles.title}>Verify your number</Text>
 
         <Text style={styles.subtitle}>
           Enter the 6-digit code we sent to{"\n"}
@@ -159,6 +145,8 @@ export default function VerifyScreen() {
           maxLength={6}
           textAlign="center"
           editable={!loading}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
 
         <Pressable
@@ -168,8 +156,7 @@ export default function VerifyScreen() {
               otp.length === 6 &&
               !loading &&
               styles.verifyButtonPressed,
-            (otp.length !== 6 || loading) &&
-              styles.verifyButtonDisabled,
+            (otp.length !== 6 || loading) && styles.verifyButtonDisabled,
           ]}
           onPress={handleVerify}
           disabled={otp.length !== 6 || loading}
@@ -182,18 +169,13 @@ export default function VerifyScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.resendButton,
-            pressed &&
-              !resending &&
-              !loading &&
-              styles.pressed,
+            pressed && !resending && !loading && styles.pressed,
           ]}
           onPress={handleResend}
           disabled={resending || loading}
         >
           <Text style={styles.resendText}>
-            {resending
-              ? "Sending..."
-              : "Didn't receive a code? Resend"}
+            {resending ? "Sending..." : "Didn't receive a code? Resend"}
           </Text>
         </Pressable>
       </View>

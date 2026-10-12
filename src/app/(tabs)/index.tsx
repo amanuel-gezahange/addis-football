@@ -8,7 +8,6 @@ import {
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +19,7 @@ import GameCard from "../../components/GameCard";
 import { COLORS } from "../../constants/colors";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { supabase } from "../../lib/supabase";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Game = {
   id: number;
@@ -346,6 +346,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
+      edges={["top"]}
     >
       <View
         style={styles.container}

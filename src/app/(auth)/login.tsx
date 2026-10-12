@@ -1,17 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
+
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { COLORS } from "../../constants/colors";
 import { supabase } from "../../lib/supabase";
@@ -37,7 +41,7 @@ export default function LoginScreen() {
     if (!/^9\d{8}$/.test(cleanPhone)) {
       Alert.alert(
         "Invalid phone number",
-        "Enter a valid Ethiopian mobile number."
+        "Enter a valid Ethiopian mobile number.",
       );
       return;
     }
@@ -45,6 +49,7 @@ export default function LoginScreen() {
     const fullPhone = `+251${cleanPhone}`;
 
     try {
+      Keyboard.dismiss();
       setLoading(true);
 
       const { error } = await supabase.auth.signInWithOtp({
@@ -53,7 +58,6 @@ export default function LoginScreen() {
 
       if (error) {
         console.log("OTP error:", error);
-
         Alert.alert("Could not send code", error.message);
         return;
       }
@@ -69,7 +73,7 @@ export default function LoginScreen() {
 
       Alert.alert(
         "Something went wrong",
-        "We couldn't send the verification code. Please try again."
+        "We couldn't send the verification code. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -84,12 +88,13 @@ export default function LoginScreen() {
     if (!email || !reviewPassword) {
       Alert.alert(
         "Missing information",
-        "Enter the review email and password."
+        "Enter the review email and password.",
       );
       return;
     }
 
     try {
+      Keyboard.dismiss();
       setReviewLoading(true);
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -102,7 +107,7 @@ export default function LoginScreen() {
 
         Alert.alert(
           "Login failed",
-          "The review account email or password is incorrect."
+          "The review account email or password is incorrect.",
         );
 
         return;
@@ -114,7 +119,7 @@ export default function LoginScreen() {
 
       Alert.alert(
         "Something went wrong",
-        "Unable to sign in. Please try again."
+        "Unable to sign in. Please try again.",
       );
     } finally {
       setReviewLoading(false);
@@ -122,131 +127,141 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.content}>
-          <View style={styles.logo}>
-            <Ionicons
-              name="football"
-              size={34}
-              color={COLORS.primary}
-            />
-          </View>
-
-          <Text style={styles.title}>Welcome</Text>
-
-          <Text style={styles.subtitle}>
-            Enter your phone number to continue.
-          </Text>
-
-          <Text style={styles.label}>Phone number</Text>
-
-          <View style={styles.phoneContainer}>
-            <View style={styles.countryCode}>
-              <Text style={styles.flag}>🇪🇹</Text>
-
-              <Text style={styles.countryCodeText}>+251</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
+          contentInsetAdjustmentBehavior="automatic"
+        >
+          <Pressable style={styles.content} onPress={Keyboard.dismiss}>
+            <View style={styles.logo}>
+              <Ionicons name="football" size={34} color={COLORS.primary} />
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="9 12 345 678"
-              placeholderTextColor={COLORS.textMuted}
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-              editable={!loading}
-            />
-          </View>
+            <Text style={styles.title}>Welcome</Text>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.continueButton,
-              pressed && !loading && styles.continueButtonPressed,
-              loading && styles.continueButtonDisabled,
-            ]}
-            onPress={handleContinue}
-            disabled={loading}
-          >
-            <Text style={styles.continueText}>
-              {loading ? "Sending..." : "Continue"}
-            </Text>
-          </Pressable>
-
-          <Text style={styles.terms}>
-            We'll send you a verification code by SMS.
-          </Text>
-
-          <Pressable
-            style={styles.reviewToggle}
-            onPress={() => setShowReviewLogin((current) => !current)}
-          >
-            <Text style={styles.reviewToggleText}>
-              {showReviewLogin
-                ? "Hide App Review Login"
-                : "App Review Login"}
+            <Text style={styles.subtitle}>
+              Enter your phone number to continue.
             </Text>
 
-            <Ionicons
-              name={showReviewLogin ? "chevron-up" : "chevron-down"}
-              size={16}
-              color={COLORS.textMuted}
-            />
-          </Pressable>
+            <Text style={styles.label}>Phone number</Text>
 
-          {showReviewLogin && (
-            <View style={styles.reviewContainer}>
-              <Text style={styles.reviewTitle}>
-                App Review
-              </Text>
+            <View style={styles.phoneContainer}>
+              <View style={styles.countryCode}>
+                <Text style={styles.flag}>🇪🇹</Text>
 
-              <Text style={styles.reviewDescription}>
-                Sign in with the review account.
-              </Text>
+                <Text style={styles.countryCodeText}>+251</Text>
+              </View>
 
               <TextInput
-                style={styles.reviewInput}
-                placeholder="Email"
+                style={styles.input}
+                placeholder="9 12 345 678"
                 placeholderTextColor={COLORS.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={reviewEmail}
-                onChangeText={setReviewEmail}
-                editable={!reviewLoading}
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+                editable={!loading}
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
               />
+            </View>
 
-              <TextInput
-                style={styles.reviewInput}
-                placeholder="Password"
-                placeholderTextColor={COLORS.textMuted}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={reviewPassword}
-                onChangeText={setReviewPassword}
-                editable={!reviewLoading}
+            <Pressable
+              style={({ pressed }) => [
+                styles.continueButton,
+                pressed && !loading && styles.continueButtonPressed,
+                loading && styles.continueButtonDisabled,
+              ]}
+              onPress={handleContinue}
+              disabled={loading}
+            >
+              <Text style={styles.continueText}>
+                {loading ? "Sending..." : "Continue"}
+              </Text>
+            </Pressable>
+
+            <Text style={styles.terms}>
+              We'll send you a verification code by SMS.
+            </Text>
+
+            <Pressable
+              style={styles.reviewToggle}
+              onPress={() => {
+                Keyboard.dismiss();
+
+                setShowReviewLogin((current) => !current);
+              }}
+            >
+              <Text style={styles.reviewToggleText}>
+                {showReviewLogin ? "Hide App Review Login" : "App Review Login"}
+              </Text>
+
+              <Ionicons
+                name={showReviewLogin ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={COLORS.textMuted}
               />
+            </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.reviewButton,
-                  pressed && styles.reviewButtonPressed,
-                  reviewLoading && styles.continueButtonDisabled,
-                ]}
-                onPress={handleReviewLogin}
-                disabled={reviewLoading}
-              >
-                <Text style={styles.reviewButtonText}>
-                  {reviewLoading ? "Signing in..." : "Sign In"}
+            {showReviewLogin && (
+              <View style={styles.reviewContainer}>
+                <Text style={styles.reviewTitle}>App Review</Text>
+
+                <Text style={styles.reviewDescription}>
+                  Sign in with the review account.
                 </Text>
-              </Pressable>
-            </View>
-          )}
-        </View>
+
+                <TextInput
+                  style={styles.reviewInput}
+                  placeholder="Email"
+                  placeholderTextColor={COLORS.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={reviewEmail}
+                  onChangeText={setReviewEmail}
+                  editable={!reviewLoading}
+                  returnKeyType="next"
+                />
+
+                <TextInput
+                  style={styles.reviewInput}
+                  placeholder="Password"
+                  placeholderTextColor={COLORS.textMuted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={reviewPassword}
+                  onChangeText={setReviewPassword}
+                  editable={!reviewLoading}
+                  returnKeyType="done"
+                  onSubmitEditing={handleReviewLogin}
+                />
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.reviewButton,
+                    pressed && styles.reviewButtonPressed,
+                    reviewLoading && styles.continueButtonDisabled,
+                  ]}
+                  onPress={handleReviewLogin}
+                  disabled={reviewLoading}
+                >
+                  <Text style={styles.reviewButtonText}>
+                    {reviewLoading ? "Signing in..." : "Sign In"}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </Pressable>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -263,9 +278,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  content: {
+  scrollView: {
     flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
+    paddingVertical: 24,
+  },
+
+  content: {
+    width: "100%",
     paddingHorizontal: 24,
   },
 
