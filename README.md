@@ -1,64 +1,376 @@
-# Addis Football --- Technical README
+# Addis Football
 
-## 1. Project Summary
+Addis Football is a mobile-first pickup football app for Addis Ababa, Ethiopia.
 
-**Addis Football** is a mobile-first pickup-football application for
-Addis Ababa, Ethiopia. Players can authenticate, discover games, reserve
-spots, join waitlists, manage bookings, and use Chapa/Telebirr for paid
-games. Authorized organizers/admins can create, edit, manage, and cancel
-games.
+Players can discover local football games, reserve spots, join waitlists, manage bookings, and handle payment instructions for paid games. Organizers and admins can create and manage games and confirm organizer-direct payments.
 
-**Stack:** React Native, Expo SDK 57, Expo Router, TypeScript, Supabase
-Auth/PostgreSQL/RLS/RPC, Chapa/Telebirr, SMSEthiopia, EAS Build, App
-Store Connect, Google Play.
+## Tech Stack
 
-> Security: this document intentionally contains no service-role keys,
-> Chapa secrets, SMS API keys, reviewer passwords, personal phone
-> numbers, signing credentials, or other private credentials.
+- React Native
+- Expo
+- Expo Router
+- TypeScript
+- Supabase Auth
+- Supabase PostgreSQL
+- Supabase Row Level Security (RLS)
+- Supabase RPC
+- EAS Build
 
-------------------------------------------------------------------------
+## Authentication
 
-## 2. Architecture
+Addis Football currently supports:
 
-``` text
-iOS / Android
-     |
-React Native + Expo Router
-     |
-Supabase client
-     |
-+----+-------------------------+
-| Auth | PostgreSQL | RLS/RPC |
-+------------------------------+
-     |                 |
- SMS backend       Edge/backend logic
-                       |
-                    Chapa
-                       |
-                    Telebirr
-                       |
-                    Webhook
-                       |
-                 Supabase state
+- Google Sign-In
+- Email and password
+
+Phone OTP and SMS authentication are not used.
+
+Authentication is handled by Supabase Auth.
+
+## Languages
+
+The app supports:
+
+- English
+- Amharic
+- Afaan Oromoo
+
+Language selection is available from the player's profile and is managed through the app's language context.
+
+## Main Player Features
+
+Players can:
+
+- Sign in with Google or email/password
+- Browse available football games
+- View games by date
+- View game location, time, format, skill level, price, and availability
+- Reserve available spots
+- Join waitlists when appropriate
+- View their bookings
+- Cancel eligible bookings
+- Submit organizer-direct payments as paid
+- View payment status
+- Manage their profile and preferred language
+
+## Game Payment Modes
+
+Each game uses one of three payment modes.
+
+### Free
+
+No payment is required.
+
+The player reserves a spot and the booking can be confirmed immediately when capacity is available.
+
+### Pay at Venue
+
+The player reserves the game through Addis Football and pays at the venue.
+
+Addis Football does not process the venue payment.
+
+### Pay Organizer Directly
+
+This is the primary paid-game flow for V1.
+
+```text
+Player reserves spot
+        ↓
+Addis Football shows organizer payment details
+        ↓
+Player pays organizer externally
+        ↓
+Player taps "I've Paid"
+        ↓
+Payment request appears for organizer
+        ↓
+Organizer checks their payment account
+        ↓
+Organizer taps "Mark Paid"
+        ↓
+Booking/payment is confirmed
 ```
 
-The mobile client handles presentation and user interaction. Supabase is
-the trusted source for authentication, games, profiles, bookings, and
-payment state. Sensitive payment/refund operations stay server-side.
+The organizer may provide information such as:
 
-------------------------------------------------------------------------
+- Payment provider
+- Payment phone/account
+- Account holder name
+- Amount to pay
 
-## 3. Core Project Structure
+For example, an organizer may use Telebirr.
 
-``` text
+Addis Football does not itself verify that an external transfer reached the organizer. The organizer is responsible for checking their payment account before confirming the payment.
+
+The app therefore uses wording such as:
+
+> Payment confirmed by organizer
+
+## Organizer and Admin Features
+
+Authorized organizers/admins have access to Admin Tools.
+
+Current tools include:
+
+### Create Game
+
+Create a football game and configure:
+
+- Title
+- Organizer
+- Area/location
+- Date
+- Start and end time
+- Format
+- Skill level
+- Capacity
+- Image
+- Payment method
+- Price
+- Organizer payment details when required
+
+### Manage Games
+
+Organizers can manage games they created.
+
+Admins can manage games according to their elevated permissions.
+
+Management includes viewing, editing, and cancelling games.
+
+### Payment Requests
+
+For organizer-direct payments, organizers/admins can view payments submitted by players.
+
+Before selecting **Mark Paid**, the organizer should verify the transfer in their external payment account.
+
+## Booking States
+
+Important booking states include:
+
+```text
+pending_payment
+confirmed
+waitlisted
+cancelled_by_player
+cancelled_by_organizer
+```
+
+Bookings also maintain payment state separately.
+
+Important payment states include:
+
+```text
+not_required
+pending
+submitted
+paid
+failed
+refund_pending
+refunded
+```
+
+## Organizer-Direct Payment States
+
+Typical organizer payment progression:
+
+```text
+pending
+   ↓
+Player pays externally
+   ↓
+submitted
+   ↓
+Organizer verifies payment
+   ↓
+paid
+```
+
+The app maintains the booking and payment status while the actual transfer occurs outside Addis Football.
+
+## Cancellation
+
+Players can cancel eligible bookings.
+
+Organizers/admins can cancel games when authorized.
+
+For organizer-direct payments, Addis Football does not automatically reverse an external payment. If a player already paid the organizer and a refund is required, the player may need to contact the organizer.
+
+Legacy integrated-payment refund functionality may still exist in the codebase but is not the primary V1 organizer-payment flow.
+
+## Waitlist
+
+When a game is full, eligible players may join the waitlist.
+
+The backend contains support for paid waitlist offers and expiration handling.
+
+Paid waitlist payment-before-expiry behavior should be fully tested before relying on it in production.
+
+## Database
+
+Supabase PostgreSQL is the application's primary database.
+
+### `profiles`
+
+Important fields include:
+
+```text
+id
+full_name
+phone
+skill_level
+avatar_url
+role
+chapa_subaccount_id
+```
+
+Roles include:
+
+```text
+player
+organizer
+admin
+```
+
+The `phone` field may still be used as profile/contact information. It does not mean the app uses phone OTP authentication.
+
+### `games`
+
+Important fields include:
+
+```text
+id
+title
+organizer
+area
+distance
+time
+format
+skill
+price
+spots_left
+status
+image_url
+created_by
+starts_at
+ends_at
+payment_method
+payment_provider
+payment_phone
+payment_account_name
+```
+
+Supported payment methods:
+
+```text
+free
+venue
+organizer
+```
+
+### `bookings`
+
+Important fields include:
+
+```text
+id
+created_at
+user_id
+game_id
+status
+price_paid
+payment_status
+payment_offer_expires_at
+```
+
+### `payments`
+
+The payments table maintains payment history and state.
+
+Important fields include:
+
+```text
+id
+created_at
+updated_at
+booking_id
+user_id
+game_id
+provider
+amount
+currency
+status
+checkout_url
+paid_at
+submitted_at
+confirmed_at
+confirmed_by
+player_reference
+metadata
+```
+
+Payment/refund-related fields may also exist for legacy integrated payment functionality.
+
+## Important Supabase RPCs
+
+The application uses Supabase RPC functions for important business operations.
+
+Current functionality includes RPCs such as:
+
+```text
+create_game
+update_game
+join_game
+reserve_organizer_paid_game
+submit_organizer_payment
+confirm_organizer_payment
+cancel_booking
+cancel_game
+```
+
+Additional waitlist, expiration, and legacy payment functions may also exist in the database.
+
+The deployed Supabase database should be treated as the authoritative source for exact RPC signatures.
+
+## Security
+
+Security-sensitive business rules should be enforced by Supabase rather than trusted only to the mobile client.
+
+Important principles:
+
+- Use Row Level Security
+- Require authentication for protected operations
+- Protect organizer/admin operations
+- Prevent unauthorized role escalation
+- Keep service-role credentials out of the app
+- Never commit private credentials
+- Validate important booking/payment transitions server-side
+- Do not trust the client to mark its own organizer payment as confirmed
+
+Organizer payment confirmation is intentionally separated:
+
+```text
+Player → submits payment claim
+Organizer → confirms payment
+```
+
+## Addis Ababa Time
+
+Games are scheduled according to Addis Ababa time.
+
+Administrative game scheduling must preserve the intended Ethiopian kickoff time even when the organizer/admin is physically located in another timezone.
+
+## Core Project Structure
+
+A simplified structure is:
+
+```text
 addis-football/
 ├── src/
 │   ├── app/
 │   │   ├── _layout.tsx
 │   │   ├── index.tsx
 │   │   ├── (auth)/
-│   │   │   ├── login.tsx
-│   │   │   └── verify.tsx
+│   │   │   └── login.tsx
 │   │   ├── (tabs)/
 │   │   │   ├── _layout.tsx
 │   │   │   ├── index.tsx
@@ -67,764 +379,195 @@ addis-football/
 │   │   └── admin/
 │   │       ├── create-game.tsx
 │   │       ├── edit-game.tsx
-│   │       └── manage-games.tsx
+│   │       ├── manage-games.tsx
+│   │       └── payment-requests.tsx
 │   ├── components/
 │   │   ├── GameCard.tsx
 │   │   └── ConfirmModal.tsx
-│   ├── constants/colors.ts
-│   └── lib/supabase.ts
-├── assets/images/icon.png
-├── docs/
+│   ├── constants/
+│   │   └── colors.ts
+│   ├── i18n/
+│   └── lib/
+│       └── supabase.ts
+├── assets/
 ├── app.json
 ├── eas.json
 ├── package.json
-├── .env
 └── README.md
 ```
 
-This documents the core files developed for the application;
-Expo-generated/supporting files may also exist.
+Supporting/generated files may differ from this simplified structure.
 
-------------------------------------------------------------------------
+## Important Screens
 
-# 4. File-by-File Code Guide
+### Login
 
-## `src/app/_layout.tsx`
+Handles:
 
-Root Expo Router layout. Wraps the app in the language provider,
-configures the status bar, dark background, hidden native headers, and
-registers: `index`, `(auth)`, `(tabs)`, `admin/create-game`,
-`admin/edit-game`, and `admin/manage-games`.
+- Google authentication
+- Email/password authentication
+- Account creation
 
-## `src/app/index.tsx`
+There is no SMS verification screen in the current authentication flow.
 
-Entry/routing screen. Keeps initial session/navigation decisions
-separate from feature screens.
+### Discover
 
-## `src/app/(auth)/login.tsx`
+Displays available football games and provides the appropriate reservation, payment, or waitlist action.
 
-Primary login screen.
+### Bookings
 
-Normal flow:
+Displays the player's current and historical booking state, including organizer payment status and cancellation information.
 
-``` text
-+251 phone -> request OTP -> Verify screen -> authenticated session
-```
+### Profile
 
-Also contains the dedicated **App Review Login** path so Apple reviewers
-do not need access to an Ethiopian SMS number. Reviewer credentials must
-remain outside source/public documentation.
+Allows players to manage profile information, skill level, and language.
 
-Form behavior uses `SafeAreaView` from `react-native-safe-area-context`,
-`KeyboardAvoidingView`, and a `ScrollView` with:
+Authorized organizers/admins also receive access to Admin Tools.
 
-``` tsx
-keyboardShouldPersistTaps="handled"
-keyboardDismissMode="none"
-```
+### GameCard
 
-## `src/app/(auth)/verify.tsx`
+Displays game information and handles major player actions such as reservations and organizer-direct payment instructions.
 
-OTP verification screen. Accepts the numeric code, removes non-numeric
-input, verifies the challenge, and continues into the authenticated app.
-It is a small single-input screen and does not need a large scrolling
-form.
+### Create Game
 
-## `src/app/(tabs)/_layout.tsx`
+Allows authorized users to create games and configure the game's payment method.
 
-Bottom navigation for: - Discover - Bookings - Profile
+### Edit Game
 
-Uses safe-area insets so the app tab bar stays above the iPhone home
-indicator and Android/Samsung system navigation area.
+Allows authorized users to modify existing games and handle authorized cancellation behavior.
 
-## `src/app/(tabs)/index.tsx`
+### Manage Games
 
-Main **Discover** screen. Loads and displays games and drives player
-actions such as joining, paid reservation, waitlisting, and refresh. It
-presents game title, organizer, area, time, format, skill, price,
-availability, image, and status.
+Allows organizers/admins to manage their games.
 
-## `src/app/(tabs)/bookings.tsx`
+### Payment Requests
 
-Displays the current player's bookings and their states. Important
-states include: `pending_payment`, `confirmed`, `waitlisted`,
-`cancelled_by_player`, and `cancelled_by_organizer`.
+Allows organizers/admins to review player-submitted organizer payments and mark verified payments as paid.
 
-## `src/app/(tabs)/profile.tsx`
+## Environment Variables
 
-Player profile screen. Displays/updates full name and skill level, shows
-the authenticated phone, changes language, saves the profile, signs out,
-and exposes authorized admin tools where appropriate.
+Client configuration uses environment variables such as:
 
-Supported languages: - English - Amharic - Afaan Oromoo
-
-## `src/app/admin/create-game.tsx`
-
-Authorized game creation form.
-
-Fields include title, organizer, area, distance/display location, date,
-start time, end time, format, skill, price, spots, and image URL.
-
-The form validates inputs and calls Supabase RPC `create_game`.
-
-### Addis Ababa time
-
-Admin-entered schedule values are interpreted in Addis Ababa time using
-the `+03:00` offset before conversion to an ISO timestamp. This prevents
-an organizer physically located in another timezone from shifting the
-Ethiopian kickoff time.
-
-Known `create_game` parameters:
-
-``` text
-p_title
-p_organizer
-p_area
-p_distance
-p_time
-p_format
-p_skill
-p_price
-p_spots_left
-p_starts_at
-p_ends_at
-p_image_url
-```
-
-## `src/app/admin/edit-game.tsx`
-
-Loads an existing game, populates the form, validates changes, preserves
-Addis Ababa timezone handling, calls `update_game`, and supports
-authorized cancellation/refund workflows.
-
-## `src/app/admin/manage-games.tsx`
-
-Organizer/admin dashboard used to retrieve and manage games and navigate
-to Create/Edit Game.
-
-## `src/components/GameCard.tsx`
-
-Reusable game presentation component. Shows image, status, title,
-organizer, area/distance, skill, spots, schedule, format, price, and the
-relevant action.
-
-## `src/components/ConfirmModal.tsx`
-
-Reusable confirmation UI for consequential actions such as cancellation.
-
-## `src/constants/colors.ts`
-
-Central design tokens:
-
-``` ts
-export const COLORS = {
-  background: "#07111F",
-  surface: "#101D2E",
-  surfaceAlt: "#16263A",
-  primary: "#18C8FF",
-  primaryPressed: "#08A9DC",
-  text: "#F7FAFC",
-  textSecondary: "#94A3B8",
-  textMuted: "#64748B",
-  border: "#24364B",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger: "#EF4444",
-  white: "#FFFFFF",
-  black: "#000000",
-} as const;
-```
-
-## `src/lib/supabase.ts`
-
-Creates the shared Supabase client from:
-
-``` text
-EXPO_PUBLIC_SUPABASE_URL
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-```
-
-Never put `SUPABASE_SERVICE_ROLE_KEY` in the mobile app.
-
-## Language provider / translations
-
-Maintains global English/Amharic/Afaan Oromoo state and persists the
-selected language locally.
-
-## `app.json`
-
-Expo app configuration: app identity, version, portrait orientation,
-icon, scheme, iOS/Android settings, router/splash plugins, and typed
-routes.
-
-## `eas.json`
-
-EAS profiles:
-
-``` text
-development
-preview
-production
-```
-
-Production uses automatic version/build incrementing.
-
-## `.env`
-
-Client configuration only:
-
-``` bash
-EXPO_PUBLIC_SUPABASE_URL=...
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
-```
-
-Never commit privileged keys.
-
-------------------------------------------------------------------------
-
-# 5. Database
-
-## `games`
-
-  Field          Purpose
-  -------------- ------------------------------------
-  `id`           Game identifier
-  `title`        Game title
-  `organizer`    Organizer display name
-  `area`         Location
-  `distance`     Display distance/location metadata
-  `time`         Human-readable time
-  `format`       e.g. 6v6
-  `skill`        Skill level
-  `price`        Price
-  `spots_left`   Remaining capacity
-  `status`       Game state
-  `image_url`    Image
-  `created_by`   Creator
-  `starts_at`    Canonical start timestamp
-  `ends_at`      Canonical end timestamp
-
-## `profiles`
-
-Fields: `id`, `full_name`, `phone`, `skill_level`, `avatar_url`, `role`.
-
-Roles: `player`, `organizer`, `admin`. Role escalation is protected
-server-side.
-
-## `bookings`
-
-Fields: `id`, `user_id`, `game_id`, `status`, `price_paid`,
-`payment_status`, `payment_offer_expires_at`.
-
-## `payments`
-
-Audit records for payment state, provider transaction references, and
-refund references/status.
-
-## `notification_jobs`
-
-Server-managed notification jobs. Normal clients do not get direct write
-access.
-
-## `otp_codes`
-
-Server-controlled OTP-related data. It is not a normal
-client-readable/writable table.
-
-------------------------------------------------------------------------
-
-# 6. Supabase RPC Functions
-
-### Authenticated/user-facing
-
-  Function              Purpose
-  --------------------- -----------------------------------
-  `create_game`         Create an authorized game
-  `update_game`         Update an authorized game
-  `join_game`           Join/free-booking flow
-  `reserve_paid_game`   Temporarily reserve paid capacity
-  `cancel_booking`      Cancel player's booking
-  `cancel_game`         Authorized game cancellation
-
-### Server/internal workflow
-
-  Function                       Purpose
-  ------------------------------ -------------------------------------
-  `expire_paid_reservation`      Release expired unpaid reservation
-  `expire_paid_waitlist_offer`   Expire unpaid waitlist offer
-  `finalize_chapa_refund`        Finalize/record refund result
-  `finalize_paid_booking`        Finalize verified payment booking
-  `offer_paid_waitlist_spot`     Offer capacity to waitlisted player
-  `release_paid_reservation`     Release payment reservation
-
-### Supporting functions
-
-`handle_new_user`, `protect_profile_role`, `set_updated_at`.
-
-------------------------------------------------------------------------
-
-# 7. Booking Logic
-
-### Free game
-
-``` text
-Select game -> join_game -> capacity?
-                         ├─ yes -> confirmed
-                         └─ no  -> waitlisted
-```
-
-### Paid game
-
-``` text
-Select paid game
-      ↓
-reserve_paid_game
-      ↓
-temporary reservation
-      ↓
-Chapa / Telebirr
-      ↓
-trusted provider verification
-      ↓
-finalize_paid_booking
-      ↓
-confirmed
-```
-
-Temporary reservations prevent abandoned checkouts from holding capacity
-forever.
-
-### Paid waitlist
-
-``` text
-Game full
-  ↓
-waitlist
-  ↓
-spot becomes available
-  ↓
-offer_paid_waitlist_spot
-  ↓
-temporary payment offer
-  ├─ paid -> confirmed
-  └─ expires -> release/next eligible player
-```
-
-------------------------------------------------------------------------
-
-# 8. Cancellation / Refund Logic
-
-``` text
-cancel_booking OR cancel_game
-        ↓
-booking/game state transition
-        ↓
-refund required?
-        ↓
-server contacts payment provider
-        ↓
-finalize_chapa_refund
-        ↓
-audit state recorded
-```
-
-Provider transaction references, not client claims, are used for refund
-processing.
-
-------------------------------------------------------------------------
-
-# 9. Authentication
-
-### Player
-
-``` text
-+251 phone -> OTP request -> SMS delivery -> OTP verification -> Supabase session
-```
-
-### Apple reviewer
-
-A separate email/password review path exists. Credentials are configured
-privately and are intentionally absent from this README.
-
-------------------------------------------------------------------------
-
-# 10. Security
-
-RLS is enabled on core tables including: `bookings`, `games`,
-`notification_jobs`, `otp_codes`, `payments`, `profiles`.
-
-Rules: - Keep anonymous access minimal. - Require authentication for
-player-facing mutations. - Restrict sensitive RPCs to
-server/service-role execution. - Protect profile roles. - Verify payment
-server-side. - Perform refunds server-side. - Never ship service-role,
-Chapa, SMS, webhook, or reviewer secrets in the app. - Never commit
-secrets to Git.
-
-------------------------------------------------------------------------
-
-# 11. Chapa / Telebirr
-
-Architecture:
-
-``` text
-App -> backend payment initialization -> Chapa -> Telebirr
-                                             ↓
-                                          webhook
-                                             ↓
-                                    backend verification
-                                             ↓
-                                     booking finalized
-```
-
-A mobile success screen is **not** sufficient proof of payment. Backend
-verification determines the final state.
-
-Sandbox integration has been used during development. Real-money
-production requires legitimate merchant/compliance approval and
-production credentials.
-
-------------------------------------------------------------------------
-
-# 12. Swagger / OpenAPI 3.0
-
-Supabase RPC is not a conventional custom REST-controller layer. This
-Swagger section documents the **known logical API contract** without
-exposing private URLs/secrets. Exact payloads for every internal Edge
-Function/RPC should ultimately be generated from the deployed
-SQL/function source.
-
-Save this section as `docs/openapi.yaml` if a standalone Swagger file is
-needed.
-
-``` yaml
-openapi: 3.0.3
-info:
-  title: Addis Football API
-  version: 1.0.0
-  description: Logical API contract for Addis Football.
-servers:
-  - url: https://YOUR_SUPABASE_PROJECT.supabase.co
-tags:
-  - name: Auth
-  - name: Games
-  - name: Bookings
-  - name: Payments
-
-paths:
-  /auth/v1/otp:
-    post:
-      tags: [Auth]
-      summary: Request authentication OTP
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [phone]
-              properties:
-                phone:
-                  type: string
-                  example: "+251911000000"
-      responses:
-        "200": { description: OTP request accepted }
-        "400": { description: Invalid request }
-
-  /rest/v1/rpc/create_game:
-    post:
-      tags: [Games]
-      summary: Create a game
-      security: [{ bearerAuth: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateGameRequest"
-      responses:
-        "200": { description: Game created }
-        "400": { description: Invalid game data }
-        "401": { description: Authentication required }
-        "403": { description: Not authorized }
-
-  /rest/v1/rpc/update_game:
-    post:
-      tags: [Games]
-      summary: Update a game
-      security: [{ bearerAuth: [] }]
-      responses:
-        "200": { description: Game updated }
-        "401": { description: Authentication required }
-        "403": { description: Not authorized }
-
-  /rest/v1/rpc/join_game:
-    post:
-      tags: [Bookings]
-      summary: Join a game
-      security: [{ bearerAuth: [] }]
-      responses:
-        "200": { description: Booking operation completed }
-        "401": { description: Authentication required }
-        "409": { description: Booking/capacity conflict }
-
-  /rest/v1/rpc/reserve_paid_game:
-    post:
-      tags: [Bookings, Payments]
-      summary: Reserve temporary paid-game capacity
-      security: [{ bearerAuth: [] }]
-      responses:
-        "200": { description: Reservation created }
-        "401": { description: Authentication required }
-        "409": { description: Capacity/reservation conflict }
-
-  /rest/v1/rpc/cancel_booking:
-    post:
-      tags: [Bookings]
-      summary: Cancel player's booking
-      security: [{ bearerAuth: [] }]
-      responses:
-        "200": { description: Booking cancelled }
-        "401": { description: Authentication required }
-        "403": { description: Not allowed }
-
-  /rest/v1/rpc/cancel_game:
-    post:
-      tags: [Games]
-      summary: Cancel a game
-      description: Authorized operation; may initiate refund processing.
-      security: [{ bearerAuth: [] }]
-      responses:
-        "200": { description: Game cancelled }
-        "401": { description: Authentication required }
-        "403": { description: Not authorized }
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    CreateGameRequest:
-      type: object
-      required:
-        - p_title
-        - p_organizer
-        - p_area
-        - p_distance
-        - p_time
-        - p_format
-        - p_skill
-        - p_price
-        - p_spots_left
-        - p_starts_at
-        - p_ends_at
-      properties:
-        p_title: { type: string }
-        p_organizer: { type: string }
-        p_area: { type: string }
-        p_distance: { type: string }
-        p_time: { type: string, example: "7:00 PM to 9:00 PM" }
-        p_format: { type: string, example: "6v6" }
-        p_skill: { type: string, example: "Intermediate" }
-        p_price: { type: number, format: double, example: 300 }
-        p_spots_left: { type: integer, minimum: 1, example: 12 }
-        p_starts_at: { type: string, format: date-time }
-        p_ends_at: { type: string, format: date-time }
-        p_image_url: { type: string, nullable: true }
-
-    Game:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        title: { type: string }
-        organizer: { type: string }
-        area: { type: string }
-        distance: { type: string }
-        time: { type: string }
-        format: { type: string }
-        skill: { type: string }
-        price: { type: number }
-        spots_left: { type: integer }
-        status: { type: string }
-        image_url: { type: string, nullable: true }
-        starts_at: { type: string, format: date-time }
-        ends_at: { type: string, format: date-time }
-
-    Booking:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        user_id: { type: string, format: uuid }
-        game_id: { type: string, format: uuid }
-        status:
-          type: string
-          enum: [pending_payment, confirmed, waitlisted,
-                 cancelled_by_player, cancelled_by_organizer]
-        price_paid: { type: number }
-        payment_status: { type: string }
-        payment_offer_expires_at:
-          type: string
-          format: date-time
-          nullable: true
-```
-
-**Swagger accuracy note:** `create_game` parameters above are based on
-the known client call. Do not invent missing RPC parameter names. For a
-byte-for-byte production OpenAPI specification, inspect/export the
-current deployed Supabase SQL and Edge Function source.
-
-------------------------------------------------------------------------
-
-# 13. Safe-Area and Keyboard Standard
-
-Use:
-
-``` ts
-import { SafeAreaView } from "react-native-safe-area-context";
-```
-
-For multi-field scrolling forms:
-
-``` tsx
-<ScrollView
-  keyboardShouldPersistTaps="handled"
-  keyboardDismissMode="none"
->
-```
-
-For larger forms:
-
-``` tsx
-<KeyboardAvoidingView
-  behavior={Platform.OS === "ios" ? "padding" : "height"}
->
-```
-
-This keeps fields usable on both iOS and Android and avoids accidental
-keyboard dismissal while moving between fields.
-
-------------------------------------------------------------------------
-
-# 14. Development
-
-``` bash
-git clone <repository-url>
-cd addis-football
-npm install
-```
-
-Create `.env`:
-
-``` bash
+```bash
 EXPO_PUBLIC_SUPABASE_URL=YOUR_URL
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
-Start:
+Never place a Supabase service-role key or other privileged secret in the mobile application.
 
-``` bash
+## Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start Expo:
+
+```bash
 npx expo start
 ```
 
-Clear cache:
+Start with a cleared cache when needed:
 
-``` bash
+```bash
 npx expo start -c
 ```
 
-------------------------------------------------------------------------
-
-# 15. Production Builds
+## Production Builds
 
 iOS:
 
-``` bash
+```bash
 eas build --platform ios --profile production
 ```
 
 Android:
 
-``` bash
+```bash
 eas build --platform android --profile production
 ```
 
-A Git push does **not** update an already-submitted App Store binary. A
-new binary requires a new EAS build and App Store submission/update.
+A Git push does not update an already-built mobile binary. App Store and Google Play releases require the appropriate new build/submission process when native production changes are being released.
 
-------------------------------------------------------------------------
+## Legacy Chapa Integration
 
-# 16. Testing Checklist
+Earlier development included a more integrated Chapa payment architecture.
 
--   [ ] Ethiopian phone OTP works.
--   [ ] Reviewer login works.
--   [ ] Sign out works.
--   [ ] Discover loads games.
--   [ ] Free booking works.
--   [ ] Paid reservation works.
--   [ ] Full-game waitlist works.
--   [ ] Duplicate booking is prevented.
--   [ ] Cancellation works.
--   [ ] Chapa/Telebirr checkout initializes.
--   [ ] Trusted payment verification confirms booking.
--   [ ] Abandoned paid reservation expires.
--   [ ] Refund state is recorded.
--   [ ] Duplicate webhook handling is safe/idempotent.
--   [ ] Authorized user can create/edit/cancel games.
--   [ ] Unauthorized user cannot perform admin operations.
--   [ ] Addis Ababa times remain correct from other timezones.
--   [ ] iPhone safe areas work.
--   [ ] Android status/navigation bars do not overlap UI.
--   [ ] Keyboard behavior is correct.
--   [ ] English, Amharic, and Afaan Oromoo render correctly.
+Some Chapa-related database fields, RPCs, Edge Functions, refund logic, or other code may remain in the project.
 
-------------------------------------------------------------------------
+For the current V1, Chapa is not the primary organizer-direct payment path.
 
-# 17. Developer Handoff Reading Order
+The current V1 design intentionally favors:
 
-``` text
-src/app/_layout.tsx
- -> src/app/(auth)/login.tsx
- -> src/app/(auth)/verify.tsx
- -> src/app/(tabs)/_layout.tsx
- -> src/app/(tabs)/index.tsx
- -> src/components/GameCard.tsx
- -> src/app/(tabs)/bookings.tsx
- -> src/app/(tabs)/profile.tsx
- -> src/app/admin/manage-games.tsx
- -> src/app/admin/create-game.tsx
- -> src/app/admin/edit-game.tsx
- -> src/lib/supabase.ts
- -> Supabase SQL/RPC/Edge Function source
+```text
+Addis Football
+    ↓
+Reservation
+    ↓
+Organizer payment details
+    ↓
+External payment
+    ↓
+Player submits "I've Paid"
+    ↓
+Organizer verifies
+    ↓
+Organizer confirms
 ```
 
-------------------------------------------------------------------------
+Legacy Chapa functionality should remain isolated from organizer-direct games unless it is intentionally reintroduced later.
 
-# 18. One-Paragraph Summary
+## Current Pre-Launch Testing
 
-**Addis Football** is an Expo/React Native pickup-football marketplace
-for Addis Ababa. Players authenticate primarily through Ethiopian phone
-OTP, discover local games, reserve spots, join waitlists, manage
-bookings, and pay for paid games through Chapa/Telebirr.
-Organizers/admins create and manage games. Supabase provides
-authentication, PostgreSQL storage, Row Level Security, RPC-based
-business logic, and backend workflows. The app supports English,
-Amharic, and Afaan Oromoo and treats administrative game schedules as
-Addis Ababa time.
+Before production release, verify at minimum:
 
-------------------------------------------------------------------------
+- [ ] Google Sign-In works
+- [ ] Email/password sign-in works
+- [ ] Email/password account creation works
+- [ ] Sign out works
+- [ ] Discover loads games correctly
+- [ ] Calendar/date filtering works
+- [ ] Free-game reservation works
+- [ ] Pay-at-venue reservation works
+- [ ] Organizer-direct reservation works
+- [ ] Organizer payment details display correctly
+- [ ] "I've Paid" changes payment to submitted
+- [ ] Payment Requests shows submitted payments
+- [ ] Organizer can mark a verified payment paid
+- [ ] Player sees payment confirmed by organizer
+- [ ] Duplicate active bookings are prevented
+- [ ] Player cancellation works
+- [ ] Organizer game cancellation works
+- [ ] Organizer-direct refund/contact messaging is correct
+- [ ] Waitlist behavior works
+- [ ] Authorized organizer/admin can create games
+- [ ] Authorized organizer/admin can edit games
+- [ ] Authorized organizer/admin can manage games
+- [ ] Unauthorized users cannot access protected admin operations
+- [ ] English renders correctly
+- [ ] Amharic renders correctly
+- [ ] Afaan Oromoo renders correctly
+- [ ] Addis Ababa game times remain correct from other timezones
+- [ ] iPhone safe areas work
+- [ ] Android status/navigation areas do not overlap the UI
+- [ ] Keyboard behavior works on forms
 
-## Documentation Scope
+## Current V1 Summary
 
-This README documents the known Addis Football architecture, core source
-files, database entities, RPC inventory, payment/authentication flows,
-security rules, build process, and a Swagger/OpenAPI contract.
+Addis Football is an Expo/React Native pickup-football app for Addis Ababa.
 
-For documentation containing **every exact current function signature,
-every SQL parameter, every Edge Function request/response, and every
-source file**, generate the next revision directly from a fresh
-checkout/export of the latest repository and deployed Supabase functions
-so the documentation cannot drift from production.
+Players authenticate using Google or email/password, discover games, reserve spots, join waitlists, manage bookings, and follow the appropriate payment flow for each game.
 
-**Addis Football --- Version 1.0**
+Games can be free, paid at the venue, or paid directly to the organizer. For organizer-direct games, Addis Football manages reservation and payment status while the player transfers money externally. The organizer verifies receipt and confirms the payment.
+
+Organizers/admins can create, edit, cancel, and manage games and review submitted payment requests.
+
+Supabase provides authentication, PostgreSQL storage, Row Level Security, and RPC-based business logic.
+
+The app supports English, Amharic, and Afaan Oromoo.
+
+---
+
+**Addis Football — Version 1.0**

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { useEffect, useState } from "react";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -18,11 +19,12 @@ import {
   View,
 } from "react-native";
 
+import { COLORS } from "../../constants/colors";
+
 import { languageOptions, Language } from "../../i18n";
 
 import { useLanguage } from "../../i18n/LanguageContext";
 
-import { COLORS } from "../../constants/colors";
 import { supabase } from "../../lib/supabase";
 
 const skillLevels = ["Beginner", "Intermediate", "Advanced"];
@@ -31,6 +33,7 @@ export default function ProfileScreen() {
   const { width } = useWindowDimensions();
 
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
+
   const [fullName, setFullName] = useState("");
 
   const [phone, setPhone] = useState("");
@@ -43,13 +46,7 @@ export default function ProfileScreen() {
 
   const [saving, setSaving] = useState(false);
 
-  const {
-    language,
-
-    setLanguage,
-
-    t,
-  } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     loadProfile();
@@ -93,11 +90,7 @@ export default function ProfileScreen() {
       .maybeSingle();
 
     if (error) {
-      console.log(
-        "Profile error:",
-
-        error.message,
-      );
+      console.log("Profile error:", error.message);
 
       setLoading(false);
 
@@ -173,11 +166,7 @@ export default function ProfileScreen() {
       .eq("id", user.id);
 
     if (error) {
-      console.log(
-        "Profile save error:",
-
-        error.message,
-      );
+      console.log("Profile save error:", error.message);
 
       Alert.alert(
         t("profile.couldNotSave"),
@@ -235,7 +224,11 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <SafeAreaView
+        style={styles.safeArea}
+
+        edges={["top"]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="large"
@@ -250,15 +243,24 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+
+      edges={["top"]}
+    >
       <ScrollView
         style={styles.container}
+
         contentContainerStyle={[
           styles.content,
+
           isDesktopWeb && styles.contentDesktop,
         ]}
+
         showsVerticalScrollIndicator={false}
+
         keyboardShouldPersistTaps="handled"
+
         keyboardDismissMode="none"
       >
         <Text style={styles.title}>{t("profile.title")}</Text>
@@ -365,11 +367,17 @@ export default function ProfileScreen() {
 
         <TextInput
           style={styles.input}
+
           placeholder={t("profile.namePlaceholder")}
+
           placeholderTextColor={COLORS.textMuted}
+
           value={fullName}
+
           onChangeText={setFullName}
+
           returnKeyType="done"
+
           blurOnSubmit
         />
 
@@ -393,8 +401,7 @@ export default function ProfileScreen() {
 
             size={17}
 
-            color={COLORS.text}
-            Muted
+            color={COLORS.textMuted}
           />
         </View>
 
@@ -482,6 +489,8 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+            {/* CREATE GAME */}
+
             <Pressable
               style={styles.adminButton}
 
@@ -512,10 +521,11 @@ export default function ProfileScreen() {
 
                 size={22}
 
-                color={COLORS.text}
-                Muted
+                color={COLORS.textMuted}
               />
             </Pressable>
+
+            {/* MANAGE GAMES */}
 
             <Pressable
               style={styles.adminButton}
@@ -547,8 +557,43 @@ export default function ProfileScreen() {
 
                 size={22}
 
-                color={COLORS.text}
-                Muted
+                color={COLORS.textMuted}
+              />
+            </Pressable>
+
+            {/* PAYMENT REQUESTS */}
+
+            <Pressable
+              style={styles.adminButton}
+
+              onPress={() => router.push("/admin/payment-requests")}
+            >
+              <View style={styles.adminButtonIcon}>
+                <Ionicons
+                  name="card-outline"
+
+                  size={23}
+
+                  color={COLORS.primary}
+                />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.adminButtonTitle}>
+                  {t("profile.paymentRequests")}
+                </Text>
+
+                <Text style={styles.adminButtonSubtitle}>
+                  {t("profile.paymentRequestsSubtitle")}
+                </Text>
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+
+                size={22}
+
+                color={COLORS.textMuted}
               />
             </Pressable>
           </View>
@@ -596,11 +641,16 @@ const styles = StyleSheet.create({
 
     paddingTop: 14,
   },
+
   contentDesktop: {
     width: "100%",
+
     maxWidth: 900,
+
     alignSelf: "center",
+
     paddingHorizontal: 28,
+
     paddingTop: 24,
   },
 

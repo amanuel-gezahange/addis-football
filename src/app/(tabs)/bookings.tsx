@@ -2,14 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useFocusEffect } from "expo-router";
 
-import { useLanguage } from "../../i18n/LanguageContext";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -19,8 +17,13 @@ import {
   View,
 } from "react-native";
 
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import ConfirmModal from "../../components/ConfirmModal";
+
 import { COLORS } from "../../constants/colors";
+
+import { useLanguage } from "../../i18n/LanguageContext";
 
 import { supabase } from "../../lib/supabase";
 
@@ -34,11 +37,50 @@ type BookingStatus =
 type PaymentStatus =
   | "not_required"
   | "pending"
+  | "submitted"
   | "paid"
   | "failed"
   | "refund_pending"
   | "refunded"
   | null;
+
+type PaymentMethod = "free" | "venue" | "organizer";
+
+type Game = {
+  id: number;
+
+  title: string;
+
+  organizer: string;
+
+  area: string;
+
+  distance: string | null;
+
+  time: string;
+
+  format: string;
+
+  skill: string;
+
+  price: number;
+
+  image_url: string | null;
+
+  starts_at: string | null;
+
+  ends_at: string | null;
+
+  status: string;
+
+  payment_method: PaymentMethod;
+
+  payment_provider: string | null;
+
+  payment_phone: string | null;
+
+  payment_account_name: string | null;
+};
 
 type Booking = {
   id: number;
@@ -53,37 +95,12 @@ type Booking = {
 
   created_at: string;
 
-  games: {
-    id: number;
-
-    title: string;
-
-    organizer: string;
-
-    area: string;
-
-    distance: string | null;
-
-    time: string;
-
-    format: string;
-
-    skill: string;
-
-    price: number;
-
-    image_url: string | null;
-
-    starts_at: string | null;
-
-    ends_at: string | null;
-
-    status: string;
-  } | null;
+  games: Game | null;
 };
 
 export default function BookingsScreen() {
   const { language, t } = useLanguage();
+
   const { width } = useWindowDimensions();
 
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
@@ -99,33 +116,11 @@ export default function BookingsScreen() {
 
   const [loading, setLoading] = useState(true);
 
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
-  const [refundingId, setRefundingId] = useState<number | null>(null);
-
-  const [checkingPaymentId, setCheckingPaymentId] = useState<number | null>(
-    null,
-  );
-
-  const [startingPaymentId, setStartingPaymentId] = useState<number | null>(
-    null,
-  );
-
-  const [paymentAttemptBookingIds, setPaymentAttemptBookingIds] = useState<
-    Set<number>
-  >(new Set());
-
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [submittingId, setSubmittingId] = useState<number | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -138,203 +133,140 @@ export default function BookingsScreen() {
   async function fetchBookings() {
     setLoading(true);
 
-    const {
-      data: { user },
+    try {
+      const {
+        data: { user },
 
-      error: userError,
-    } = await supabase.auth.getUser();
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      console.log(
-        "Booking user error:",
+      if (userError || !user) {
+        console.log("Booking user error:", userError?.message || "No user");
 
-        userError?.message || "No user",
-      );
+        setBookings([]);
 
-      setBookings([]);
+        return;
+      }
 
-      setLoading(false);
+      const { data, error } = await supabase
 
-      return;
-    }
+        .from("bookings")
 
-    const { data, error } = await supabase
+        .select(
+          `
 
-      .from("bookings")
+          id,
 
-      .select(
-        `
+          status,
 
+          price_paid,
 
+          payment_status,
 
-      id,
+          payment_offer_expires_at,
 
+          created_at,
 
-
-status,
-
-
-
-price_paid,
-
-
-
-payment_status,
-
-
-
-payment_offer_expires_at,
-
-
-
-created_at,
-
-
-
-games (
-
-
+          games (
 
             id,
 
-
-
             title,
-
-
 
             organizer,
 
-
-
             area,
-
-
 
             distance,
 
-
-
             time,
-
-
 
             format,
 
-
-
             skill,
-
-
 
             price,
 
-
-
             image_url,
-
-
 
             starts_at,
 
-
-
             ends_at,
 
+            status,
 
+            payment_method,
 
-            status
+            payment_provider,
 
+            payment_phone,
 
+            payment_account_name
 
           )
 
-
-
         `,
-      )
+        )
 
-      .eq("user_id", user.id)
+        .eq("user_id", user.id)
 
-      .order("created_at", {
-        ascending: false,
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.log("Bookings error:", error.message);
+
+        setBookings([]);
+
+        return;
+      }
+
+      setBookings((data || []) as unknown as Booking[]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function submitOrganizerPayment(booking: Booking) {
+    if (
+      !booking.games ||
+      booking.games.payment_method !== "organizer" ||
+      booking.status !== "pending_payment" ||
+      booking.payment_status === "submitted"
+    ) {
+      return;
+    }
+
+    setSubmittingId(booking.id);
+
+    try {
+      const { data, error } = await supabase.rpc("submit_organizer_payment", {
+        p_booking_id: booking.id,
+
+        p_player_reference: null,
       });
 
-    if (error) {
-      console.log(
-        "Bookings error:",
+      if (error) {
+        throw error;
+      }
 
-        error.message,
-      );
+      if (!data?.success) {
+        throw new Error(t("bookings.paymentCouldNotBeSubmitted"));
+      }
 
-      setBookings([]);
+      await fetchBookings();
+    } catch (error: any) {
+      console.log("Submit organizer payment error:", error?.message || error);
 
-      setLoading(false);
-
-      return;
+      if (Platform.OS === "web") {
+        window.alert(error?.message || t("bookings.couldNotSubmitPayment"));
+      }
+    } finally {
+      setSubmittingId(null);
     }
-
-    const loadedBookings = (data || []) as unknown as Booking[];
-
-    setBookings(loadedBookings);
-
-    // A fresh waitlist offer is pending_payment but has no active
-
-    // Chapa payment yet. Once a payment exists, show Check Payment.
-
-    const pendingBookingIds = loadedBookings
-
-      .filter((booking) => booking.status === "pending_payment")
-
-      .map((booking) => booking.id);
-
-    if (pendingBookingIds.length === 0) {
-      setPaymentAttemptBookingIds(new Set());
-
-      setLoading(false);
-
-      return;
-    }
-
-    const { data: paymentRows, error: paymentRowsError } = await supabase
-
-      .from("payments")
-
-      .select("booking_id, status")
-
-      .in("booking_id", pendingBookingIds)
-
-      .eq("provider", "chapa")
-
-      .in("status", ["pending", "paid"]);
-
-    if (paymentRowsError) {
-      console.log(
-        "Payment attempt lookup error:",
-
-        paymentRowsError.message,
-      );
-
-      // Safer fallback: avoid accidentally starting a duplicate payment.
-
-      setPaymentAttemptBookingIds(new Set(pendingBookingIds));
-    } else {
-      setPaymentAttemptBookingIds(
-        new Set(
-          (paymentRows || [])
-
-            .map((payment) => Number(payment.booking_id))
-
-            .filter((id) => Number.isInteger(id)),
-        ),
-      );
-    }
-
-    setLoading(false);
   }
 
   function openCancellationModal(booking: Booking) {
-    if (!isActiveBooking(booking.status)) {
+    if (booking.status !== "confirmed" && booking.status !== "waitlisted") {
       return;
     }
 
@@ -354,357 +286,63 @@ games (
   }
 
   async function cancelSelectedBooking() {
-    if (!selectedBooking || !selectedBooking.games) {
-      return;
-    }
-
-    if (!isActiveBooking(selectedBooking.status)) {
+    if (!selectedBooking?.games) {
       return;
     }
 
     const booking = selectedBooking;
 
+    const game = booking.games;
+
+    if (!game) {
+      return;
+    }
+
+    if (booking.status !== "confirmed" && booking.status !== "waitlisted") {
+      return;
+    }
+
     setErrorMessage(null);
 
     setCancellingId(booking.id);
 
-    const {
-      data: cancelData,
-
-      error: cancelError,
-    } = await supabase.rpc("cancel_booking", {
-      p_game_id: Number(booking.games.id),
-    });
-
-    if (cancelError) {
-      console.log(
-        "Cancel booking error:",
-
-        cancelError.message,
-      );
-
-      setCancellingId(null);
-
-      setErrorMessage(cancelError.message);
-
-      return;
-    }
-
-    const refundRequired =
-      cancelData?.refund_required === true || booking.payment_status === "paid";
-
-    // Free booking or waitlist:
-
-    // cancellation is already finished.
-
-    if (!refundRequired) {
-      setCancellingId(null);
-
-      setSelectedBooking(null);
-
-      setErrorMessage(null);
-
-      await fetchBookings();
-
-      return;
-    }
-
-    // Paid booking:
-
-    // cancel_booking has changed it to refund_pending.
-
-    const {
-      data: refundData,
-
-      error: refundError,
-    } = await supabase.functions.invoke(
-      "refund-chapa-payment",
-
-      {
-        body: {
-          booking_id: booking.id,
-        },
-      },
-    );
-
-    if (refundError) {
-      console.log(
-        "Refund request error:",
-
-        refundError.message,
-      );
-
-      // The booking is still cancelled.
-
-      // Keep refund_pending so we can retry later.
-
-      setCancellingId(null);
-
-      setSelectedBooking(null);
-
-      setErrorMessage(null);
-
-      await fetchBookings();
-
-      return;
-    }
-
-    console.log(
-      "Refund request:",
-
-      refundData?.status ?? "submitted",
-    );
-
-    // Check Chapa a few times.
-
-    // If it is still processing, it remains refund_pending.
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      }
-
-      const {
-        data: verifyData,
-
-        error: verifyError,
-      } = await supabase.functions.invoke(
-        "verify-chapa-refund",
+    try {
+      const { data: cancelData, error: cancelError } = await supabase.rpc(
+        "cancel_booking",
 
         {
-          body: {
-            booking_id: booking.id,
-          },
+          p_game_id: Number(game.id),
         },
       );
 
-      if (verifyError) {
-        console.log(
-          "Refund verification error:",
-
-          verifyError.message,
-        );
-
-        break;
+      if (cancelError) {
+        throw cancelError;
       }
 
-      if (verifyData?.status === "refunded") {
-        break;
-      }
+      /*
 
-      if (verifyData?.status === "reversed") {
-        break;
-      }
-    }
+       * IMPORTANT
 
-    setCancellingId(null);
+       *
 
-    setSelectedBooking(null);
+       * Organizer-direct payments must NEVER call the old
 
-    setErrorMessage(null);
+       * Chapa refund function.
 
-    await fetchBookings();
-  }
+       *
 
-  async function startWaitlistPayment(booking: Booking) {
-    if (!booking.games) {
-      return;
-    }
+       * The player paid the organizer directly through Telebirr,
 
-    if (
-      booking.status !== "pending_payment" ||
-      !booking.payment_offer_expires_at
-    ) {
-      return;
-    }
+       * so any refund must be handled by the organizer.
 
-    const expiration = new Date(booking.payment_offer_expires_at).getTime();
+       */
 
-    if (!Number.isFinite(expiration) || expiration <= Date.now()) {
-      await fetchBookings();
-
-      return;
-    }
-
-    setStartingPaymentId(booking.id);
-
-    try {
-      const { data: paymentData, error: paymentError } =
-        await supabase.functions.invoke("create-chapa-payment", {
-          body: {
-            game_id: Number(booking.games.id),
-
-            booking_id: booking.id,
-          },
-        });
-
-      if (paymentError) {
-        console.log(
-          "Waitlist payment start error:",
-
-          paymentError.message,
-        );
-
-        return;
-      }
-
-      if (!paymentData?.success) {
-        console.log(
-          "Waitlist payment start failed:",
-
-          paymentData?.error ?? "Unknown error",
-        );
-
-        return;
-      }
-
-      setPaymentAttemptBookingIds((current) => {
-        const next = new Set(current);
-
-        next.add(booking.id);
-
-        return next;
-      });
-
-      const paymentId = Number(paymentData.payment_id);
-
-      if (!Number.isInteger(paymentId) || paymentId <= 0) {
-        await fetchBookings();
-
-        return;
-      }
-
-      // Match the short automatic verification behavior used on Discover.
-
-      for (let attempt = 0; attempt < 6; attempt++) {
-        if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
-
-        const { data: verifyData, error: verifyError } =
-          await supabase.functions.invoke("verify-chapa-payment", {
-            body: {
-              payment_id: paymentId,
-            },
-          });
-
-        if (verifyError) {
-          console.log(
-            "Waitlist payment verification error:",
-
-            verifyError.message,
-          );
-
-          continue;
-        }
-
-        if (
-          verifyData?.paid === true ||
-          verifyData?.status === "paid" ||
-          verifyData?.status === "refund_pending" ||
-          verifyData?.status === "expired" ||
-          verifyData?.status === "failed"
-        ) {
-          break;
-        }
-      }
-    } finally {
-      setStartingPaymentId(null);
-
-      await fetchBookings();
-    }
-  }
-
-  async function checkPendingPayment(booking: Booking) {
-    if (booking.payment_status !== "pending") {
-      return;
-    }
-
-    setCheckingPaymentId(booking.id);
-
-    try {
-      const { data: payment, error: paymentError } = await supabase
-
-        .from("payments")
-
-        .select("id")
-
-        .eq("booking_id", booking.id)
-
-        .eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "")
-
-        .order("created_at", { ascending: false })
-
-        .limit(1)
-
-        .maybeSingle();
-
-      if (paymentError) {
-        console.log(
-          "Payment lookup error:",
-
-          paymentError.message,
-        );
-
-        return;
-      }
-
-      if (!payment) {
-        console.log(
-          "No payment record found for booking:",
-
-          booking.id,
-        );
-
-        return;
-      }
-
-      const {
-        data: verifyData,
-
-        error: verifyError,
-      } = await supabase.functions.invoke(
-        "verify-chapa-payment",
-
-        {
-          body: {
-            payment_id: payment.id,
-          },
-        },
-      );
-
-      if (verifyError) {
-        console.log(
-          "Payment verification error:",
-
-          verifyError.message,
-        );
-
-        return;
-      }
-
-      console.log(
-        "Payment verification:",
-
-        verifyData?.status ?? "unknown",
-      );
-    } finally {
-      setCheckingPaymentId(null);
-
-      await fetchBookings();
-    }
-  }
-
-  async function processPendingRefund(booking: Booking) {
-    if (booking.payment_status !== "refund_pending") {
-      return;
-    }
-
-    setRefundingId(booking.id);
-
-    try {
-      const { data: refundData, error: refundError } =
-        await supabase.functions.invoke(
+      if (
+        game.payment_method !== "organizer" &&
+        booking.payment_status === "paid" &&
+        cancelData?.refund_required === true
+      ) {
+        const { error: refundError } = await supabase.functions.invoke(
           "refund-chapa-payment",
 
           {
@@ -714,79 +352,54 @@ games (
           },
         );
 
-      if (refundError) {
-        console.log(
-          "Refund request error:",
-
-          refundError.message,
-        );
-
-        return;
-      }
-
-      console.log(
-        "Refund request:",
-
-        refundData?.status ?? "submitted",
-      );
-
-      for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
-
-        const {
-          data: verifyData,
-
-          error: verifyError,
-        } = await supabase.functions.invoke(
-          "verify-chapa-refund",
-
-          {
-            body: {
-              booking_id: booking.id,
-            },
-          },
-        );
-
-        if (verifyError) {
-          console.log(
-            "Refund verification error:",
-
-            verifyError.message,
-          );
-
-          break;
-        }
-
-        if (
-          verifyData?.status === "refunded" ||
-          verifyData?.status === "reversed"
-        ) {
-          break;
+        if (refundError) {
+          console.log("Legacy refund request error:", refundError.message);
         }
       }
-    } finally {
-      setRefundingId(null);
+
+      setSelectedBooking(null);
+
+      setErrorMessage(null);
 
       await fetchBookings();
+    } catch (error: any) {
+      console.log("Cancel booking error:", error?.message || error);
+
+      setErrorMessage(error?.message || t("bookings.couldNotCancelBooking"));
+    } finally {
+      setCancellingId(null);
     }
   }
 
   const selectedIsWaitlisted = selectedBooking?.status === "waitlisted";
 
-  const selectedNeedsRefund =
-    selectedBooking?.status === "confirmed" &&
+  const selectedIsOrganizerPaid =
+    selectedBooking?.games?.payment_method === "organizer" &&
     selectedBooking?.payment_status === "paid";
+
+  async function callOrganizer(phone: string | null) {
+    if (!phone) {
+      return;
+    }
+
+    try {
+      await Linking.openURL(`tel:${phone}`);
+    } catch (error) {
+      console.log("Could not open phone dialer:", error);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
         style={styles.container}
+
         contentContainerStyle={[
           styles.content,
+
           isDesktopWeb && styles.contentDesktop,
         ]}
+
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>{t("bookings.title")}</Text>
@@ -795,11 +408,7 @@ games (
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator
-              size="large"
-
-              color={COLORS.primary}
-            />
+            <ActivityIndicator size="large" color={COLORS.primary} />
 
             <Text style={styles.loadingText}>{t("bookings.loading")}</Text>
           </View>
@@ -834,6 +443,8 @@ games (
 
               const isConfirmed = booking.status === "confirmed";
 
+              const isPendingPayment = booking.status === "pending_payment";
+
               const cancelledByPlayer =
                 booking.status === "cancelled_by_player";
 
@@ -842,10 +453,33 @@ games (
 
               const isCancelled = cancelledByPlayer || cancelledByOrganizer;
 
+              const isOrganizerPayment = game.payment_method === "organizer";
+
+              const paymentPending =
+                isOrganizerPayment &&
+                isPendingPayment &&
+                booking.payment_status === "pending";
+
+              const paymentSubmitted =
+                isOrganizerPayment &&
+                isPendingPayment &&
+                booking.payment_status === "submitted";
+
+              const paymentConfirmed =
+                isOrganizerPayment &&
+                isConfirmed &&
+                booking.payment_status === "paid";
+
               const isCancelling = cancellingId === booking.id;
+
+              const isSubmitting = submittingId === booking.id;
 
               const statusInfo = getStatusInfo(
                 booking.status,
+
+                booking.payment_status,
+
+                isOrganizerPayment,
 
                 t,
               );
@@ -909,37 +543,39 @@ games (
                   </View>
 
                   <View style={styles.cardContent}>
-                    <View style={styles.statusRow}>
-                      <View
-                        style={[
-                          styles.statusBadge,
-
-                          {
-                            backgroundColor: statusInfo.backgroundColor,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={statusInfo.icon}
-
-                          size={16}
-
-                          color={statusInfo.color}
-                        />
-
-                        <Text
+                    {!isCancelled && (
+                      <View style={styles.statusRow}>
+                        <View
                           style={[
-                            styles.statusText,
+                            styles.statusBadge,
 
                             {
-                              color: statusInfo.color,
+                              backgroundColor: statusInfo.backgroundColor,
                             },
                           ]}
                         >
-                          {statusInfo.label}
-                        </Text>
+                          <Ionicons
+                            name={statusInfo.icon}
+
+                            size={16}
+
+                            color={statusInfo.color}
+                          />
+
+                          <Text
+                            style={[
+                              styles.statusText,
+
+                              {
+                                color: statusInfo.color,
+                              },
+                            ]}
+                          >
+                            {statusInfo.label}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
+                    )}
 
                     <Text
                       style={[
@@ -966,11 +602,7 @@ games (
                         />
 
                         <Text style={styles.infoText}>
-                          {formatAddisDate(
-                            game.starts_at,
-
-                            dateLocale,
-                          )}
+                          {formatAddisDate(game.starts_at, dateLocale)}
                         </Text>
                       </View>
                     ) : null}
@@ -1015,329 +647,326 @@ games (
                           isCancelled && styles.cancelledPrice,
                         ]}
                       >
-                        {isWaitlisted
-                          ? `${game.price} ETB`
+                        {game.payment_method === "free"
+                          ? t("bookings.free")
                           : `${booking.price_paid ?? game.price} ETB`}
                       </Text>
                     </View>
 
-                    {cancelledByOrganizer && (
-                      <View style={styles.historyNotice}>
-                        <Ionicons
-                          name={
-                            booking.payment_status === "refunded"
-                              ? "checkmark-circle-outline"
-                              : "information-circle-outline"
-                          }
+                    {/* ORGANIZER PAYMENT: PAYMENT REQUIRED */}
 
-                          size={20}
+                    {paymentPending && (
+                      <View style={styles.paymentSection}>
+                        <View style={styles.paymentHeader}>
+                          <Ionicons
+                            name="wallet-outline"
 
-                          color={
-                            booking.payment_status === "refunded"
-                              ? COLORS.primary
-                              : booking.payment_status === "refund_pending"
-                                ? "#F6C85F"
-                                : "#FF9A9E"
-                          }
-                        />
+                            size={22}
 
-                        <Text style={styles.historyNoticeText}>
-                          {booking.payment_status === "refunded"
-                            ? `${booking.price_paid ?? game.price} ${t(
-                                "bookings.refundOrganizer",
-                              )}`
-                            : booking.payment_status === "refund_pending"
-                              ? t("bookings.organizerRefundPending")
-                              : t("bookings.organizerCancelledHistory")}
-                        </Text>
-                      </View>
-                    )}
+                            color="#F6C85F"
+                          />
 
-                    {cancelledByPlayer && (
-                      <View style={styles.historyNotice}>
-                        <Ionicons
-                          name="information-circle-outline"
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.paymentTitle}>
+                              {t("bookings.organizerPaymentRequired")}
+                            </Text>
 
-                          size={20}
+                            <Text style={styles.paymentDescription}>
+                              {t("bookings.payOrganizerToConfirm")}
+                            </Text>
+                          </View>
+                        </View>
 
-                          color={
-                            booking.payment_status === "refunded"
-                              ? COLORS.primary
-                              : COLORS.textSecondary
-                          }
-                        />
+                        <View style={styles.paymentAccountCard}>
+                          <View style={styles.paymentAccountRow}>
+                            <Text style={styles.paymentLabel}>
+                              {t("bookings.method")}
+                            </Text>
 
-                        <Text style={styles.historyNoticeText}>
-                          {booking.payment_status === "refunded"
-                            ? `${booking.price_paid ?? game.price} ${t(
-                                "bookings.refundedToPayment",
-                              )}`
-                            : booking.payment_status === "refund_pending"
-                              ? t("bookings.refundProcessing")
-                              : t("bookings.playerCancelledHistory")}
-                        </Text>
-                      </View>
-                    )}
+                            <Text style={styles.paymentValue}>
+                              {game.payment_provider || "Telebirr"}
+                            </Text>
+                          </View>
 
-                    {booking.status === "pending_payment" &&
-                      booking.payment_status === "pending" &&
-                      !isCancelled &&
-                      (() => {
-                        const offerExpiration = booking.payment_offer_expires_at
-                          ? new Date(booking.payment_offer_expires_at).getTime()
-                          : null;
+                          <View style={styles.paymentDivider} />
 
-                        const offerMsLeft = offerExpiration
-                          ? Math.max(0, offerExpiration - now)
-                          : 0;
+                          <View style={styles.paymentAccountRow}>
+                            <Text style={styles.paymentLabel}>
+                              {t("bookings.phone")}
+                            </Text>
 
-                        const offerSeconds = Math.ceil(offerMsLeft / 1000);
+                            <Text selectable style={styles.paymentValue}>
+                              {game.payment_phone || "—"}
+                            </Text>
+                          </View>
 
-                        const offerMinutes = Math.floor(offerSeconds / 60);
+                          <View style={styles.paymentDivider} />
 
-                        const offerRemainingSeconds = offerSeconds % 60;
+                          <View style={styles.paymentAccountRow}>
+                            <Text style={styles.paymentLabel}>
+                              {t("bookings.accountName")}
+                            </Text>
 
-                        const countdown = `${String(offerMinutes).padStart(
-                          2,
-                          "0",
-                        )}:${String(offerRemainingSeconds).padStart(2, "0")}`;
-
-                        const hasOffer =
-                          booking.status === "pending_payment" &&
-                          !!booking.payment_offer_expires_at;
-
-                        const offerExpired = hasOffer && offerMsLeft <= 0;
-
-                        const hasPaymentAttempt = paymentAttemptBookingIds.has(
-                          booking.id,
-                        );
-
-                        const freshWaitlistOffer =
-                          hasOffer && !offerExpired && !hasPaymentAttempt;
-
-                        if (freshWaitlistOffer) {
-                          return (
-                            <>
-                              <View style={styles.waitlistOfferNotice}>
-                                <View style={styles.waitlistOfferHeader}>
-                                  <View style={styles.waitlistOfferTitleRow}>
-                                    <Ionicons
-                                      name="football-outline"
-
-                                      size={20}
-
-                                      color={COLORS.success}
-                                    />
-
-                                    <Text style={styles.waitlistOfferTitle}>
-                                      {t("bookings.spotOpened")}
-                                    </Text>
-                                  </View>
-
-                                  <View style={styles.waitlistCountdown}>
-                                    <Ionicons
-                                      name="time-outline"
-
-                                      size={15}
-
-                                      color="#F6C85F"
-                                    />
-
-                                    <Text style={styles.waitlistCountdownText}>
-                                      {countdown}
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                <Text style={styles.waitlistOfferText}>
-                                  {game.price} ETB •{" "}
-                                  {t("bookings.payBeforeTimer")}
-                                </Text>
-                              </View>
-
-                              <Pressable
-                                style={[
-                                  styles.waitlistPayButton,
-
-                                  startingPaymentId === booking.id &&
-                                    styles.disabledButton,
-                                ]}
-
-                                onPress={() => startWaitlistPayment(booking)}
-
-                                disabled={startingPaymentId === booking.id}
-                              >
-                                {startingPaymentId === booking.id ? (
-                                  <>
-                                    <ActivityIndicator
-                                      size="small"
-
-                                      color={COLORS.background}
-                                    />
-
-                                    <Text style={styles.waitlistPayButtonText}>
-                                      {t("bookings.connectingTelebirr")}
-                                    </Text>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Ionicons
-                                      name="phone-portrait-outline"
-
-                                      size={20}
-
-                                      color={COLORS.background}
-                                    />
-
-                                    <Text style={styles.waitlistPayButtonText}>
-                                      {game.price} ETB •{" "}
-                                      {t("bookings.payWithTelebirr")}
-                                    </Text>
-                                  </>
-                                )}
-                              </Pressable>
-                            </>
-                          );
-                        }
-
-                        if (hasOffer && offerExpired && !hasPaymentAttempt) {
-                          return (
-                            <View style={styles.expiredOfferNotice}>
-                              <Ionicons
-                                name="time-outline"
-
-                                size={20}
-
-                                color="#FF9A9E"
-                              />
-
-                              <Text style={styles.expiredOfferText}>
-                                {t("bookings.paymentOfferExpired")}
-                              </Text>
-                            </View>
-                          );
-                        }
-
-                        return (
-                          <>
-                            {hasOffer && !offerExpired && (
-                              <View style={styles.paymentCountdownNotice}>
-                                <Ionicons
-                                  name="time-outline"
-
-                                  size={20}
-
-                                  color="#F6C85F"
-                                />
-
-                                <Text style={styles.historyNoticeText}>
-                                  {t("bookings.spotReserved")} {countdown}.
-                                </Text>
-                              </View>
-                            )}
-
-                            <View style={styles.historyNotice}>
-                              <Ionicons
-                                name="time-outline"
-
-                                size={20}
-
-                                color="#F6C85F"
-                              />
-
-                              <Text style={styles.historyNoticeText}>
-                                {t("bookings.telebirrPending")}
-                              </Text>
-                            </View>
-
-                            <Pressable
+                            <Text
                               style={[
-                                styles.refundButton,
+                                styles.paymentValue,
 
-                                checkingPaymentId === booking.id &&
-                                  styles.disabledButton,
+                                {
+                                  flex: 1,
+
+                                  textAlign: "right",
+                                },
                               ]}
-
-                              onPress={() => checkPendingPayment(booking)}
-
-                              disabled={checkingPaymentId === booking.id}
                             >
-                              {checkingPaymentId === booking.id ? (
-                                <>
-                                  <ActivityIndicator
-                                    size="small"
+                              {game.payment_account_name || "—"}
+                            </Text>
+                          </View>
 
-                                    color={COLORS.primary}
-                                  />
+                          <View style={styles.paymentDivider} />
 
-                                  <Text style={styles.refundButtonText}>
-                                    {t("bookings.checkingPayment")}
-                                  </Text>
-                                </>
-                              ) : (
-                                <>
-                                  <Ionicons
-                                    name="refresh-outline"
+                          <View style={styles.paymentAccountRow}>
+                            <Text style={styles.paymentLabel}>
+                              {t("bookings.amount")}
+                            </Text>
 
-                                    size={20}
+                            <Text style={styles.paymentAmount}>
+                              {game.price} ETB
+                            </Text>
+                          </View>
+                        </View>
 
-                                    color={COLORS.primary}
-                                  />
+                        <Text style={styles.paymentInstruction}>
+                          {t("bookings.sendPaymentInstruction").replace(
+                            "{amount}",
 
-                                  <Text style={styles.refundButtonText}>
-                                    {t("bookings.checkPayment")}
-                                  </Text>
-                                </>
-                              )}
-                            </Pressable>
-                          </>
-                        );
-                      })()}
+                            String(game.price),
+                          )}
+                        </Text>
 
-                    {isCancelled &&
-                      booking.payment_status === "refund_pending" && (
                         <Pressable
                           style={[
-                            styles.refundButton,
+                            styles.paidButton,
 
-                            refundingId === booking.id && styles.disabledButton,
+                            isSubmitting && styles.disabledButton,
                           ]}
 
-                          onPress={() => processPendingRefund(booking)}
+                          onPress={() => submitOrganizerPayment(booking)}
 
-                          disabled={refundingId === booking.id}
+                          disabled={isSubmitting}
                         >
-                          {refundingId === booking.id ? (
-                            <>
-                              <ActivityIndicator
-                                size="small"
+                          {isSubmitting ? (
+                            <ActivityIndicator
+                              size="small"
 
-                                color={COLORS.primary}
-                              />
-
-                              <Text style={styles.refundButtonText}>
-                                {t("bookings.checkingRefund")}
-                              </Text>
-                            </>
+                              color={COLORS.background}
+                            />
                           ) : (
                             <>
                               <Ionicons
-                                name="refresh-outline"
+                                name="checkmark-circle-outline"
 
-                                size={20}
+                                size={21}
 
-                                color={COLORS.primary}
+                                color={COLORS.background}
                               />
 
-                              <Text style={styles.refundButtonText}>
-                                {t("bookings.retryRefund")}
+                              <Text style={styles.paidButtonText}>
+                                {t("bookings.ivePaid")}
                               </Text>
                             </>
                           )}
                         </Pressable>
+                      </View>
+                    )}
+
+                    {/* ORGANIZER PAYMENT: SUBMITTED */}
+
+                    {paymentSubmitted && (
+                      <View style={styles.waitingPaymentNotice}>
+                        <Ionicons
+                          name="time-outline"
+
+                          size={22}
+
+                          color="#F6C85F"
+                        />
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.waitingPaymentTitle}>
+                            {t("bookings.paymentSubmitted")}
+                          </Text>
+
+                          <Text style={styles.waitingPaymentText}>
+                            {t("bookings.waitingForOrganizerConfirmation")}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* ORGANIZER PAYMENT: CONFIRMED */}
+
+                    {paymentConfirmed && (
+                      <View style={styles.confirmedPaymentNotice}>
+                        <Ionicons
+                          name="checkmark-circle"
+
+                          size={22}
+
+                          color={COLORS.primary}
+                        />
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.confirmedPaymentTitle}>
+                            {t("bookings.paymentConfirmedByOrganizer")}
+                          </Text>
+
+                          <Text style={styles.confirmedPaymentText}>
+                            {booking.price_paid ?? game.price} ETB •{" "}
+                            {game.payment_provider || "Telebirr"}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* PAY AT VENUE */}
+
+                    {game.payment_method === "venue" &&
+                      isConfirmed &&
+                      !isCancelled && (
+                        <View style={styles.venueNotice}>
+                          <Ionicons
+                            name="location-outline"
+
+                            size={21}
+
+                            color={COLORS.primary}
+                          />
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.venueTitle}>
+                              {t("bookings.payAtVenue")}
+                            </Text>
+
+                            <Text style={styles.venueText}>
+                              {t("bookings.payAtVenueInstruction").replace(
+                                "{amount}",
+
+                                String(game.price),
+                              )}
+                            </Text>
+                          </View>
+                        </View>
                       )}
 
-                    {(isConfirmed || isWaitlisted) && (
+                    {/* CANCELLED ORGANIZER PAYMENT */}
+
+                    {isCancelled &&
+                      isOrganizerPayment &&
+                      (booking.payment_status === "paid" ||
+                        booking.payment_status === "submitted") && (
+                        <View style={styles.refundNotice}>
+                          <View style={styles.refundHeader}>
+                            <Ionicons
+                              name="information-circle-outline"
+
+                              size={22}
+
+                              color="#F6C85F"
+                            />
+
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.refundTitle}>
+                                {cancelledByOrganizer
+                                  ? t("bookings.gameCancelledByOrganizer")
+                                  : t("bookings.organizerPayment")}
+                              </Text>
+
+                              <Text style={styles.refundNoticeText}>
+                                {cancelledByOrganizer
+                                  ? t(
+                                      "bookings.organizerCancelledContactRefund",
+                                    )
+                                  : t("bookings.organizerPaymentRefundContact")}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.contactCard}>
+                            <Text style={styles.contactLabel}>
+                              {t("bookings.organizer")}
+                            </Text>
+
+                            <Text style={styles.contactValue}>
+                              {game.organizer}
+                            </Text>
+
+                            {game.payment_phone ? (
+                              <>
+                                <View style={styles.contactDivider} />
+
+                                <Text style={styles.contactLabel}>
+                                  {t("bookings.paymentContactNumber")}
+                                </Text>
+
+                                <Text selectable style={styles.contactPhone}>
+                                  {game.payment_phone}
+                                </Text>
+
+                                <Pressable
+                                  style={styles.callButton}
+
+                                  onPress={() =>
+                                    callOrganizer(game.payment_phone)
+                                  }
+                                >
+                                  <Ionicons
+                                    name="call-outline"
+
+                                    size={19}
+
+                                    color={COLORS.background}
+                                  />
+
+                                  <Text style={styles.callButtonText}>
+                                    {t("bookings.callOrganizer")}
+                                  </Text>
+                                </Pressable>
+                              </>
+                            ) : (
+                              <Text style={styles.noContactText}>
+                                {t("bookings.noOrganizerContact")}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      )}
+
+                    {/* NORMAL CANCELLED HISTORY */}
+
+                    {isCancelled &&
+                      !(
+                        isOrganizerPayment &&
+                        (booking.payment_status === "paid" ||
+                          booking.payment_status === "submitted")
+                      ) && (
+                        <View style={styles.historyNotice}>
+                          <Ionicons
+                            name="information-circle-outline"
+
+                            size={20}
+
+                            color={COLORS.textSecondary}
+                          />
+
+                          <Text style={styles.historyNoticeText}>
+                            {cancelledByOrganizer
+                              ? t("bookings.gameCancelledByOrganizerShort")
+                              : t("bookings.youCancelledBooking")}
+                          </Text>
+                        </View>
+                      )}
+
+                    {(isConfirmed || isWaitlisted) && !isCancelled && (
                       <Pressable
                         style={[
                           styles.cancelButton,
@@ -1350,11 +979,7 @@ games (
                         disabled={isCancelling}
                       >
                         {isCancelling ? (
-                          <ActivityIndicator
-                            size="small"
-
-                            color="#FF747A"
-                          />
+                          <ActivityIndicator size="small" color="#FF747A" />
                         ) : (
                           <>
                             <Ionicons
@@ -1404,10 +1029,12 @@ games (
               ? `${t("bookings.leaveWaitlistMessage")} ${
                   selectedBooking?.games?.title ?? t("bookings.thisGame")
                 }? ${t("bookings.leaveWaitlistHistory")}`
-              : selectedNeedsRefund
-                ? `${t("bookings.cancelBooking")} ${
-                    selectedBooking?.games?.title ?? t("bookings.thisGame")
-                  }? ${t("bookings.cancelRefundMessage")}`
+              : selectedIsOrganizerPaid
+                ? t("bookings.cancelOrganizerPaidMessage").replace(
+                    "{game}",
+
+                    selectedBooking?.games?.title ?? t("bookings.thisGame"),
+                  )
                 : `${t("bookings.cancelBooking")} ${
                     selectedBooking?.games?.title ?? t("bookings.thisGame")
                   }? ${t("bookings.cancelNormalMessage")}`
@@ -1435,12 +1062,12 @@ games (
   );
 }
 
-function isActiveBooking(status: BookingStatus) {
-  return status === "confirmed" || status === "waitlisted";
-}
-
 function getStatusInfo(
   status: BookingStatus,
+
+  paymentStatus: PaymentStatus,
+
+  organizerPayment: boolean,
 
   t: (key: string) => string,
 ): {
@@ -1453,8 +1080,20 @@ function getStatusInfo(
   icon: "checkmark-circle" | "time-outline" | "close-circle";
 } {
   if (status === "pending_payment") {
+    if (organizerPayment && paymentStatus === "submitted") {
+      return {
+        label: t("bookings.waitingForOrganizer"),
+
+        color: "#F6C85F",
+
+        backgroundColor: "#2A2415",
+
+        icon: "time-outline",
+      };
+    }
+
     return {
-      label: t("bookings.paymentPending"),
+      label: t("bookings.organizerPaymentRequired"),
 
       color: "#F6C85F",
 
@@ -1467,8 +1106,11 @@ function getStatusInfo(
   if (status === "confirmed") {
     return {
       label: t("bookings.confirmed"),
+
       color: "#FFFFFF",
+
       backgroundColor: "#15803D",
+
       icon: "checkmark-circle",
     };
   }
@@ -1508,26 +1150,18 @@ function getStatusInfo(
   };
 }
 
-function formatAddisDate(
-  timestamp: string,
+function formatAddisDate(timestamp: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: "Africa/Addis_Ababa",
 
-  locale: string,
-) {
-  return new Intl.DateTimeFormat(
-    locale,
+    weekday: "short",
 
-    {
-      timeZone: "Africa/Addis_Ababa",
+    month: "short",
 
-      weekday: "short",
+    day: "numeric",
 
-      month: "short",
-
-      day: "numeric",
-
-      year: "numeric",
-    },
-  ).format(new Date(timestamp));
+    year: "numeric",
+  }).format(new Date(timestamp));
 }
 
 const styles = StyleSheet.create({
@@ -1548,11 +1182,16 @@ const styles = StyleSheet.create({
 
     paddingTop: 14,
   },
+
   contentDesktop: {
     width: "100%",
+
     maxWidth: 1180,
+
     alignSelf: "center",
+
     paddingHorizontal: 28,
+
     paddingTop: 24,
   },
 
@@ -1605,7 +1244,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 34,
 
-    backgroundColor: COLORS.surfaceSoft,
+    backgroundColor: COLORS.surface,
 
     alignItems: "center",
 
@@ -1662,20 +1301,20 @@ const styles = StyleSheet.create({
     height: 170,
   },
 
-  cancelledImage: {
-    opacity: 0.45,
-  },
-
   imagePlaceholder: {
     width: "100%",
 
     height: 170,
 
-    backgroundColor: COLORS.surfaceSoft,
+    backgroundColor: COLORS.surface,
 
     alignItems: "center",
 
     justifyContent: "center",
+  },
+
+  cancelledImage: {
+    opacity: 0.45,
   },
 
   cancelledOverlay: {
@@ -1793,7 +1432,7 @@ const styles = StyleSheet.create({
   },
 
   formatBadge: {
-    backgroundColor: COLORS.surfaceSoft,
+    backgroundColor: COLORS.surface,
 
     borderRadius: 14,
 
@@ -1820,6 +1459,358 @@ const styles = StyleSheet.create({
 
   cancelledPrice: {
     color: COLORS.textSecondary,
+  },
+
+  paymentSection: {
+    marginTop: 18,
+
+    backgroundColor: "#171D1B",
+
+    borderWidth: 1,
+
+    borderColor: "#5E522C",
+
+    borderRadius: 16,
+
+    padding: 14,
+  },
+
+  paymentHeader: {
+    flexDirection: "row",
+
+    alignItems: "flex-start",
+
+    gap: 10,
+  },
+
+  paymentTitle: {
+    color: COLORS.text,
+
+    fontSize: 16,
+
+    fontWeight: "800",
+  },
+
+  paymentDescription: {
+    color: COLORS.textSecondary,
+
+    fontSize: 13,
+
+    lineHeight: 18,
+
+    marginTop: 3,
+  },
+
+  paymentAccountCard: {
+    marginTop: 14,
+
+    backgroundColor: COLORS.surface,
+
+    borderRadius: 13,
+
+    paddingHorizontal: 13,
+  },
+
+  paymentAccountRow: {
+    minHeight: 45,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "space-between",
+
+    gap: 12,
+  },
+
+  paymentDivider: {
+    height: 1,
+
+    backgroundColor: COLORS.border,
+  },
+
+  paymentLabel: {
+    color: COLORS.textSecondary,
+
+    fontSize: 13,
+  },
+
+  paymentValue: {
+    color: COLORS.text,
+
+    fontSize: 14,
+
+    fontWeight: "700",
+  },
+
+  paymentAmount: {
+    color: COLORS.primary,
+
+    fontSize: 16,
+
+    fontWeight: "800",
+  },
+
+  paymentInstruction: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    lineHeight: 18,
+
+    marginTop: 12,
+  },
+
+  paidButton: {
+    height: 50,
+
+    borderRadius: 13,
+
+    backgroundColor: COLORS.primary,
+
+    marginTop: 13,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    gap: 7,
+  },
+
+  paidButtonText: {
+    color: COLORS.background,
+
+    fontSize: 15,
+
+    fontWeight: "800",
+  },
+
+  waitingPaymentNotice: {
+    flexDirection: "row",
+
+    alignItems: "flex-start",
+
+    gap: 10,
+
+    backgroundColor: "#2A2415",
+
+    borderWidth: 1,
+
+    borderColor: "#5E522C",
+
+    borderRadius: 13,
+
+    padding: 13,
+
+    marginTop: 17,
+  },
+
+  waitingPaymentTitle: {
+    color: "#F6C85F",
+
+    fontSize: 14,
+
+    fontWeight: "800",
+  },
+
+  waitingPaymentText: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    lineHeight: 17,
+
+    marginTop: 3,
+  },
+
+  confirmedPaymentNotice: {
+    flexDirection: "row",
+
+    alignItems: "flex-start",
+
+    gap: 10,
+
+    backgroundColor: "#0A211C",
+
+    borderWidth: 1,
+
+    borderColor: "#1E5A46",
+
+    borderRadius: 13,
+
+    padding: 13,
+
+    marginTop: 17,
+  },
+
+  confirmedPaymentTitle: {
+    color: COLORS.primary,
+
+    fontSize: 14,
+
+    fontWeight: "800",
+  },
+
+  confirmedPaymentText: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    marginTop: 3,
+  },
+
+  venueNotice: {
+    flexDirection: "row",
+
+    alignItems: "flex-start",
+
+    gap: 10,
+
+    backgroundColor: "#0A211C",
+
+    borderRadius: 13,
+
+    padding: 13,
+
+    marginTop: 17,
+  },
+
+  venueTitle: {
+    color: COLORS.primary,
+
+    fontSize: 14,
+
+    fontWeight: "800",
+  },
+
+  venueText: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    marginTop: 3,
+  },
+
+  refundNotice: {
+    backgroundColor: "#2A2415",
+
+    borderWidth: 1,
+
+    borderColor: "#5E522C",
+
+    borderRadius: 13,
+
+    padding: 13,
+
+    marginTop: 17,
+  },
+
+  refundHeader: {
+    flexDirection: "row",
+
+    alignItems: "flex-start",
+
+    gap: 9,
+  },
+
+  refundTitle: {
+    color: "#F6C85F",
+
+    fontSize: 14,
+
+    fontWeight: "800",
+  },
+
+  refundNoticeText: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    lineHeight: 18,
+
+    marginTop: 3,
+  },
+
+  contactCard: {
+    marginTop: 13,
+
+    backgroundColor: COLORS.surface,
+
+    borderRadius: 12,
+
+    padding: 12,
+  },
+
+  contactLabel: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+  },
+
+  contactValue: {
+    color: COLORS.text,
+
+    fontSize: 15,
+
+    fontWeight: "700",
+
+    marginTop: 3,
+  },
+
+  contactDivider: {
+    height: 1,
+
+    backgroundColor: COLORS.border,
+
+    marginVertical: 11,
+  },
+
+  contactPhone: {
+    color: COLORS.text,
+
+    fontSize: 17,
+
+    fontWeight: "800",
+
+    marginTop: 4,
+  },
+
+  callButton: {
+    height: 44,
+
+    borderRadius: 11,
+
+    backgroundColor: COLORS.primary,
+
+    marginTop: 12,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "center",
+
+    gap: 7,
+  },
+
+  callButtonText: {
+    color: COLORS.background,
+
+    fontSize: 14,
+
+    fontWeight: "800",
+  },
+
+  noContactText: {
+    color: COLORS.textSecondary,
+
+    fontSize: 12,
+
+    lineHeight: 17,
+
+    marginTop: 8,
   },
 
   historyNotice: {
@@ -1874,188 +1865,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
 
     fontWeight: "700",
-  },
-
-  refundButton: {
-    height: 48,
-
-    borderRadius: 13,
-
-    borderWidth: 1,
-
-    borderColor: "#287D58",
-
-    marginTop: 12,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    gap: 7,
-  },
-
-  refundButtonText: {
-    color: COLORS.primary,
-
-    fontSize: 15,
-
-    fontWeight: "700",
-  },
-
-  waitlistOfferNotice: {
-    backgroundColor: "#102B22",
-
-    borderWidth: 1,
-
-    borderColor: COLORS.primary,
-
-    borderRadius: 13,
-
-    padding: 12,
-
-    marginTop: 17,
-  },
-
-  waitlistOfferHeader: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "space-between",
-
-    gap: 8,
-  },
-
-  waitlistOfferTitleRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 7,
-
-    flexShrink: 1,
-  },
-
-  waitlistOfferTitle: {
-    color: COLORS.success,
-
-    fontSize: 15,
-
-    fontWeight: "800",
-  },
-
-  waitlistCountdown: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 4,
-
-    backgroundColor: "#2A2415",
-
-    borderRadius: 12,
-
-    paddingHorizontal: 8,
-
-    paddingVertical: 5,
-  },
-
-  waitlistCountdownText: {
-    color: "#F6C85F",
-
-    fontSize: 13,
-
-    fontWeight: "800",
-
-    fontVariant: ["tabular-nums"],
-  },
-
-  waitlistOfferText: {
-    color: COLORS.textSecondary,
-
-    fontSize: 13,
-
-    lineHeight: 19,
-
-    marginTop: 9,
-  },
-
-  waitlistPayButton: {
-    height: 50,
-
-    borderRadius: 13,
-
-    backgroundColor: COLORS.primary,
-
-    marginTop: 12,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    gap: 7,
-  },
-
-  waitlistPayButtonText: {
-    color: COLORS.background,
-
-    fontSize: 15,
-
-    fontWeight: "800",
-  },
-
-  expiredOfferNotice: {
-    flexDirection: "row",
-
-    alignItems: "flex-start",
-
-    gap: 8,
-
-    backgroundColor: "#2B1C1E",
-
-    borderWidth: 1,
-
-    borderColor: "#6B3439",
-
-    borderRadius: 12,
-
-    padding: 12,
-
-    marginTop: 17,
-  },
-
-  expiredOfferText: {
-    color: "#FF9A9E",
-
-    fontSize: 12,
-
-    lineHeight: 17,
-
-    flex: 1,
-  },
-
-  paymentCountdownNotice: {
-    flexDirection: "row",
-
-    alignItems: "flex-start",
-
-    gap: 8,
-
-    backgroundColor: "#2A2415",
-
-    borderWidth: 1,
-
-    borderColor: "#5E522C",
-
-    borderRadius: 12,
-
-    padding: 12,
-
-    marginTop: 17,
   },
 
   disabledButton: {

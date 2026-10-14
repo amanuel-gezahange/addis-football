@@ -1,73 +1,186 @@
 const en = {
   common: {
     appName: "Addis Football",
+
     loading: "Loading...",
+
     save: "Save",
+
     cancel: "Cancel",
+
     close: "Close",
+
     retry: "Retry",
+
     error: "Something went wrong",
   },
 
   tabs: {
     discover: "Discover",
+
     bookings: "Bookings",
+
     profile: "Profile",
   },
 
   discover: {
     title: "Discover",
+
     subtitle: "Play football in Addis Ababa",
+
     searchPlaceholder: "Search games, venues or areas",
 
     today: "Today",
+
     tomorrow: "Tomorrow",
 
     games: "Games",
+
     game: "game",
+
     gamesCount: "games",
 
     findingGames: "Finding games...",
+
     noGamesFound: "No games found",
-    noGamesForDay:
-      "There are no upcoming games scheduled for this day yet.",
-    noSearchResults:
-      "Try another search or choose a different day.",
+
+    noGamesForDay: "There are no upcoming games scheduled for this day yet.",
+
+    noSearchResults: "Try another search or choose a different day.",
 
     available: "Available",
+
     full: "Full",
+
     cancelled: "Cancelled",
+
     spotsLeft: "spots left",
+
     joinGame: "Join Game",
+
     joinWaitlist: "Join Waitlist",
+
     payWithTelebirr: "Pay with Telebirr",
   },
 
   gameCard: {
+    available: "Available",
+
+    payLater: "Pay later",
+
+    paidWaitlistMessage:
+      "You are on the waitlist. If a spot opens, you can reserve it and pay the organizer.",
+
+    livePaid: "Paid",
+
+    paymentMethodNotAvailable: "This payment method is not available.",
+
+    reserveSpot: "Reserve Spot",
+
+    reserving: "Reserving...",
+
+    payOrganizer: "Pay Organizer",
+
+    payAtVenue: "Pay at Venue",
+
+    paymentRequired: "Payment required",
+
+    ivePaid: "I've paid",
+
+    submittingPayment: "Submitting payment...",
+
+    waitingForOrganizer: "Waiting for organizer confirmation",
+
+    paymentSubmitted: "Payment submitted. Waiting for organizer confirmation.",
+
+    paymentConfirmedByOrganizer: "Payment confirmed by organizer",
+
+    paymentDetails: "Payment details",
+
+    paymentProvider: "Payment method",
+
+    paymentNumber: "Payment number",
+
+    accountName: "Account name",
+
+    notProvided: "Not provided",
+
+    accountNameNotProvided: "Account name not provided",
+
+    copy: "Copy",
+
+    copied: "Copied",
+
+    send: "Send",
+
+    usingAccountAbove: "using the account above.",
+
+    toKeepSpot: "to keep this spot.",
+
+    spotReservedWhilePending: "Your spot is reserved while payment is pending.",
+
+    sendPaymentTo:
+      "Send the payment directly to the organizer using the details below.",
+
+    afterPaying:
+      "After paying, tap “I've paid”. The organizer will confirm your payment.",
+
+    payWithin: "Pay within this time",
+
+    payWithinDescription:
+      "Complete payment before the timer ends to keep your spot.",
+
+    paymentTimeExpired:
+      "The payment time has expired. This spot is no longer reserved for you.",
+
+    paymentMethodUnavailable: "This payment method is not available.",
+
+    bookingNotFound: "Booking not found.",
+
+    couldNotReserve: "Could not reserve your spot.",
+
+    couldNotSubmitPayment: "Could not submit your payment.",
+
     gameFull: "Game full",
+
     confirmed: "Confirmed",
+
     by: "by",
+
     spotsLeft: "spots left",
+
     free: "FREE",
 
     allLevels: "All Levels",
+
     beginner: "Beginner",
+
     intermediate: "Intermediate",
+
     advanced: "Advanced",
 
     joined: "Joined",
+
     waitlisted: "Waitlisted",
+
     joinGame: "Join Game",
+
     joinWaitlist: "Join Waitlist",
+
     joining: "Joining...",
+
     joiningWaitlist: "Joining Waitlist...",
 
     connectingTelebirr: "Connecting to Telebirr...",
+
     checkingPayment: "Checking Payment...",
+
     checkPayment: "Check Payment",
+
     payWithTelebirr: "Pay with Telebirr",
 
     offerExpired: "Offer Expired",
+
     spotOpened: "A spot opened!",
 
     offerExpiredDescription:
@@ -85,54 +198,44 @@ const en = {
       "This payment offer has expired. Your booking will update automatically.",
 
     // Payment status messages
+
     paymentSuccessful:
       "Telebirr payment successful. You're confirmed for this game.",
 
-    paymentSuccessfulShort:
-      "Telebirr payment successful.",
+    paymentSuccessfulShort: "Telebirr payment successful.",
 
-    paymentFailed:
-      "Telebirr payment failed. You can try again.",
+    paymentFailed: "Telebirr payment failed. You can try again.",
 
     waitlistPaymentFailed:
       "Telebirr payment failed. You can try again while your waitlist offer is still active.",
 
-    waitlistPaymentExpired:
-      "Your waitlist payment offer has expired.",
+    waitlistPaymentExpired: "Your waitlist payment offer has expired.",
 
-    waitingForPayment:
-      "Waiting for Telebirr payment...",
+    waitingForPayment: "Waiting for Telebirr payment...",
 
     paymentStillPending:
       "Payment is still pending. Complete the Telebirr authorization, then tap Check Payment.",
 
-    paymentStartError:
-      "Something went wrong while starting the payment.",
+    paymentStartError: "Something went wrong while starting the payment.",
 
-    paymentCheckError:
-      "Something went wrong while checking the payment.",
+    paymentCheckError: "Something went wrong while checking the payment.",
 
-    paymentCouldNotStart:
-      "Could not start the Telebirr payment.",
+    paymentCouldNotStart: "Could not start the Telebirr payment.",
 
-    bookingCouldNotBeCreated:
-      "Could not create your booking.",
+    bookingCouldNotBeCreated: "Could not create your booking.",
 
-    waitlistCouldNotBeJoined:
-      "Could not join the waitlist.",
+    waitlistCouldNotBeJoined: "Could not join the waitlist.",
 
-    joinedWaitlist:
-      "You're on the waitlist.",
+    joinedWaitlist: "You're on the waitlist.",
 
-    joinedGameSuccessfully:
-      "You joined the game successfully.",
+    joinedGameSuccessfully: "You joined the game successfully.",
 
     // Remaining payment messages
+
     paymentBookingNotFound:
       "Could not find this payment booking. Refresh and try again.",
 
-    checkingTelebirrPayment:
-      "Checking Telebirr payment...",
+    checkingTelebirrPayment: "Checking Telebirr payment...",
 
     paymentVerifyError:
       "Could not verify the payment right now. Please try again.",
@@ -152,40 +255,121 @@ const en = {
     startingWaitlistPayment:
       "Starting Telebirr payment for your waitlist spot...",
 
-    startingPayment:
-      "Starting Telebirr payment...",
+    startingPayment: "Starting Telebirr payment...",
 
     paymentReferenceMissing:
       "Payment started, but the payment reference is missing.",
 
-    paymentRequestSent:
-      "Telebirr request sent. Checking payment...",
+    paymentRequestSent: "Telebirr request sent. Checking payment...",
 
     paymentStillVerifying:
       "Payment is still being verified. Tap Check Payment to check again.",
+
+    sendPaymentBeforeExpiry:
+      "Send {price} ETB using the account above. Pay within {time} to keep this spot.",
+
+    sendPaymentPending:
+      "Send {price} ETB using the account above. Your spot is reserved while payment is pending.",
   },
 
   bookings: {
     title: "Bookings",
+
     subtitle: "Your games and booking history",
+
     loading: "Loading your games...",
+
     noBookings: "No bookings yet",
-    noBookingsDescription:
-      "Games you join or waitlist will appear here.",
+
+    noBookingsDescription: "Games you join or waitlist will appear here.",
 
     confirmed: "Confirmed",
+
     waitlisted: "Waitlisted",
+
     paymentPending: "Payment Pending",
+
     cancelled: "Cancelled",
+
     gameCancelled: "Game Cancelled",
 
     by: "by",
 
+    free: "Free",
+
+    // Organizer-direct payment flow
+
+    organizerPaymentRequired: "Payment required",
+
+    payOrganizerToConfirm: "Pay the organizer to confirm your spot.",
+
+    method: "Method",
+
+    phone: "Phone",
+
+    accountName: "Account name",
+
+    amount: "Amount",
+
+    sendPaymentInstruction:
+      "Send {amount} ETB using the account above, then tap “I've paid”.",
+
+    ivePaid: "I've paid",
+
+    paymentSubmitted: "Payment submitted",
+
+    waitingForOrganizer: "Waiting for organizer",
+
+    waitingForOrganizerConfirmation: "Waiting for organizer confirmation.",
+
+    paymentConfirmedByOrganizer: "Payment confirmed by organizer",
+
+    payAtVenue: "Pay at venue",
+
+    payAtVenueInstruction: "Pay {amount} ETB when you arrive.",
+
+    // Organizer-direct cancellation / refund contact
+
+    organizerPayment: "Organizer payment",
+
+    gameCancelledByOrganizer: "Game cancelled by organizer",
+
+    organizerCancelledContactRefund:
+      "This game was cancelled by the organizer. Contact the organizer directly regarding your payment or refund.",
+
+    organizerPaymentRefundContact:
+      "This payment was made directly to the organizer. Contact the organizer regarding any refund.",
+
+    organizer: "Organizer",
+
+    paymentContactNumber: "Payment/contact number",
+
+    callOrganizer: "Call organizer",
+
+    noOrganizerContact: "No organizer contact number is available.",
+
+    gameCancelledByOrganizerShort: "This game was cancelled by the organizer.",
+
+    youCancelledBooking: "You cancelled this booking.",
+
+    paymentCouldNotBeSubmitted: "Payment could not be submitted.",
+
+    couldNotSubmitPayment: "Could not submit payment.",
+
+    couldNotCancelBooking: "Could not cancel booking.",
+
+    cancelOrganizerPaidMessage:
+      "Cancel {game}? You paid the organizer directly. Any refund must be handled by the organizer.",
+
+    // Waitlist / legacy Telebirr-Chapa flow
+
     spotOpened: "A spot opened!",
+
     payBeforeTimer:
       "Pay with Telebirr before the timer ends to secure your spot.",
-    connectingTelebirr:
-      "Connecting to Telebirr...",
+
+    connectingTelebirr: "Connecting to Telebirr...",
+
     payWithTelebirr: "Pay with Telebirr",
 
     paymentOfferExpired:
@@ -198,6 +382,7 @@ const en = {
       "Your Telebirr payment is still pending. Check the payment status to continue.",
 
     checkingPayment: "Checking Payment...",
+
     checkPayment: "Check Payment",
 
     refundOrganizer:
@@ -209,33 +394,34 @@ const en = {
     organizerCancelledHistory:
       "This game was cancelled by the organizer. The booking remains in your history.",
 
-    refundedToPayment:
-      "ETB was refunded to your payment method.",
+    refundedToPayment: "ETB was refunded to your payment method.",
 
-    refundProcessing:
-      "Your refund is being processed.",
+    refundProcessing: "Your refund is being processed.",
 
     playerCancelledHistory:
       "You cancelled this booking. It remains here for your history.",
 
     checkingRefund: "Checking Refund...",
+
     retryRefund: "Retry Refund",
 
     leaveWaitlist: "Leave Waitlist",
+
     cancelBooking: "Cancel Booking",
 
     leaveWaitlistQuestion: "Leave Waitlist?",
+
     cancelBookingQuestion: "Cancel Booking?",
+
     keepBooking: "Keep Booking",
 
     somethingWentWrong: "Something went wrong:",
+
     thisGame: "this game",
 
-    leaveWaitlistMessage:
-      "Leave the waitlist for",
+    leaveWaitlistMessage: "Leave the waitlist for",
 
-    leaveWaitlistHistory:
-      "Your booking will remain in your history.",
+    leaveWaitlistHistory: "Your booking will remain in your history.",
 
     cancelRefundMessage:
       "Your spot will be released and a Telebirr refund will be requested.",
@@ -244,70 +430,467 @@ const en = {
       "Your spot will be released and may be given to someone on the waitlist.",
   },
 
+  createGame: {
+    back: "Back",
+
+    title: "Create Game",
+
+    subtitle: "Add a new football game",
+
+    gameTitle: "Game title",
+
+    organizer: "Organizer",
+
+    area: "Area",
+
+    distance: "Distance",
+
+    gameSchedule: "Game Schedule",
+
+    scheduleHint: "Enter the game date and times in Addis Ababa time.",
+
+    gameDate: "Game date",
+
+    startTime: "Start time",
+
+    endTime: "End time",
+
+    format: "Format",
+
+    skillLevel: "Skill level",
+
+    payment: "Payment",
+
+    paymentHint: "Choose how players will pay for this game.",
+
+    free: "Free",
+
+    freeDescription: "Players can join without paying.",
+
+    payAtVenue: "Pay at venue",
+
+    payAtVenueDescription: "Players reserve now and pay when they arrive.",
+
+    payOrganizerDirectly: "Pay organizer directly",
+
+    payOrganizerDescription:
+      "Players pay the organizer outside Addis Football.",
+
+    priceEtb: "Price (ETB)",
+
+    organizerPaymentDetails: "Organizer payment details",
+
+    organizerPaymentDetailsHint:
+      "Players will see these details after reserving a spot.",
+
+    paymentMethod: "Payment method",
+
+    paymentNumber: "Payment number",
+
+    accountName: "Account name",
+
+    availableSpots: "Available spots",
+
+    imageUrlOptional: "Image URL (optional)",
+
+    missingInformation: "Missing information",
+
+    completeRequiredFields: "Please complete all required fields.",
+
+    missingPrice: "Missing price",
+
+    enterGamePrice: "Enter the game price.",
+
+    missingPaymentMethod: "Missing payment method",
+
+    enterPaymentProvider: "Enter the payment provider.",
+
+    missingPaymentNumber: "Missing payment number",
+
+    enterOrganizerPaymentNumber: "Enter the organizer's payment number.",
+
+    missingAccountName: "Missing account name",
+
+    enterPaymentAccountName: "Enter the payment account name.",
+
+    invalidPrice: "Invalid price",
+
+    enterValidPrice: "Enter a valid price.",
+
+    paidPriceGreaterThanZero: "Paid games must have a price greater than 0.",
+
+    invalidSpots: "Invalid spots",
+
+    enterAtLeastOneSpot: "Enter at least 1 available spot.",
+
+    invalidStartTime: "Invalid start time",
+
+    startTimeFormatHelp: "Use YYYY-MM-DD for the date and a time like 7:00 PM.",
+
+    invalidEndTime: "Invalid end time",
+
+    endTimeFormatHelp: "Use YYYY-MM-DD for the date and a time like 9:00 PM.",
+
+    invalidGameTime: "Invalid game time",
+
+    endAfterStart: "End time must be after the start time.",
+
+    couldNotCreateGame: "Could not create game",
+
+    createErrorFallback: "Something went wrong while creating the game.",
+  },
+
+  editGame: {
+    manageGames: "Manage Games",
+
+    title: "Edit Game",
+
+    subtitle: "Update game information",
+
+    loading: "Loading game...",
+
+    loadingGame: "Loading game...",
+
+    gameCancelled: "Game cancelled",
+
+    playersCannotJoin: "Players can no longer join this game.",
+
+    currentAvailability: "Current availability",
+
+    spotsLeft: "spots left",
+
+    available: "Available",
+
+    full: "Full",
+
+    cancelled: "Cancelled",
+
+    capacityHelp:
+      "Availability is calculated from the game's current bookings.",
+
+    gameTitle: "Game title",
+
+    organizer: "Organizer",
+
+    area: "Area",
+
+    distance: "Distance",
+
+    gameSchedule: "Game Schedule",
+
+    scheduleHint: "Date and time in Addis Ababa",
+
+    gameDate: "Game date",
+
+    startTime: "Start time",
+
+    endTime: "End time",
+
+    format: "Format",
+
+    skillLevel: "Skill level",
+
+    payment: "Payment",
+
+    paymentSubtitle: "Choose how players pay for this game",
+
+    paymentHint: "Choose how players pay for this game",
+
+    free: "Free",
+
+    freeSubtitle: "Players join without paying",
+
+    freeDescription: "Players join without paying",
+
+    payAtVenue: "Pay at venue",
+
+    payAtVenueSubtitle: "Players pay when they arrive",
+
+    payAtVenueDescription: "Players pay when they arrive",
+
+    payOrganizerDirectly: "Pay organizer directly",
+
+    payOrganizerSubtitle: "Players pay your Telebirr or other account",
+
+    payOrganizerDescription: "Players pay your Telebirr or other account",
+
+    priceEtb: "Price (ETB)",
+
+    organizerPaymentDetails: "Organizer payment details",
+
+    organizerPaymentHelp:
+      "Players will see these details after reserving a spot.",
+
+    organizerPaymentDetailsHint:
+      "Players will see these details after reserving a spot.",
+
+    paymentProvider: "Payment provider",
+
+    paymentMethod: "Payment provider",
+
+    paymentPhoneNumber: "Payment phone number",
+
+    paymentNumber: "Payment phone number",
+
+    accountName: "Account name",
+
+    imageUrlOptional: "Image URL (optional)",
+
+    saveChanges: "Save Changes",
+
+    saving: "Saving...",
+
+    cancelGame: "Cancel Game",
+
+    cancelling: "Cancelling...",
+
+    cancelHelp:
+      "Cancelling keeps the game in your records, but prevents new players from joining.",
+
+    cancelGameTitle: "Cancel Game?",
+
+    cancelGameMessage:
+      "This will cancel the game and prevent new players from joining.",
+
+    keepGame: "Keep Game",
+
+    confirmCancel: "Cancel Game",
+
+    missingInformation: "Missing information",
+
+    completeRequiredFields: "Please complete all required fields.",
+
+    missingPrice: "Missing price",
+
+    enterGamePrice: "Enter the game price.",
+
+    missingPaymentMethod: "Missing payment method",
+
+    enterPaymentProvider: "Enter the payment provider.",
+
+    missingPaymentNumber: "Missing payment number",
+
+    enterOrganizerPaymentNumber: "Enter the organizer's payment number.",
+
+    missingAccountName: "Missing account name",
+
+    enterPaymentAccountName: "Enter the payment account name.",
+
+    invalidPrice: "Invalid price",
+
+    enterValidPrice: "Enter a valid price.",
+
+    paidPriceGreaterThanZero: "Paid games must have a price greater than 0.",
+
+    invalidStartTime: "Invalid start time",
+
+    startTimeFormatHelp: "Use YYYY-MM-DD for the date and a time like 7:00 PM.",
+
+    invalidEndTime: "Invalid end time",
+
+    endTimeFormatHelp: "Use YYYY-MM-DD for the date and a time like 9:00 PM.",
+
+    invalidGameTime: "Invalid game time",
+
+    endAfterStart: "End time must be after the start time.",
+
+    invalidGame: "Invalid game",
+
+    invalidGameId: "The game ID is invalid.",
+
+    couldNotLoadGame: "Could not load game",
+
+    couldNotUpdateGame: "Could not update game",
+
+    updateErrorFallback: "Something went wrong while updating the game.",
+
+    couldNotCancelGame: "Could not cancel game",
+
+    cancelErrorFallback: "Something went wrong while cancelling the game.",
+  },
+
+  manageGames: {
+    loading: "Loading games...",
+
+    back: "Back",
+
+    title: "Manage Games",
+
+    adminSubtitle: "Manage all football games",
+
+    organizerSubtitle: "Manage your football games",
+
+    adminAccess: "Admin access — viewing all games",
+
+    organizerAccess: "Organizer access — viewing only your games",
+
+    noGames: "No games",
+
+    noOrganizerGames: "You haven't created any games yet.",
+
+    createFirstGame: "Create your first football game.",
+
+    createGame: "Create Game",
+
+    cancelled: "Cancelled",
+
+    full: "Full",
+
+    available: "Available",
+
+    by: "by",
+
+    format: "Format",
+
+    skill: "Skill",
+
+    spots: "Spots",
+
+    payment: "Payment",
+
+    free: "Free",
+
+    venue: "Venue",
+
+    organizer: "Organizer",
+
+    viewCancelledGame: "View Cancelled Game",
+
+    editGame: "Edit Game",
+  },
+
+  paymentRequests: {
+    error: "Error",
+
+    mustBeSignedIn: "You must be signed in.",
+
+    notAllowed: "Not allowed",
+
+    organizersAdminsOnly:
+      "Only organizers and admins can view payment requests.",
+
+    footballGame: "Football Game",
+
+    playerFallback: "Player",
+
+    couldNotLoadPayments: "Could not load payments",
+
+    pleaseTryAgain: "Please try again.",
+
+    paymentCouldNotBeConfirmed: "Payment could not be confirmed.",
+
+    couldNotConfirmPayment: "Could not confirm payment",
+
+    recentlySubmitted: "Recently submitted",
+
+    loading: "Loading payment requests...",
+
+    title: "Payment Requests",
+
+    subtitle: "Confirm payments after checking your account",
+
+    noRequests: "No payment requests",
+
+    noRequestsDescription:
+      "Player payments waiting for confirmation will appear here.",
+
+    submitted: "Submitted",
+
+    player: "Player",
+
+    phone: "Phone",
+
+    method: "Method",
+
+    organizerPayment: "Organizer payment",
+
+    amountToVerify: "Amount to verify",
+
+    paymentFallback: "payment",
+
+    checkAccountBeforeConfirming:
+      "Check your {provider} account before confirming.",
+
+    markPaid: "Mark Paid",
+  },
+
   profile: {
     title: "Profile",
+
     subtitle: "Your player information",
 
     fullName: "Full Name",
+
     phone: "Phone",
+
     skillLevel: "Skill Level",
 
     beginner: "Beginner",
+
     intermediate: "Intermediate",
+
     advanced: "Advanced",
 
     saveProfile: "Save Profile",
+
     createGame: "Create Game",
+
     manageGames: "Manage Games",
+
     signOut: "Sign Out",
+
     language: "Language",
 
     footballPlayer: "Football Player",
+
     phoneNumber: "Phone number",
+
     admin: "Admin",
+
     organizer: "Organizer",
 
     namePlaceholder: "Enter your name",
-    phoneHelp:
-      "Your phone number is connected to your account.",
+
+    phoneHelp: "Your phone number is connected to your account.",
 
     adminTools: "Admin Tools",
-    adminToolsSubtitle:
-      "Manage football games",
 
-    createGameSubtitle:
-      "Add a new football game",
+    adminToolsSubtitle: "Manage football games",
 
-    manageGamesSubtitle:
-      "Edit or cancel existing games",
+    createGameSubtitle: "Add a new football game",
+
+    manageGamesSubtitle: "Edit or cancel existing games",
+
+    paymentRequests: "Payment Requests",
+
+    paymentRequestsSubtitle: "Confirm player payments",
 
     nameRequired: "Name required",
-    nameRequiredMessage:
-      "Please enter your full name.",
+
+    nameRequiredMessage: "Please enter your full name.",
 
     skillRequired: "Skill level required",
-    skillRequiredMessage:
-      "Please select your skill level.",
+
+    skillRequiredMessage: "Please select your skill level.",
 
     error: "Error",
-    notLoggedIn:
-      "You are not logged in.",
 
-    couldNotSave:
-      "Could not save profile",
+    notLoggedIn: "You are not logged in.",
+
+    couldNotSave: "Could not save profile",
 
     saved: "Saved",
 
-    profileUpdated:
-      "Your profile has been updated.",
+    profileUpdated: "Your profile has been updated.",
 
-    signOutFailed:
-      "Sign out failed",
+    signOutFailed: "Sign out failed",
   },
 
   languages: {
     english: "English",
+
     amharic: "አማርኛ",
+
     oromo: "Afaan Oromoo",
   },
 };

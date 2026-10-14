@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
+import { Calendar } from "react-native-calendars";
+import { Modal } from "react-native";
 import {
   ActivityIndicator,
   Platform,
@@ -69,6 +71,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
   /*
     Generate the next 7 days.
@@ -249,7 +252,33 @@ export default function HomeScreen() {
     });
   }, [games, search, selectedDate]);
 
-  const selectedDateLabel = dates.find((item) => item.key === selectedDate);
+  const selectedDateLabel = useMemo(() => {
+    const quickDate = dates.find((item) => item.key === selectedDate);
+
+    if (quickDate) {
+      return quickDate;
+    }
+
+    if (!selectedDate) {
+      return null;
+    }
+
+    const [year, month, day] = selectedDate.split("-").map(Number);
+
+    const selected = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+
+    return {
+      key: selectedDate,
+      day: "",
+      date: String(day),
+      fullDate: new Intl.DateTimeFormat(dateLocale, {
+        timeZone: "Africa/Addis_Ababa",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(selected),
+    };
+  }, [dates, selectedDate, dateLocale]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -320,9 +349,12 @@ export default function HomeScreen() {
               )}
             </View>
 
-            <Pressable style={styles.filterButton}>
+            <Pressable
+              style={styles.filterButton}
+              onPress={() => setCalendarVisible(true)}
+            >
               <Ionicons
-                name="options-outline"
+                name="calendar-outline"
                 size={25}
                 color={COLORS.primary}
               />
@@ -449,6 +481,80 @@ export default function HomeScreen() {
             }}
           />
         </ScrollView>
+        <Modal
+          visible={calendarVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCalendarVisible(false)}
+        >
+          <Pressable
+            style={styles.calendarOverlay}
+            onPress={() => setCalendarVisible(false)}
+          >
+            <Pressable
+              style={styles.calendarModal}
+              onPress={(event) => event.stopPropagation()}
+            >
+              <View style={styles.calendarHeader}>
+                <View>
+                  <Text style={styles.calendarTitle}>Choose a date</Text>
+                  <Text style={styles.calendarSubtitle}>
+                    Find games on any future date
+                  </Text>
+                </View>
+
+                <Pressable
+                  style={styles.calendarCloseButton}
+                  onPress={() => setCalendarVisible(false)}
+                >
+                  <Ionicons name="close" size={24} color={COLORS.text} />
+                </Pressable>
+              </View>
+
+              <Calendar
+                minDate={new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Africa/Addis_Ababa",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date())}
+                current={selectedDate ?? undefined}
+                onDayPress={(day) => {
+                  setSelectedDate(day.dateString);
+                  setCalendarVisible(false);
+                }}
+                markedDates={
+                  selectedDate
+                    ? {
+                        [selectedDate]: {
+                          selected: true,
+                        },
+                      }
+                    : {}
+                }
+                enableSwipeMonths
+                theme={{
+                  calendarBackground: COLORS.surface,
+                  backgroundColor: COLORS.surface,
+
+                  monthTextColor: COLORS.text,
+                  dayTextColor: COLORS.text,
+                  textDisabledColor: COLORS.textMuted,
+
+                  arrowColor: COLORS.primary,
+                  todayTextColor: COLORS.primary,
+
+                  selectedDayBackgroundColor: COLORS.primary,
+                  selectedDayTextColor: COLORS.background,
+
+                  textMonthFontWeight: "800",
+                  textDayFontWeight: "500",
+                  textDayHeaderFontWeight: "700",
+                }}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -694,5 +800,52 @@ const styles = StyleSheet.create({
     marginBottom: 7,
     marginLeft: 3,
     textTransform: "uppercase",
+  },
+  calendarOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+
+  calendarModal: {
+    width: "100%",
+    maxWidth: 440,
+    alignSelf: "center",
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 18,
+  },
+
+  calendarHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  calendarTitle: {
+    color: COLORS.text,
+    fontSize: 21,
+    fontWeight: "800",
+  },
+
+  calendarSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    marginTop: 3,
+  },
+
+  calendarCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 });
