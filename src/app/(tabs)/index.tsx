@@ -232,38 +232,31 @@ export default function HomeScreen() {
   const visibleGames = useMemo(() => {
     const cleanSearch = search.trim().toLowerCase();
 
-    // First keep only games for the selected date.
-    const gamesForSelectedDate = games.filter((game) => {
+    return games.filter((game) => {
       if (!game.starts_at) {
         return false;
       }
 
+      // Keep the selected-date filter.
       const gameDate = getAddisDateKey(game.starts_at);
+      const matchesDate = !selectedDate || gameDate === selectedDate;
 
-      return !selectedDate || gameDate === selectedDate;
-    });
+      if (!matchesDate) {
+        return false;
+      }
 
-    // No search: preserve the normal chronological order.
-    if (!cleanSearch) {
-      return gamesForSelectedDate;
-    }
+      // No search text = show every game for this date.
+      if (!cleanSearch) {
+        return true;
+      }
 
-    // Search entered: matching games move to the top.
-    return [...gamesForSelectedDate].sort((a, b) => {
-      const aMatches =
-        a.title.toLowerCase().includes(cleanSearch) ||
-        a.area.toLowerCase().includes(cleanSearch) ||
-        a.organizer.toLowerCase().includes(cleanSearch);
+      // Search title, area and organizer.
+      const matchesSearch =
+        (game.title ?? "").toLowerCase().includes(cleanSearch) ||
+        (game.area ?? "").toLowerCase().includes(cleanSearch) ||
+        (game.organizer ?? "").toLowerCase().includes(cleanSearch);
 
-      const bMatches =
-        b.title.toLowerCase().includes(cleanSearch) ||
-        b.area.toLowerCase().includes(cleanSearch) ||
-        b.organizer.toLowerCase().includes(cleanSearch);
-
-      if (aMatches && !bMatches) return -1;
-      if (!aMatches && bMatches) return 1;
-
-      return 0;
+      return matchesSearch;
     });
   }, [games, search, selectedDate]);
 
