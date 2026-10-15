@@ -539,6 +539,25 @@ const en = {
 
     createErrorFallback: "Something went wrong while creating the game.",
   },
+  login: {
+    tagline: "Find a game. Join. Play.",
+    continueGoogle: "Continue with Google",
+    connecting: "Connecting...",
+    helper: "One tap to sign in or create your account",
+
+    signInFailed: "Sign in failed",
+    unableToStart: "Unable to start Google sign in.",
+    sessionFailed:
+      "Google sign in completed, but the app could not create a session.",
+    somethingWrong: "Something went wrong",
+    tryAgain: "Unable to continue with Google. Please try again.",
+  },
+
+  languages: {
+    english: "English",
+    amharic: "አማርኛ",
+    oromo: "Afaan Oromoo",
+  },
 
   editGame: {
     manageGames: "Manage Games",
@@ -884,14 +903,6 @@ const en = {
     profileUpdated: "Your profile has been updated.",
 
     signOutFailed: "Sign out failed",
-  },
-
-  languages: {
-    english: "English",
-
-    amharic: "አማርኛ",
-
-    oromo: "Afaan Oromoo",
   },
 };
 

@@ -904,6 +904,19 @@ const om = {
 
     oromo: "Afaan Oromoo",
   },
+  login: {
+    tagline: "Tapha barbaadi. Makami. Taphadhu.",
+    continueGoogle: "Google'n itti fufi",
+    connecting: "Wal qunnamaa jira...",
+    helper: "Tuqaa tokkoon seeni yookaan herrega bani",
+
+    signInFailed: "Seenuun hin milkoofne",
+    unableToStart: "Google'n seenuu jalqabuun hin danda'amne.",
+    sessionFailed:
+      "Google'n seenuun xumurameera, garuu appichi session uumuu hin dandeenye.",
+    somethingWrong: "Rakkoon uumameera",
+    tryAgain: "Google'n itti fufuun hin danda'amne. Irra deebi'ii yaali.",
+  },
 };
 
 export default om;

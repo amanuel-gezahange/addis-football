@@ -858,6 +858,18 @@ const am = {
 
     oromo: "Afaan Oromoo",
   },
+  login: {
+    tagline: "ጨዋታ ያግኙ። ይቀላቀሉ። ይጫወቱ።",
+    continueGoogle: "በGoogle ይቀጥሉ",
+    connecting: "በመገናኘት ላይ...",
+    helper: "በአንድ ንክኪ ይግቡ ወይም መለያ ይፍጠሩ",
+
+    signInFailed: "መግባት አልተሳካም",
+    unableToStart: "በGoogle መግባት መጀመር አልተቻለም።",
+    sessionFailed: "በGoogle መግባት ተጠናቋል፣ ግን መተግበሪያው የመግቢያ ክፍለ ጊዜ መፍጠር አልቻለም።",
+    somethingWrong: "ችግር ተፈጥሯል",
+    tryAgain: "በGoogle መቀጠል አልተቻለም። እንደገና ይሞክሩ።",
+  },
 };
 
 export default am;
