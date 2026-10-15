@@ -105,12 +105,10 @@ export default function BookingsScreen() {
 
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
 
-  const dateLocale =
-    language === "am"
-      ? "am-ET-u-ca-gregory"
-      : language === "om"
-        ? "om-ET-u-ca-gregory"
-        : "en-US-u-ca-gregory";
+const dateLocale =
+  language === "om"
+    ? "om-ET-u-ca-gregory"
+    : "en-US-u-ca-gregory";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
 
@@ -602,7 +600,9 @@ export default function BookingsScreen() {
                         />
 
                         <Text style={styles.infoText}>
-                          {formatAddisDate(game.starts_at, dateLocale)}
+                          {language === "am"
+  ? formatEthiopianDate(game.starts_at)
+  : formatAddisDate(game.starts_at, dateLocale)}
                         </Text>
                       </View>
                     ) : null}
@@ -1148,6 +1148,66 @@ function getStatusInfo(
 
     icon: "close-circle",
   };
+}
+
+function formatEthiopianDate(timestamp: string) {
+  const date = new Date(timestamp);
+
+  // Read the Gregorian date in Addis Ababa time
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Addis_Ababa",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+
+  const year = Number(parts.find((p) => p.type === "year")?.value);
+  const month = Number(parts.find((p) => p.type === "month")?.value);
+  const day = Number(parts.find((p) => p.type === "day")?.value);
+
+  // Gregorian -> Julian Day Number
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+
+  const jdn =
+    day +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045;
+
+  // Julian Day Number -> Ethiopian calendar
+  const r = (jdn - 1724221) % 1461;
+  const n = (r % 365) + 365 * Math.floor(r / 1460);
+
+  const ethYear =
+    4 * Math.floor((jdn - 1724221) / 1461) +
+    Math.floor(r / 365) -
+    Math.floor(r / 1460);
+
+  const ethMonth = Math.floor(n / 30) + 1;
+  const ethDay = (n % 30) + 1;
+
+  const months = [
+    "መስከረም",
+    "ጥቅምት",
+    "ኅዳር",
+    "ታኅሣሥ",
+    "ጥር",
+    "የካቲት",
+    "መጋቢት",
+    "ሚያዝያ",
+    "ግንቦት",
+    "ሰኔ",
+    "ሐምሌ",
+    "ነሐሴ",
+    "ጳጉሜ",
+  ];
+
+  return `${months[ethMonth - 1]} ${ethDay} ${ethYear}`;
 }
 
 function formatAddisDate(timestamp: string, locale: string) {
