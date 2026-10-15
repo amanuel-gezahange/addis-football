@@ -232,32 +232,59 @@ export default function HomeScreen() {
   const visibleGames = useMemo(() => {
     const cleanSearch = search.trim().toLowerCase();
 
-    return games.filter((game) => {
+    const filtered = games.filter((game) => {
       if (!game.starts_at) {
         return false;
       }
 
-      // Keep the selected-date filter.
       const gameDate = getAddisDateKey(game.starts_at);
-      const matchesDate = !selectedDate || gameDate === selectedDate;
 
-      if (!matchesDate) {
+      if (selectedDate && gameDate !== selectedDate) {
         return false;
       }
 
-      // No search text = show every game for this date.
       if (!cleanSearch) {
         return true;
       }
 
-      // Search title, area and organizer.
-      const matchesSearch =
-        (game.title ?? "").toLowerCase().includes(cleanSearch) ||
-        (game.area ?? "").toLowerCase().includes(cleanSearch) ||
-        (game.organizer ?? "").toLowerCase().includes(cleanSearch);
+      const title = (game.title ?? "").toLowerCase();
+      const area = (game.area ?? "").toLowerCase();
+      const organizer = (game.organizer ?? "").toLowerCase();
 
-      return matchesSearch;
+      return (
+        title.includes(cleanSearch) ||
+        area.includes(cleanSearch) ||
+        organizer.includes(cleanSearch)
+      );
     });
+
+    // No search = keep the normal chronological order.
+    if (!cleanSearch) {
+      return filtered;
+    }
+
+    // Search = rank stronger matches above weaker matches.
+    const getSearchScore = (game: DiscoverGame) => {
+      const title = (game.title ?? "").toLowerCase();
+      const area = (game.area ?? "").toLowerCase();
+      const organizer = (game.organizer ?? "").toLowerCase();
+
+      if (title === cleanSearch) return 100;
+      if (title.startsWith(cleanSearch)) return 90;
+      if (title.includes(cleanSearch)) return 80;
+
+      if (organizer === cleanSearch) return 70;
+      if (organizer.startsWith(cleanSearch)) return 65;
+      if (organizer.includes(cleanSearch)) return 60;
+
+      if (area === cleanSearch) return 50;
+      if (area.startsWith(cleanSearch)) return 45;
+      if (area.includes(cleanSearch)) return 40;
+
+      return 0;
+    };
+
+    return [...filtered].sort((a, b) => getSearchScore(b) - getSearchScore(a));
   }, [games, search, selectedDate]);
 
   const selectedDateLabel = useMemo(() => {
