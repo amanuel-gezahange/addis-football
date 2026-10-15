@@ -635,6 +635,8 @@ function jdnToEthiopian(jdn: number) {
       Math.floor(r / 365) -
       Math.floor(r / 1460) +
       1,
+    month: Math.floor(n / 30) + 1,
+    day: (n % 30) + 1,
   };
 }
 
