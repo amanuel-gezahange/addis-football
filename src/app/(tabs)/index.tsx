@@ -633,9 +633,8 @@ function jdnToEthiopian(jdn: number) {
     year:
       4 * Math.floor((jdn - 1724221) / 1461) +
       Math.floor(r / 365) -
-      Math.floor(r / 1460),
-    month: Math.floor(n / 30) + 1,
-    day: (n % 30) + 1,
+      Math.floor(r / 1460) +
+      1,
   };
 }
 
@@ -726,20 +725,13 @@ function EthiopianCalendar({
   selectedDate: string | null;
   onSelect: (gregorianDate: string) => void;
 }) {
-  const initial = useMemo(() => {
-    if (selectedDate) {
-      const [year, month, day] = selectedDate.split("-").map(Number);
+  const todayEthiopian = useMemo(
+    () => getEthiopianDate(new Date(), language),
+    [language],
+  );
 
-      const selected = new Date(Date.UTC(year, month - 1, day, 12));
-
-      return getEthiopianDate(selected, language);
-    }
-
-    return getEthiopianDate(new Date(), language);
-  }, [selectedDate, language]);
-
-  const [viewYear, setViewYear] = useState(initial.year);
-  const [viewMonth, setViewMonth] = useState(initial.month);
+  const [viewYear, setViewYear] = useState(todayEthiopian.year);
+  const [viewMonth, setViewMonth] = useState(todayEthiopian.month);
 
   const months = language === "om" ? OROMO_MONTHS : AMHARIC_MONTHS;
 
@@ -764,7 +756,10 @@ function EthiopianCalendar({
     ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
   ];
 
-  while (cells.length % 7 !== 0) {
+  // Always render 6 calendar rows.
+  // This keeps the popup the same height for every Ethiopian month,
+  // including Pagume.
+  while (cells.length < 42) {
     cells.push(null);
   }
 
