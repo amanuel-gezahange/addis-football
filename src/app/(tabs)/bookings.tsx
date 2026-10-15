@@ -105,10 +105,8 @@ export default function BookingsScreen() {
 
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
 
-const dateLocale =
-  language === "om"
-    ? "om-ET-u-ca-gregory"
-    : "en-US-u-ca-gregory";
+  const dateLocale =
+    language === "om" ? "om-ET-u-ca-gregory" : "en-US-u-ca-gregory";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
 
@@ -600,9 +598,9 @@ const dateLocale =
                         />
 
                         <Text style={styles.infoText}>
-                          {language === "am"
-  ? formatEthiopianDate(game.starts_at)
-  : formatAddisDate(game.starts_at, dateLocale)}
+                          {language === "am" || language === "om"
+                            ? formatEthiopianDate(game.starts_at)
+                            : formatAddisDate(game.starts_at, dateLocale)}
                         </Text>
                       </View>
                     ) : null}
