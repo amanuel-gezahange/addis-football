@@ -599,7 +599,7 @@ export default function BookingsScreen() {
 
                         <Text style={styles.infoText}>
                           {language === "am" || language === "om"
-                            ? formatEthiopianDate(game.starts_at)
+                            ? formatEthiopianDate(game.starts_at, language)
                             : formatAddisDate(game.starts_at, dateLocale)}
                         </Text>
                       </View>
@@ -1148,10 +1148,10 @@ function getStatusInfo(
   };
 }
 
-function formatEthiopianDate(timestamp: string) {
+function formatEthiopianDate(timestamp: string, language: "en" | "am" | "om") {
   const date = new Date(timestamp);
 
-  // Read the Gregorian date in Addis Ababa time
+  // Read Gregorian date using Addis Ababa timezone
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Africa/Addis_Ababa",
     year: "numeric",
@@ -1189,7 +1189,7 @@ function formatEthiopianDate(timestamp: string) {
   const ethMonth = Math.floor(n / 30) + 1;
   const ethDay = (n % 30) + 1;
 
-  const months = [
+  const amharicMonths = [
     "መስከረም",
     "ጥቅምት",
     "ኅዳር",
@@ -1204,6 +1204,24 @@ function formatEthiopianDate(timestamp: string) {
     "ነሐሴ",
     "ጳጉሜ",
   ];
+
+  const oromoMonths = [
+    "Fulbaana",
+    "Onkololeessa",
+    "Sadaasa",
+    "Muddee",
+    "Amajjii",
+    "Guraandhala",
+    "Bitooteessa",
+    "Ebla",
+    "Caamsaa",
+    "Waxabajjii",
+    "Adooleessa",
+    "Hagayya",
+    "Qaammee",
+  ];
+
+  const months = language === "om" ? oromoMonths : amharicMonths;
 
   return `${months[ethMonth - 1]} ${ethDay} ${ethYear}`;
 }
