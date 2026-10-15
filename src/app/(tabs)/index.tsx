@@ -232,22 +232,38 @@ export default function HomeScreen() {
   const visibleGames = useMemo(() => {
     const cleanSearch = search.trim().toLowerCase();
 
-    return games.filter((game) => {
+    // First keep only games for the selected date.
+    const gamesForSelectedDate = games.filter((game) => {
       if (!game.starts_at) {
         return false;
       }
 
       const gameDate = getAddisDateKey(game.starts_at);
 
-      const matchesDate = !selectedDate || gameDate === selectedDate;
+      return !selectedDate || gameDate === selectedDate;
+    });
 
-      const matchesSearch =
-        !cleanSearch ||
-        game.title.toLowerCase().includes(cleanSearch) ||
-        game.area.toLowerCase().includes(cleanSearch) ||
-        game.organizer.toLowerCase().includes(cleanSearch);
+    // No search: preserve the normal chronological order.
+    if (!cleanSearch) {
+      return gamesForSelectedDate;
+    }
 
-      return matchesDate && matchesSearch;
+    // Search entered: matching games move to the top.
+    return [...gamesForSelectedDate].sort((a, b) => {
+      const aMatches =
+        a.title.toLowerCase().includes(cleanSearch) ||
+        a.area.toLowerCase().includes(cleanSearch) ||
+        a.organizer.toLowerCase().includes(cleanSearch);
+
+      const bMatches =
+        b.title.toLowerCase().includes(cleanSearch) ||
+        b.area.toLowerCase().includes(cleanSearch) ||
+        b.organizer.toLowerCase().includes(cleanSearch);
+
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+
+      return 0;
     });
   }, [games, search, selectedDate]);
 
