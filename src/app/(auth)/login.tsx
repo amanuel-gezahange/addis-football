@@ -44,58 +44,117 @@ export default function LoginScreen() {
       Keyboard.dismiss();
       setLoading(true);
 
-      const redirectTo = Linking.createURL("auth/callback", {
-        scheme: "addisfootball",
-      });
+      // WEB:
+      // Use the real production website callback.
+      // This performs a full-page browser redirect instead of a popup.
+      if (Platform.OS === "web") {
+        const redirectTo = `${window.location.origin}/auth/callback`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo,
+          },
+        });
+
+        if (error) {
+          console.log("Google web OAuth error:", error);
+
+          showMessage(
+            t("login.signInFailed"),
+            error.message,
+          );
+
+          setLoading(false);
+        }
+
+        // On success Supabase redirects the browser,
+        // so nothing else needs to happen here.
+        return;
+      }
+
+      // ANDROID / NATIVE:
+      // Keep using the Addis Football deep link.
+      const redirectTo = Linking.createURL(
+        "auth/callback",
+        {
+          scheme: "addisfootball",
         },
-      });
+      );
+
+      const { data, error } =
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo,
+            skipBrowserRedirect: true,
+          },
+        });
 
       if (error) {
-        console.log("Google OAuth error:", error);
+        console.log(
+          "Google OAuth error:",
+          error,
+        );
 
-        showMessage(t("login.signInFailed"), error.message);
+        showMessage(
+          t("login.signInFailed"),
+          error.message,
+        );
 
         return;
       }
 
       if (!data?.url) {
-        showMessage(t("login.signInFailed"), t("login.unableToStart"));
+        showMessage(
+          t("login.signInFailed"),
+          t("login.unableToStart"),
+        );
 
         return;
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectTo,
-      );
+      const result =
+        await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectTo,
+        );
 
-      if (result.type !== "success" || !result.url) {
+      if (
+        result.type !== "success" ||
+        !result.url
+      ) {
         return;
       }
 
       const returnedUrl = result.url;
 
-      const parsedUrl = Linking.parse(returnedUrl);
+      const parsedUrl =
+        Linking.parse(returnedUrl);
 
       const code =
-        typeof parsedUrl.queryParams?.code === "string"
+        typeof parsedUrl.queryParams?.code ===
+        "string"
           ? parsedUrl.queryParams.code
           : null;
 
+      // PKCE response
       if (code) {
         const { error: exchangeError } =
-          await supabase.auth.exchangeCodeForSession(code);
+          await supabase.auth.exchangeCodeForSession(
+            code,
+          );
 
         if (exchangeError) {
-          console.log("Google code exchange error:", exchangeError);
+          console.log(
+            "Google code exchange error:",
+            exchangeError,
+          );
 
-          showMessage(t("login.signInFailed"), exchangeError.message);
+          showMessage(
+            t("login.signInFailed"),
+            exchangeError.message,
+          );
 
           return;
         }
@@ -104,27 +163,49 @@ export default function LoginScreen() {
         return;
       }
 
-      const hashIndex = returnedUrl.indexOf("#");
+      // Implicit response fallback
+      const hashIndex =
+        returnedUrl.indexOf("#");
 
       if (hashIndex !== -1) {
-        const hash = returnedUrl.substring(hashIndex + 1);
+        const hash =
+          returnedUrl.substring(
+            hashIndex + 1,
+          );
 
-        const params = new URLSearchParams(hash);
+        const params =
+          new URLSearchParams(hash);
 
-        const accessToken = params.get("access_token");
+        const accessToken =
+          params.get("access_token");
 
-        const refreshToken = params.get("refresh_token");
+        const refreshToken =
+          params.get("refresh_token");
 
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+        if (
+          accessToken &&
+          refreshToken
+        ) {
+          const {
+            error: sessionError,
+          } =
+            await supabase.auth.setSession({
+              access_token:
+                accessToken,
+              refresh_token:
+                refreshToken,
+            });
 
           if (sessionError) {
-            console.log("Google session error:", sessionError);
+            console.log(
+              "Google session error:",
+              sessionError,
+            );
 
-            showMessage(t("login.signInFailed"), sessionError.message);
+            showMessage(
+              t("login.signInFailed"),
+              sessionError.message,
+            );
 
             return;
           }
@@ -136,45 +217,64 @@ export default function LoginScreen() {
 
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } =
+        await supabase.auth.getSession();
 
       if (session) {
         router.replace("/");
         return;
       }
 
-      showMessage(t("login.signInFailed"), t("login.sessionFailed"));
+      showMessage(
+        t("login.signInFailed"),
+        t("login.sessionFailed"),
+      );
     } catch (error: any) {
-      console.log("Google sign in error:", error);
+      console.log(
+        "Google sign in error:",
+        error,
+      );
 
       showMessage(
         t("login.somethingWrong"),
-        error?.message || t("login.tryAgain"),
+        error?.message ||
+          t("login.tryAgain"),
       );
     } finally {
+      // On web, successful OAuth navigates away.
+      // This mainly resets Android or failed web attempts.
       setLoading(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["top", "bottom"]}
+    >
       <View style={styles.screen}>
         {/* LANGUAGE */}
 
-        <View style={styles.languageContainer}>
+        <View
+          style={styles.languageContainer}
+        >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="English"
-            onPress={() => setLanguage("en")}
+            onPress={() =>
+              setLanguage("en")
+            }
             style={[
               styles.languageButton,
-              language === "en" && styles.languageButtonActive,
+              language === "en" &&
+                styles.languageButtonActive,
             ]}
           >
             <Text
               style={[
                 styles.languageText,
-                language === "en" && styles.languageTextActive,
+                language === "en" &&
+                  styles.languageTextActive,
               ]}
             >
               English
@@ -184,16 +284,20 @@ export default function LoginScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="አማርኛ"
-            onPress={() => setLanguage("am")}
+            onPress={() =>
+              setLanguage("am")
+            }
             style={[
               styles.languageButton,
-              language === "am" && styles.languageButtonActive,
+              language === "am" &&
+                styles.languageButtonActive,
             ]}
           >
             <Text
               style={[
                 styles.languageText,
-                language === "am" && styles.languageTextActive,
+                language === "am" &&
+                  styles.languageTextActive,
               ]}
             >
               አማርኛ
@@ -203,16 +307,20 @@ export default function LoginScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Oromoo"
-            onPress={() => setLanguage("om")}
+            onPress={() =>
+              setLanguage("om")
+            }
             style={[
               styles.languageButton,
-              language === "om" && styles.languageButtonActive,
+              language === "om" &&
+                styles.languageButtonActive,
             ]}
           >
             <Text
               style={[
                 styles.languageText,
-                language === "om" && styles.languageTextActive,
+                language === "om" &&
+                  styles.languageTextActive,
               ]}
             >
               Oromoo
@@ -225,12 +333,22 @@ export default function LoginScreen() {
         <View style={styles.content}>
           <View style={styles.brand}>
             <View style={styles.logo}>
-              <Ionicons name="football" size={38} color={COLORS.primary} />
+              <Ionicons
+                name="football"
+                size={38}
+                color={COLORS.primary}
+              />
             </View>
 
-            <Text style={styles.title}>Addis Football</Text>
+            <Text style={styles.title}>
+              Addis Football
+            </Text>
 
-            <Text style={styles.subtitle}>{t("login.tagline")}</Text>
+            <Text
+              style={styles.subtitle}
+            >
+              {t("login.tagline")}
+            </Text>
           </View>
 
           {/* GOOGLE */}
@@ -238,43 +356,81 @@ export default function LoginScreen() {
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("login.continueGoogle")}
+              accessibilityLabel={t(
+                "login.continueGoogle",
+              )}
               disabled={loading}
-              onPress={handleGoogleSignIn}
+              onPress={
+                handleGoogleSignIn
+              }
               style={({ pressed }) => [
                 styles.googleButton,
 
-                pressed && !loading && styles.googleButtonPressed,
+                pressed &&
+                  !loading &&
+                  styles.googleButtonPressed,
 
-                loading && styles.googleButtonDisabled,
+                loading &&
+                  styles.googleButtonDisabled,
               ]}
             >
               {loading ? (
                 <>
-                  <ActivityIndicator size="small" color="#202124" />
+                  <ActivityIndicator
+                    size="small"
+                    color="#202124"
+                  />
 
-                  <Text style={styles.googleButtonText}>
-                    {t("login.connecting")}
+                  <Text
+                    style={
+                      styles.googleButtonText
+                    }
+                  >
+                    {t(
+                      "login.connecting",
+                    )}
                   </Text>
                 </>
               ) : (
                 <>
-                  <View style={styles.googleIcon}>
-                    <Text style={styles.googleG}>G</Text>
+                  <View
+                    style={
+                      styles.googleIcon
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.googleG
+                      }
+                    >
+                      G
+                    </Text>
                   </View>
 
-                  <Text style={styles.googleButtonText}>
-                    {t("login.continueGoogle")}
+                  <Text
+                    style={
+                      styles.googleButtonText
+                    }
+                  >
+                    {t(
+                      "login.continueGoogle",
+                    )}
                   </Text>
                 </>
               )}
             </Pressable>
 
-            <Text style={styles.helperText}>{t("login.helper")}</Text>
+            <Text
+              style={styles.helperText}
+            >
+              {t("login.helper")}
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.footer}>Addis Football</Text>
+        <Text style={styles.footer}>
+          Addis Football
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -283,12 +439,14 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor:
+      COLORS.background,
   },
 
   screen: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor:
+      COLORS.background,
     paddingHorizontal: 24,
     paddingBottom: 18,
   },
@@ -322,7 +480,8 @@ const styles = StyleSheet.create({
   },
 
   languageButtonActive: {
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor:
+      COLORS.surfaceAlt,
 
     borderColor: COLORS.border,
   },
@@ -359,7 +518,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
 
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor:
+      COLORS.surfaceAlt,
 
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -380,7 +540,8 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
+    color:
+      COLORS.textSecondary,
 
     fontSize: 17,
     lineHeight: 25,
