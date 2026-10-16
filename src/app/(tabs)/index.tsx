@@ -141,13 +141,6 @@ export default function HomeScreen() {
   /*
     Select Today automatically.
   */
-  useFocusEffect(
-    useCallback(() => {
-      if (!selectedDate && dates.length > 0) {
-        setSelectedDate(dates[0].key);
-      }
-    }, [dates, selectedDate]),
-  );
 
   /*
     Reload whenever Discover
@@ -248,7 +241,7 @@ export default function HomeScreen() {
 
         const gameDate = getAddisDateKey(game.starts_at);
 
-        if (!cleanSearch && selectedDate && gameDate !== selectedDate) {
+        if (selectedDate && gameDate !== selectedDate) {
           return false;
         }
 
@@ -390,13 +383,7 @@ export default function HomeScreen() {
 
               <TextInput
                 value={search}
-                onChangeText={(text) => {
-                  setSearch(text);
-
-                  if (text.trim()) {
-                    setSelectedDate(null);
-                  }
-                }}
+                onChangeText={setSearch}
                 placeholder={t("discover.searchPlaceholder")}
                 placeholderTextColor={COLORS.textMuted}
                 style={styles.searchInput}
