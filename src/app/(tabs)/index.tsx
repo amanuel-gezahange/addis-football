@@ -92,6 +92,15 @@ export default function HomeScreen() {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [selectedCity, setSelectedCity] = useState("Addis Ababa");
   const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const [sortBy, setSortBy] = useState<"soonest" | "price_low" | "spots">(
+    "soonest",
+  );
+
+  const [skillFilter, setSkillFilter] = useState<string | null>(null);
+  const [formatFilter, setFormatFilter] = useState<string | null>(null);
+  const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
 
   /*
     Generate the next 7 days.
@@ -266,6 +275,7 @@ export default function HomeScreen() {
 
         const gameDate = getAddisDateKey(game.starts_at);
 
+        // City
         if (
           selectedCity !== "All Ethiopia" &&
           (game.city || "Addis Ababa").toLowerCase() !==
@@ -274,57 +284,86 @@ export default function HomeScreen() {
           return false;
         }
 
+        // Date
         if (!cleanSearch && selectedDate && gameDate !== selectedDate) {
           return false;
         }
 
-        const searchableText = [
-          // Basic game information
-          game.title,
-          game.organizer,
-          game.area,
-          game.city,
-          game.distance,
-          game.time,
-          game.format,
-          game.skill,
+        // Skill
+        if (
+          skillFilter &&
+          game.skill.toLowerCase() !== skillFilter.toLowerCase()
+        ) {
+          return false;
+        }
 
-          // Price
-          game.price,
-          game.payment_method !== "free" ? `${game.price} ETB` : null,
-          game.payment_method !== "free" ? `${game.price} birr` : null,
+        // Format
+        if (
+          formatFilter &&
+          game.format.toLowerCase() !== formatFilter.toLowerCase()
+        ) {
+          return false;
+        }
 
-          // Currency
-          game.payment_method !== "free" ? "ETB" : null,
-          game.payment_method !== "free" ? "birr" : null,
+        // Free / Paid
+        if (priceFilter === "free" && game.payment_method !== "free") {
+          return false;
+        }
 
-          // Availability
-          game.spots_left,
-          `${game.spots_left} spots`,
-          `${game.spots_left} spots left`,
+        if (priceFilter === "paid" && game.payment_method === "free") {
+          return false;
+        }
 
-          // Payment information
-          game.payment_method,
-          game.payment_provider,
-          game.payment_phone,
-          game.payment_account_name,
+        // Search
+        if (cleanSearch) {
+          const searchableText = [
+            game.title,
+            game.organizer,
+            game.area,
+            game.city,
+            game.distance,
+            game.time,
+            game.format,
+            game.skill,
+            game.price,
+            game.payment_method !== "free" ? `${game.price} ETB` : null,
+            game.payment_method !== "free" ? `${game.price} birr` : null,
+            game.payment_method !== "free" ? "ETB" : null,
+            game.payment_method !== "free" ? "birr" : null,
+            game.spots_left,
+            `${game.spots_left} spots`,
+            `${game.spots_left} spots left`,
+            game.payment_method,
+            game.payment_provider,
+            game.payment_phone,
+            game.payment_account_name,
+            game.payment_method === "free" ? "free" : null,
+            game.payment_method === "venue" ? "venue pay at venue" : null,
+            game.payment_method === "organizer"
+              ? "organizer pay organizer"
+              : null,
+          ]
+            .filter((value) => value !== null && value !== undefined)
+            .map((value) => String(value).toLowerCase())
+            .join(" ");
 
-          // Natural search terms
-          game.payment_method === "free" ? "free" : null,
+          if (!searchableText.includes(cleanSearch)) {
+            return false;
+          }
+        }
 
-          game.payment_method === "venue" ? "venue pay at venue" : null,
-
-          game.payment_method === "organizer"
-            ? "organizer pay organizer"
-            : null,
-        ]
-          .filter((value) => value !== null && value !== undefined)
-          .map((value) => String(value).toLowerCase())
-          .join(" ");
-
-        return searchableText.includes(cleanSearch);
+        return true;
       })
       .sort((a, b) => {
+        if (sortBy === "price_low") {
+          return a.price - b.price;
+        }
+
+        if (sortBy === "spots") {
+          return b.spots_left - a.spots_left;
+        }
+
+        // Default: soonest
         const aTime = a.starts_at
           ? new Date(a.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -335,7 +374,16 @@ export default function HomeScreen() {
 
         return aTime - bTime;
       });
-  }, [games, search, selectedDate, selectedCity]);
+  }, [
+    games,
+    search,
+    selectedDate,
+    selectedCity,
+    skillFilter,
+    formatFilter,
+    priceFilter,
+    sortBy,
+  ]);
 
   const selectedDateLabel = useMemo(() => {
     const quickDate = dates.find((item) => item.key === selectedDate);
@@ -439,6 +487,30 @@ export default function HomeScreen() {
                 </Pressable>
               )}
             </View>
+            <Pressable
+              style={[
+                styles.filterButton,
+                (skillFilter ||
+                  formatFilter ||
+                  priceFilter ||
+                  sortBy !== "soonest") &&
+                  styles.filterButtonActive,
+              ]}
+              onPress={() => setFilterModalVisible(true)}
+            >
+              <Ionicons
+                name="options-outline"
+                size={25}
+                color={
+                  skillFilter ||
+                  formatFilter ||
+                  priceFilter ||
+                  sortBy !== "soonest"
+                    ? "#fff"
+                    : COLORS.primary
+                }
+              />
+            </Pressable>
 
             <Pressable
               style={styles.filterButton}
@@ -722,6 +794,168 @@ export default function HomeScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+        <Modal
+          visible={filterModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setFilterModalVisible(false)}
+        >
+          <View style={styles.filterOverlay}>
+            <View style={styles.filterSheet}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 10 }}
+              >
+                <View style={styles.filterHeader}>
+                  <Text style={styles.filterTitle}>
+                    {t("discover.filterGames")}
+                  </Text>
+
+                  <Pressable onPress={() => setFilterModalVisible(false)}>
+                    <Ionicons name="close" size={26} color={COLORS.text} />
+                  </Pressable>
+                </View>
+             
+              <Text style={styles.filterSectionTitle}>
+                {t("discover.sortBy")}
+              </Text>
+
+              {[
+                ["soonest", t("discover.soonest")],
+                ["price_low", t("discover.lowestPrice")],
+                ["spots", t("discover.mostSpotsAvailable")],
+              ].map(([value, label]) => (
+                <Pressable
+                  key={value}
+                  style={styles.filterOption}
+                  onPress={() =>
+                    setSortBy(value as "soonest" | "price_low" | "spots")
+                  }
+                >
+                  <Text style={styles.filterOptionText}>{label}</Text>
+
+                  <Ionicons
+                    name={
+                      sortBy === value ? "radio-button-on" : "radio-button-off"
+                    }
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                </Pressable>
+              ))}
+
+              <Text style={styles.filterSectionTitle}>
+                {t("discover.price")}
+              </Text>
+
+              {[
+                [null, t("discover.anyPrice")],
+                ["free", t("discover.free")],
+                ["paid", t("discover.paid")],
+              ].map(([value, label]) => (
+                <Pressable
+                  key={label}
+                  style={styles.filterOption}
+                  onPress={() =>
+                    setPriceFilter(value as "free" | "paid" | null)
+                  }
+                >
+                  <Text style={styles.filterOptionText}>{label}</Text>
+
+                  <Ionicons
+                    name={
+                      priceFilter === value
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                </Pressable>
+              ))}
+              <Text style={styles.filterSectionTitle}>
+                {t("discover.skillLevel")}
+              </Text>
+
+              {[
+                [null, t("discover.anySkill")],
+                ["Beginner", t("discover.beginner")],
+                ["Intermediate", t("discover.intermediate")],
+                ["Advanced", t("discover.advanced")],
+              ].map(([value, label]) => (
+                <Pressable
+                  key={label}
+                  style={styles.filterOption}
+                  onPress={() => setSkillFilter(value)}
+                >
+                  <Text style={styles.filterOptionText}>{label}</Text>
+
+                  <Ionicons
+                    name={
+                      skillFilter === value
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                </Pressable>
+              ))}
+              <Text style={styles.filterSectionTitle}>
+                {t("discover.gameFormat")}
+              </Text>
+
+              {[
+                [null, t("discover.anyFormat")],
+                ["5v5", "5v5"],
+                ["6v6", "6v6"],
+                ["7v7", "7v7"],
+                ["11v11", "11v11"],
+              ].map(([value, label]) => (
+                <Pressable
+                  key={label}
+                  style={styles.filterOption}
+                  onPress={() => setFormatFilter(value)}
+                >
+                  <Text style={styles.filterOptionText}>{label}</Text>
+
+                  <Ionicons
+                    name={
+                      formatFilter === value
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                </Pressable>
+              ))}
+              <View style={styles.filterActions}>
+                <Pressable
+                  style={styles.resetFilterButton}
+                  onPress={() => {
+                    setSortBy("soonest");
+                    setSkillFilter(null);
+                    setFormatFilter(null);
+                    setPriceFilter(null);
+                  }}
+                >
+                  <Text style={styles.resetFilterText}>{t("discover.reset")}</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.showGamesButton}
+                  onPress={() => setFilterModalVisible(false)}
+                >
+                  <Text style={styles.showGamesText}>
+                    {t("discover.showGames")}
+                  </Text>
+                </Pressable>
+              </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -892,13 +1126,13 @@ function EthiopianCalendar({
   const weekdays =
     language === "om"
       ? [
-          "Dilbata",
           "Wiixata",
           "Kibxata",
           "Roobii",
           "Kamiisa",
           "Jimaata",
           "Sanbata",
+          "Dilbata",
         ]
       : ["ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
 
@@ -909,10 +1143,10 @@ function EthiopianCalendar({
 
   const [firstYear, firstMonth, firstDay] = firstDate.split("-").map(Number);
 
-const firstWeekday =
-  (new Date(
-    Date.UTC(firstYear, firstMonth - 1, firstDay, 12),
-  ).getUTCDay() + 6) % 7;
+  const firstWeekday =
+    (new Date(Date.UTC(firstYear, firstMonth - 1, firstDay, 12)).getUTCDay() +
+      6) %
+    7;
 
   const cells: Array<number | null> = [
     ...Array(firstWeekday).fill(null),
@@ -1016,6 +1250,96 @@ const firstWeekday =
 }
 
 const styles = StyleSheet.create({
+  filterButtonActive: {
+    backgroundColor: COLORS.primary,
+  },
+  filterOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+
+  filterSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 20,
+    maxHeight: "85%",
+  },
+
+  filterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  filterTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginTop: 18,
+    marginBottom: 6,
+  },
+
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
+
+  filterOptionText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+
+  filterActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+  },
+
+  resetFilterButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  resetFilterText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.primary,
+  },
+
+  showGamesButton: {
+    flex: 2,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  showGamesText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 18,

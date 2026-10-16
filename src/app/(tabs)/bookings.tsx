@@ -126,6 +126,15 @@ export default function BookingsScreen() {
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [bookingFilterVisible, setBookingFilterVisible] = useState(false);
+
+  const [bookingSortBy, setBookingSortBy] = useState<"upcoming" | "latest">(
+    "upcoming",
+  );
+
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<
+    "all" | "confirmed" | "payment_required" | "waitlisted"
+  >("all");
 
   useFocusEffect(
     useCallback(() => {
@@ -263,6 +272,31 @@ export default function BookingsScreen() {
           return false;
         }
 
+        // Booking status filter.
+        if (
+          bookingStatusFilter === "confirmed" &&
+          booking.status !== "confirmed"
+        ) {
+          return false;
+        }
+
+        if (
+          bookingStatusFilter === "payment_required" &&
+          !(
+            booking.status === "pending_payment" &&
+            booking.payment_status === "pending"
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          bookingStatusFilter === "waitlisted" &&
+          booking.status !== "waitlisted"
+        ) {
+          return false;
+        }
+
         // Search EVERYTHING useful about the booking.
         if (cleanSearch) {
           const searchableText = [
@@ -335,9 +369,9 @@ export default function BookingsScreen() {
           ? new Date(b.games.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
 
-        return aTime - bTime;
+        return bookingSortBy === "latest" ? bTime - aTime : aTime - bTime;
       });
-  }, [bookings, search, selectedDate]);
+  }, [bookings, search, selectedDate, bookingStatusFilter, bookingSortBy]);
 
   async function submitOrganizerPayment(booking: Booking) {
     if (
@@ -550,6 +584,25 @@ export default function BookingsScreen() {
               </Pressable>
             )}
           </View>
+
+          <Pressable
+            style={[
+              styles.filterButton,
+              (bookingStatusFilter !== "all" || bookingSortBy !== "upcoming") &&
+                styles.bookingFilterButtonActive,
+            ]}
+            onPress={() => setBookingFilterVisible(true)}
+          >
+            <Ionicons
+              name="options-outline"
+              size={25}
+              color={
+                bookingStatusFilter !== "all" || bookingSortBy !== "upcoming"
+                  ? "#fff"
+                  : COLORS.primary
+              }
+            />
+          </Pressable>
 
           <Pressable
             style={[
@@ -1292,6 +1345,110 @@ export default function BookingsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      <Modal
+        visible={bookingFilterVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setBookingFilterVisible(false)}
+      >
+        <View style={styles.bookingFilterOverlay}>
+          <View style={styles.bookingFilterSheet}>
+            <View style={styles.bookingFilterHeader}>
+              <Text style={styles.bookingFilterTitle}>
+                {t("bookings.filterBookings")}
+              </Text>
+
+              <Pressable onPress={() => setBookingFilterVisible(false)}>
+                <Ionicons name="close" size={26} color={COLORS.text} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.bookingFilterSectionTitle}>
+              {t("bookings.sortBy")}
+            </Text>
+
+            {[
+              ["upcoming", t("bookings.upcomingFirst")],
+              ["latest", t("bookings.latestFirst")],
+            ].map(([value, label]) => (
+              <Pressable
+                key={value}
+                style={styles.bookingFilterOption}
+                onPress={() => setBookingSortBy(value as "upcoming" | "latest")}
+              >
+                <Text style={styles.bookingFilterOptionText}>{label}</Text>
+
+                <Ionicons
+                  name={
+                    bookingSortBy === value
+                      ? "radio-button-on"
+                      : "radio-button-off"
+                  }
+                  size={22}
+                  color={COLORS.primary}
+                />
+              </Pressable>
+            ))}
+
+            <Text style={styles.bookingFilterSectionTitle}>
+              {t("bookings.status")}
+            </Text>
+
+            {[
+              ["all", t("bookings.allBookings")],
+              ["confirmed", t("bookings.confirmed")],
+              ["payment_required", t("bookings.paymentRequired")],
+              ["waitlisted", t("bookings.waitlisted")],
+            ].map(([value, label]) => (
+              <Pressable
+                key={value}
+                style={styles.bookingFilterOption}
+                onPress={() =>
+                  setBookingStatusFilter(
+                    value as
+                      "all" | "confirmed" | "payment_required" | "waitlisted",
+                  )
+                }
+              >
+                <Text style={styles.bookingFilterOptionText}>{label}</Text>
+
+                <Ionicons
+                  name={
+                    bookingStatusFilter === value
+                      ? "radio-button-on"
+                      : "radio-button-off"
+                  }
+                  size={22}
+                  color={COLORS.primary}
+                />
+              </Pressable>
+            ))}
+
+            <View style={styles.bookingFilterActions}>
+              <Pressable
+                style={styles.bookingResetButton}
+                onPress={() => {
+                  setBookingSortBy("upcoming");
+                  setBookingStatusFilter("all");
+                }}
+              >
+                <Text style={styles.bookingResetText}>
+                  {t("bookings.reset")}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.bookingShowButton}
+                onPress={() => setBookingFilterVisible(false)}
+              >
+                <Text style={styles.bookingShowButtonText}>
+                  {t("bookings.showBookings")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <ConfirmModal
         visible={selectedBooking !== null}
@@ -1694,13 +1851,13 @@ function EthiopianCalendar({
   const weekdays =
     language === "om"
       ? [
-          "Dilbata",
           "Wiixata",
           "Kibxata",
           "Roobii",
           "Kamiisa",
           "Jimaata",
           "Sanbata",
+          "Dilbata",
         ]
       : ["ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
 
@@ -1711,10 +1868,10 @@ function EthiopianCalendar({
 
   const [firstYear, firstMonth, firstDay] = firstDate.split("-").map(Number);
 
-const firstWeekday =
-  (new Date(
-    Date.UTC(firstYear, firstMonth - 1, firstDay, 12),
-  ).getUTCDay() + 6) % 7;
+  const firstWeekday =
+    (new Date(Date.UTC(firstYear, firstMonth - 1, firstDay, 12)).getUTCDay() +
+      6) %
+    7;
 
   const cells: Array<number | null> = [
     ...Array(firstWeekday).fill(null),
@@ -1815,6 +1972,96 @@ const firstWeekday =
 }
 
 const styles = StyleSheet.create({
+  bookingFilterOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+
+  bookingFilterSheet: {
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 30,
+  },
+
+  bookingFilterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  bookingFilterTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+
+  bookingFilterSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginTop: 18,
+    marginBottom: 6,
+  },
+
+  bookingFilterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
+  },
+
+  bookingFilterOptionText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+
+  bookingFilterActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+  },
+
+  bookingResetButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bookingResetText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.primary,
+  },
+
+  bookingShowButton: {
+    flex: 2,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bookingShowButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.background,
+  },
+  bookingFilterButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
   searchRow: {
     flexDirection: "row",
     gap: 10,

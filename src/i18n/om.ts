@@ -61,6 +61,28 @@ const om = {
     joinWaitlist: "Tarree Eegumsaa Makami",
 
     payWithTelebirr: "Telebirriin Kaffali",
+    filterGames: "Taphoota Calali",
+sortBy: "Akkaataa tartiibaa",
+soonest: "Dhihoo jalqabu",
+lowestPrice: "Gatii gadi aanaa",
+mostSpotsAvailable: "Bakka baay'ee qabu",
+
+price: "Gatii",
+anyPrice: "Gatii kamiyyuu",
+free: "Bilisa",
+paid: "Kaffaltii qaba",
+
+skillLevel: "Sadarkaa dandeettii",
+anySkill: "Sadarkaa kamiyyuu",
+beginner: "Jalqabaa",
+intermediate: "Giddugaleessa",
+advanced: "Olaanaa",
+
+gameFormat: "Akkaataa taphaa",
+anyFormat: "Akkaataa kamiyyuu",
+
+reset: "Deebisi",
+showGames: "Taphoota Agarsiisi",
   },
 
   gameCard: {
@@ -433,6 +455,17 @@ const om = {
 
     cancelNormalMessage:
       "Bakki kee ni gadhiifama; nama tarree eegumsaa keessa jiruuf kennamuu danda'a.",
+      filterBookings: "Qabannoowwan Calali",
+sortBy: "Akkaataa tartiibaa",
+upcomingFirst: "Kan dhufu jalqaba",
+latestFirst: "Kan boodaa jalqaba",
+
+status: "Haala",
+allBookings: "Qabannoowwan hunda",
+paymentRequired: "Kaffaltiin barbaachisa",
+
+reset: "Deebisi",
+showBookings: "Qabannoowwan Agarsiisi",
   },
 
   createGame: {

@@ -61,6 +61,28 @@ const am = {
     joinWaitlist: "ተጠባባቂ ዝርዝር ግባ",
 
     payWithTelebirr: "በቴሌብር ክፈል",
+    filterGames: "ጨዋታዎችን አጣራ",
+sortBy: "ደርድር በ",
+soonest: "በቅርብ ጊዜ",
+lowestPrice: "ዝቅተኛ ዋጋ",
+mostSpotsAvailable: "ብዙ ክፍት ቦታዎች",
+
+price: "ዋጋ",
+anyPrice: "ማንኛውም ዋጋ",
+free: "ነፃ",
+paid: "የሚከፈልበት",
+
+skillLevel: "የችሎታ ደረጃ",
+anySkill: "ማንኛውም ደረጃ",
+beginner: "ጀማሪ",
+intermediate: "መካከለኛ",
+advanced: "ከፍተኛ",
+
+gameFormat: "የጨዋታ አይነት",
+anyFormat: "ማንኛውም አይነት",
+
+reset: "ዳግም አስጀምር",
+showGames: "ጨዋታዎችን አሳይ",
   },
 
   gameCard: {
@@ -401,6 +423,17 @@ const am = {
     cancelRefundMessage: "ቦታዎ ይለቀቃል እና የቴሌብር ተመላሽ ክፍያ ይጠየቃል።",
 
     cancelNormalMessage: "ቦታዎ ይለቀቃል እና በተጠባባቂ ዝርዝር ላይ ላለ ሌላ ተጫዋች ሊሰጥ ይችላል።",
+    filterBookings: "ምዝገባዎችን አጣራ",
+sortBy: "ደርድር በ",
+upcomingFirst: "ቅርብ ጨዋታዎች መጀመሪያ",
+latestFirst: "የኋለኛ ጨዋታዎች መጀመሪያ",
+
+status: "ሁኔታ",
+allBookings: "ሁሉም ምዝገባዎች",
+paymentRequired: "ክፍያ ያስፈልጋል",
+
+reset: "ዳግም አስጀምር",
+showBookings: "ምዝገባዎችን አሳይ",
   },
 
   createGame: {

@@ -61,6 +61,28 @@ const en = {
     joinWaitlist: "Join Waitlist",
 
     payWithTelebirr: "Pay with Telebirr",
+    filterGames: "Filter games",
+    sortBy: "Sort by",
+    soonest: "Soonest",
+    lowestPrice: "Lowest price",
+    mostSpotsAvailable: "Most spots available",
+
+    price: "Price",
+    anyPrice: "Any price",
+    free: "Free",
+    paid: "Paid",
+
+    skillLevel: "Skill level",
+    anySkill: "Any skill",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+
+    gameFormat: "Game format",
+    anyFormat: "Any format",
+
+    reset: "Reset",
+    showGames: "Show games",
   },
 
   gameCard: {
@@ -428,6 +450,17 @@ const en = {
 
     cancelNormalMessage:
       "Your spot will be released and may be given to someone on the waitlist.",
+    filterBookings: "Filter bookings",
+    sortBy: "Sort by",
+    upcomingFirst: "Upcoming first",
+    latestFirst: "Latest first",
+
+    status: "Status",
+    allBookings: "All bookings",
+    paymentRequired: "Payment required",
+
+    reset: "Reset",
+    showBookings: "Show bookings",
   },
 
   createGame: {
