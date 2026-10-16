@@ -248,13 +248,8 @@ export default function HomeScreen() {
 
         const gameDate = getAddisDateKey(game.starts_at);
 
-        // Keep the existing calendar/date filter.
-        if (selectedDate && gameDate !== selectedDate) {
+        if (!cleanSearch && selectedDate && gameDate !== selectedDate) {
           return false;
-        }
-
-        if (!cleanSearch) {
-          return true;
         }
 
         const searchableText = [
@@ -467,7 +462,7 @@ export default function HomeScreen() {
 
           {/* SELECTED DATE */}
 
-          {selectedDateLabel && (
+          {selectedDateLabel && !search.trim() && (
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>{t("discover.games")}</Text>
