@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import Fuse from "fuse.js";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
@@ -261,52 +260,70 @@ export default function HomeScreen() {
     }).format(new Date(timestamp));
   }
 
-  const fuse = useMemo(
-    () =>
-      new Fuse(games, {
-        keys: [
-          { name: "title", weight: 3 },
-          { name: "area", weight: 3 },
-          { name: "city", weight: 2 },
-          { name: "organizer", weight: 2 },
-          { name: "format", weight: 1.5 },
-          { name: "skill", weight: 1.5 },
-          { name: "payment_provider", weight: 1 },
-          { name: "payment_account_name", weight: 1 },
-        ],
-        threshold: 0.35,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-      }),
-    [games],
-  );
-
   const visibleGames = useMemo(() => {
-    const cleanSearch = search.trim();
+    const query = search.trim().toLocaleLowerCase();
 
-    // Search mode: Fuse handles matching, typo tolerance, and relevance.
-    // Keep the selected city, but ignore date and advanced filters while searching.
-    if (cleanSearch) {
-      const searchResults = fuse.search(cleanSearch).map((result) => result.item);
+    // Standard app-style search:
+    // - instant from the first character
+    // - case-insensitive
+    // - searches the fields a player naturally expects
+    // - search results are ranked by relevance
+    if (query) {
+      return games
+        .filter((game) => {
+          if (!game.starts_at) {
+            return false;
+          }
 
-      return searchResults.filter((game) => {
-        if (!game.starts_at) {
-          return false;
-        }
+          if (
+            selectedCity !== "All Ethiopia" &&
+            (game.city || "Addis Ababa").toLocaleLowerCase() !==
+              selectedCity.toLocaleLowerCase()
+          ) {
+            return false;
+          }
 
-        if (
-          selectedCity !== "All Ethiopia" &&
-          (game.city || "Addis Ababa").toLowerCase() !==
-            selectedCity.toLowerCase()
-        ) {
-          return false;
-        }
+          const title = game.title.toLocaleLowerCase();
+          const area = game.area.toLocaleLowerCase();
+          const organizer = game.organizer.toLocaleLowerCase();
+          const city = (game.city || "").toLocaleLowerCase();
 
-        return true;
-      });
+          return (
+            title.includes(query) ||
+            area.includes(query) ||
+            organizer.includes(query) ||
+            city.includes(query)
+          );
+        })
+        .sort((a, b) => {
+          const aTitle = a.title.toLocaleLowerCase();
+          const bTitle = b.title.toLocaleLowerCase();
+          const aArea = a.area.toLocaleLowerCase();
+          const bArea = b.area.toLocaleLowerCase();
+
+          const rank = (title: string, area: string) => {
+            if (title.startsWith(query)) return 0;
+            if (area.startsWith(query)) return 1;
+            if (title.includes(query)) return 2;
+            if (area.includes(query)) return 3;
+            return 4;
+          };
+
+          const rankDifference =
+            rank(aTitle, aArea) - rank(bTitle, bArea);
+
+          if (rankDifference !== 0) {
+            return rankDifference;
+          }
+
+          const aTime = new Date(a.starts_at!).getTime();
+          const bTime = new Date(b.starts_at!).getTime();
+
+          return aTime - bTime;
+        });
     }
 
-    // Normal browsing mode.
+    // Normal Discover browsing when there is no search query.
     return games
       .filter((game) => {
         if (!game.starts_at) {
@@ -315,8 +332,8 @@ export default function HomeScreen() {
 
         if (
           selectedCity !== "All Ethiopia" &&
-          (game.city || "Addis Ababa").toLowerCase() !==
-            selectedCity.toLowerCase()
+          (game.city || "Addis Ababa").toLocaleLowerCase() !==
+            selectedCity.toLocaleLowerCase()
         ) {
           return false;
         }
@@ -329,14 +346,14 @@ export default function HomeScreen() {
 
         if (
           skillFilter &&
-          game.skill.toLowerCase() !== skillFilter.toLowerCase()
+          game.skill.toLocaleLowerCase() !== skillFilter.toLocaleLowerCase()
         ) {
           return false;
         }
 
         if (
           formatFilter &&
-          game.format.toLowerCase() !== formatFilter.toLowerCase()
+          game.format.toLocaleLowerCase() !== formatFilter.toLocaleLowerCase()
         ) {
           return false;
         }
@@ -372,7 +389,6 @@ export default function HomeScreen() {
       });
   }, [
     games,
-    fuse,
     search,
     selectedDate,
     selectedCity,

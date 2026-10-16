@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import Fuse from "fuse.js";
 
 import { useFocusEffect } from "expo-router";
 
@@ -239,65 +238,84 @@ export default function BookingsScreen() {
     }
   }
 
-  const searchableBookings = useMemo(
-    () =>
-      bookings.map((booking) => ({
-        ...booking,
-        searchTitle: booking.games?.title ?? "",
-        searchOrganizer: booking.games?.organizer ?? "",
-        searchArea: booking.games?.area ?? "",
-        searchDistance: booking.games?.distance ?? "",
-        searchTime: booking.games?.time ?? "",
-        searchFormat: booking.games?.format ?? "",
-        searchSkill: booking.games?.skill ?? "",
-        searchPrice: booking.games?.price ?? "",
-        searchPricePaid: booking.price_paid ?? "",
-        searchPaymentMethod: booking.games?.payment_method ?? "",
-        searchPaymentProvider: booking.games?.payment_provider ?? "",
-        searchPaymentPhone: booking.games?.payment_phone ?? "",
-        searchPaymentAccountName: booking.games?.payment_account_name ?? "",
-        searchBookingStatus: booking.status,
-        searchPaymentStatus: booking.payment_status ?? "",
-      })),
-    [bookings],
-  );
-
-  const bookingFuse = useMemo(
-    () =>
-      new Fuse(searchableBookings, {
-        keys: [
-          { name: "searchTitle", weight: 3 },
-          { name: "searchArea", weight: 3 },
-          { name: "searchOrganizer", weight: 2 },
-          { name: "searchFormat", weight: 1.5 },
-          { name: "searchSkill", weight: 1.5 },
-          { name: "searchPaymentProvider", weight: 1 },
-          { name: "searchPaymentAccountName", weight: 1 },
-          { name: "searchPaymentPhone", weight: 1 },
-          { name: "searchPrice", weight: 1 },
-          { name: "searchPricePaid", weight: 1 },
-          { name: "searchPaymentMethod", weight: 1 },
-          { name: "searchBookingStatus", weight: 1 },
-          { name: "searchPaymentStatus", weight: 1 },
-          { name: "searchDistance", weight: 0.5 },
-          { name: "searchTime", weight: 0.5 },
-        ],
-        threshold: 0.35,
-        ignoreLocation: true,
-        minMatchCharLength: 2,
-      }),
-    [searchableBookings],
-  );
-
   const visibleBookings = useMemo(() => {
     const now = Date.now();
-    const cleanSearch = search.trim();
+    const query = search.trim().toLocaleLowerCase();
 
-    const source = cleanSearch
-      ? bookingFuse.search(cleanSearch).map((result) => result.item)
-      : searchableBookings;
+    // Standard app-style search:
+    // - instant from the first character
+    // - case-insensitive
+    // - searches only fields a player naturally expects
+    // - ranks title/area matches first
+    if (query) {
+      return bookings
+        .filter((booking) => {
+          const game = booking.games;
 
-    return source
+          if (!game?.starts_at) {
+            return false;
+          }
+
+          if (
+            booking.status === "cancelled_by_player" ||
+            booking.status === "cancelled_by_organizer"
+          ) {
+            return false;
+          }
+
+          const gameEndTime = game.ends_at
+            ? new Date(game.ends_at).getTime()
+            : new Date(game.starts_at).getTime();
+
+          if (gameEndTime < now) {
+            return false;
+          }
+
+          const title = (game.title ?? "").toLocaleLowerCase();
+          const area = (game.area ?? "").toLocaleLowerCase();
+          const organizer = (game.organizer ?? "").toLocaleLowerCase();
+
+          return (
+            title.includes(query) ||
+            area.includes(query) ||
+            organizer.includes(query)
+          );
+        })
+        .sort((a, b) => {
+          const aTitle = (a.games?.title ?? "").toLocaleLowerCase();
+          const bTitle = (b.games?.title ?? "").toLocaleLowerCase();
+          const aArea = (a.games?.area ?? "").toLocaleLowerCase();
+          const bArea = (b.games?.area ?? "").toLocaleLowerCase();
+
+          const rank = (title: string, area: string) => {
+            if (title.startsWith(query)) return 0;
+            if (area.startsWith(query)) return 1;
+            if (title.includes(query)) return 2;
+            if (area.includes(query)) return 3;
+            return 4;
+          };
+
+          const rankDifference =
+            rank(aTitle, aArea) - rank(bTitle, bArea);
+
+          if (rankDifference !== 0) {
+            return rankDifference;
+          }
+
+          const aTime = a.games?.starts_at
+            ? new Date(a.games.starts_at).getTime()
+            : Number.MAX_SAFE_INTEGER;
+
+          const bTime = b.games?.starts_at
+            ? new Date(b.games.starts_at).getTime()
+            : Number.MAX_SAFE_INTEGER;
+
+          return aTime - bTime;
+        });
+    }
+
+    // Normal Bookings browsing when there is no search query.
+    return bookings
       .filter((booking) => {
         const game = booking.games;
 
@@ -305,7 +323,6 @@ export default function BookingsScreen() {
           return false;
         }
 
-        // Hide cancelled bookings.
         if (
           booking.status === "cancelled_by_player" ||
           booking.status === "cancelled_by_organizer"
@@ -313,19 +330,12 @@ export default function BookingsScreen() {
           return false;
         }
 
-        // Hide past bookings after the game ends.
         const gameEndTime = game.ends_at
           ? new Date(game.ends_at).getTime()
           : new Date(game.starts_at).getTime();
 
         if (gameEndTime < now) {
           return false;
-        }
-
-        // While searching, Fuse handles discovery across all upcoming bookings.
-        // Date and booking-status filters are temporarily ignored.
-        if (cleanSearch) {
-          return true;
         }
 
         if (selectedDate && getAddisDateKey(game.starts_at) !== selectedDate) {
@@ -359,11 +369,6 @@ export default function BookingsScreen() {
         return true;
       })
       .sort((a, b) => {
-        // Preserve Fuse relevance order while searching.
-        if (cleanSearch) {
-          return 0;
-        }
-
         const aTime = a.games?.starts_at
           ? new Date(a.games.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -375,8 +380,7 @@ export default function BookingsScreen() {
         return bookingSortBy === "latest" ? bTime - aTime : aTime - bTime;
       });
   }, [
-    searchableBookings,
-    bookingFuse,
+    bookings,
     search,
     selectedDate,
     bookingStatusFilter,
