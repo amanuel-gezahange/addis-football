@@ -390,7 +390,13 @@ export default function HomeScreen() {
 
               <TextInput
                 value={search}
-                onChangeText={setSearch}
+                onChangeText={(text) => {
+                  setSearch(text);
+
+                  if (text.trim()) {
+                    setSelectedDate(null);
+                  }
+                }}
                 placeholder={t("discover.searchPlaceholder")}
                 placeholderTextColor={COLORS.textMuted}
                 style={styles.searchInput}
@@ -462,7 +468,7 @@ export default function HomeScreen() {
 
           {/* SELECTED DATE */}
 
-          {selectedDateLabel && !search.trim() && (
+          {selectedDateLabel && (
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>{t("discover.games")}</Text>
