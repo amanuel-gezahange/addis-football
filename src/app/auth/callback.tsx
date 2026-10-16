@@ -109,17 +109,18 @@ export default function AuthCallbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
+container: {
+  flex: 1,
+  backgroundColor: "#FFFFFF",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 24,
+},
 
-  text: {
-    color: COLORS.textSecondary,
-    fontSize: 16,
-    marginTop: 16,
-  },
+text: {
+  color: "#717171",
+  fontSize: 16,
+  fontWeight: "600",
+  marginTop: 16,
+},
 });

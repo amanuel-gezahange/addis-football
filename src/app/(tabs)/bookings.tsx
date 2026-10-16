@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import { useCallback, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
@@ -108,7 +108,11 @@ export default function BookingsScreen() {
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
 
   const dateLocale =
-    language === "om" ? "om-ET-u-ca-gregory" : "en-US-u-ca-gregory";
+    language === "am"
+      ? "am-ET-u-ca-gregory"
+      : language === "om"
+        ? "om-ET-u-ca-gregory"
+        : "en-US-u-ca-gregory";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
 
@@ -295,8 +299,7 @@ export default function BookingsScreen() {
             return 4;
           };
 
-          const rankDifference =
-            rank(aTitle, aArea) - rank(bTitle, bArea);
+          const rankDifference = rank(aTitle, aArea) - rank(bTitle, bArea);
 
           if (rankDifference !== 0) {
             return rankDifference;
@@ -379,13 +382,7 @@ export default function BookingsScreen() {
 
         return bookingSortBy === "latest" ? bTime - aTime : aTime - bTime;
       });
-  }, [
-    bookings,
-    search,
-    selectedDate,
-    bookingStatusFilter,
-    bookingSortBy,
-  ]);
+  }, [bookings, search, selectedDate, bookingStatusFilter, bookingSortBy]);
 
   async function submitOrganizerPayment(booking: Booking) {
     if (
@@ -574,13 +571,7 @@ export default function BookingsScreen() {
             <TextInput
               value={search}
               onChangeText={setSearch}
-              placeholder={
-                language === "am"
-                  ? "ቦታ፣ ጨዋታ ወይም አዘጋጅ ይፈልጉ"
-                  : language === "om"
-                    ? "Bakka, tapha ykn qopheessaa barbaadi"
-                    : "Search your bookings"
-              }
+              placeholder={t("bookings.searchPlaceholder")}
               placeholderTextColor={COLORS.textMuted}
               style={styles.searchInput}
               autoCapitalize="none"
@@ -594,11 +585,7 @@ export default function BookingsScreen() {
                 onPress={() => setSearch("")}
                 hitSlop={8}
               >
-                <Ionicons
-                  name="close"
-                  size={23}
-                  color={COLORS.textSecondary}
-                />
+                <Ionicons name="close" size={23} color={COLORS.textSecondary} />
               </Pressable>
             )}
 
@@ -618,8 +605,7 @@ export default function BookingsScreen() {
                 name="options-outline"
                 size={21}
                 color={
-                  bookingStatusFilter !== "all" ||
-                  bookingSortBy !== "upcoming"
+                  bookingStatusFilter !== "all" || bookingSortBy !== "upcoming"
                     ? "#fff"
                     : COLORS.primary
                 }
@@ -633,6 +619,8 @@ export default function BookingsScreen() {
               selectedDate && styles.calendarButtonActive,
             ]}
             onPress={() => setCalendarVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("bookings.openCalendar")}
           >
             <Ionicons
               name="calendar-outline"
@@ -754,7 +742,6 @@ export default function BookingsScreen() {
               return (
                 <View
                   key={booking.id}
-
                   style={[styles.card, isCancelled && styles.cancelledCard]}
                 >
                   <View style={styles.cardContent}>
@@ -792,24 +779,45 @@ export default function BookingsScreen() {
                       </View>
                     )}
 
-                    <Text
-                      style={[
-                        styles.gameTitle,
-
-                        isCancelled && styles.cancelledGameTitle,
-                      ]}
+                    <Pressable
+                      onPress={() => router.push(`/game/${game.id}`)}
+                      disabled={isCancelled}
                     >
-                      {game.title}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.gameTitle,
 
-                    <Text style={styles.organizer}>
-                      {t("bookings.by")} {game.organizer}
-                    </Text>
+                          isCancelled && styles.cancelledGameTitle,
+                        ]}
+                      >
+                        {game.title}
+                      </Text>
 
-                    {game.starts_at ? (
+                      <Text style={styles.organizer}>
+                        {t("bookings.by")} {game.organizer}
+                      </Text>
+
+                      {game.starts_at ? (
+                        <View style={styles.infoRow}>
+                          <Ionicons
+                            name="calendar-outline"
+
+                            size={18}
+
+                            color={COLORS.textSecondary}
+                          />
+
+                          <Text style={styles.infoText}>
+                            {language === "am" || language === "om"
+                              ? formatEthiopianDate(game.starts_at, language)
+                              : formatAddisDate(game.starts_at, dateLocale)}
+                          </Text>
+                        </View>
+                      ) : null}
+
                       <View style={styles.infoRow}>
                         <Ionicons
-                          name="calendar-outline"
+                          name="location-outline"
 
                           size={18}
 
@@ -817,58 +825,42 @@ export default function BookingsScreen() {
                         />
 
                         <Text style={styles.infoText}>
-                          {language === "am" || language === "om"
-                            ? formatEthiopianDate(game.starts_at, language)
-                            : formatAddisDate(game.starts_at, dateLocale)}
+                          {game.area}
+
+                          {game.distance ? ` • ${game.distance}` : ""}
                         </Text>
                       </View>
-                    ) : null}
 
-                    <View style={styles.infoRow}>
-                      <Ionicons
-                        name="location-outline"
+                      <View style={styles.infoRow}>
+                        <Ionicons
+                          name="time-outline"
 
-                        size={18}
+                          size={18}
 
-                        color={COLORS.textSecondary}
-                      />
+                          color={COLORS.textSecondary}
+                        />
 
-                      <Text style={styles.infoText}>
-                        {game.area}
-
-                        {game.distance ? ` • ${game.distance}` : ""}
-                      </Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Ionicons
-                        name="time-outline"
-
-                        size={18}
-
-                        color={COLORS.textSecondary}
-                      />
-
-                      <Text style={styles.infoText}>{game.time}</Text>
-                    </View>
-
-                    <View style={styles.bottomRow}>
-                      <View style={styles.formatBadge}>
-                        <Text style={styles.formatText}>{game.format}</Text>
+                        <Text style={styles.infoText}>{game.time}</Text>
                       </View>
 
-                      <Text
-                        style={[
-                          styles.price,
+                      <View style={styles.bottomRow}>
+                        <View style={styles.formatBadge}>
+                          <Text style={styles.formatText}>{game.format}</Text>
+                        </View>
 
-                          isCancelled && styles.cancelledPrice,
-                        ]}
-                      >
-                        {game.payment_method === "free"
-                          ? t("bookings.free")
-                          : `${booking.price_paid ?? game.price} ETB`}
-                      </Text>
-                    </View>
+                        <Text
+                          style={[
+                            styles.price,
+
+                            isCancelled && styles.cancelledPrice,
+                          ]}
+                        >
+                          {game.payment_method === "free"
+                            ? t("bookings.free")
+                            : `${booking.price_paid ?? game.price} ETB`}
+                        </Text>
+                      </View>
+                    </Pressable>
 
                     {/* ORGANIZER PAYMENT: PAYMENT REQUIRED */}
 
@@ -1224,19 +1216,11 @@ export default function BookingsScreen() {
             <View style={styles.calendarHeader}>
               <View>
                 <Text style={styles.calendarTitle}>
-                  {language === "am"
-                    ? "ቀን ይምረጡ"
-                    : language === "om"
-                      ? "Guyyaa fili"
-                      : "Choose a date"}
+                  {t("bookings.chooseDate")}
                 </Text>
 
                 <Text style={styles.calendarSubtitle}>
-                  {language === "am"
-                    ? "የወደፊት ቀን ቦታ ማስያዝዎን ይፈልጉ"
-                    : language === "om"
-                      ? "Guyyaa fuulduraa irratti qabannaa kee barbaadi"
-                      : "Filter your upcoming bookings by date"}
+                  {t("bookings.calendarSubtitle")}
                 </Text>
               </View>
 

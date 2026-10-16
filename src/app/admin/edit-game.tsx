@@ -356,7 +356,8 @@ ends_at
     }
 
     if (!city.trim()) {
-      showMessage(t("editGame.missingInformation"), "City is required");
+      showMessage(t("editGame.missingInformation"), t("editGame.cityRequired"));
+
       return;
     }
 
@@ -749,24 +750,23 @@ ends_at
 
     if (failedRefunds > 0) {
       showMessage(
-        "Game cancelled",
-
-        `The game was cancelled. ${failedRefunds} refund${
-          failedRefunds === 1 ? "" : "s"
-        } still require attention.`,
+        t("editGame.gameCancelled"),
+        t("editGame.refundsNeedAttention").replace(
+          "{count}",
+          String(failedRefunds),
+        ),
       );
     } else if (initiatedRefunds > 0) {
       showMessage(
-        "Game cancelled",
-
-        `${initiatedRefunds} player refund${
-          initiatedRefunds === 1 ? "" : "s"
-        } started automatically.`,
+        t("editGame.gameCancelled"),
+        t("editGame.refundsStartedAutomatically").replace(
+          "{count}",
+          String(initiatedRefunds),
+        ),
       );
     } else {
       showMessage(
         t("editGame.gameCancelled"),
-
         t("editGame.cancelledSuccessfully"),
       );
     }
@@ -988,7 +988,7 @@ ends_at
             editable={!isCancelled}
           />
 
-          <FieldLabel text="City" />
+          <FieldLabel text={t("editGame.city")} />
 
           <TextInput
             style={[styles.input, isCancelled && styles.disabledInput]}
@@ -999,7 +999,7 @@ ends_at
             editable={!isCancelled}
           />
 
-          <FieldLabel text="Google Maps link (optional)" />
+          <FieldLabel text={t("editGame.googleMapsLinkOptional")} />
 
           <TextInput
             style={[styles.input, isCancelled && styles.disabledInput]}
@@ -1130,7 +1130,7 @@ ends_at
 
             onChangeText={setSkill}
 
-            placeholder="Intermediate"
+            placeholder={t("discover.intermediate")}
 
             placeholderTextColor="#9A9A9A"
 

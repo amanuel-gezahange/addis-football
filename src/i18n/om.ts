@@ -24,6 +24,11 @@ const om = {
   },
 
   discover: {
+    allEthiopia: "Itoophiyaa guutuu",
+    chooseCity: "Magaalaa fili",
+    openCalendar: "Kaalaandarii bani",
+    chooseDate: "Guyyaa fili",
+    calendarSubtitle: "Guyyaa fuulduraa barbaadde irratti tapha barbaadi",
     title: "Taphoota",
 
     subtitle: "Finfinneetti kubbaa miilaa taphadhu",
@@ -56,36 +61,41 @@ const om = {
 
     spotsLeft: "bakka hafe",
 
-    joinGame: "Tapha Makami",
+    joinGame: "Tapha makami",
 
-    joinWaitlist: "Tarree Eegumsaa Makami",
+    joinWaitlist: "Tarree eegumsaa makami",
 
     payWithTelebirr: "Telebirriin Kaffali",
-    filterGames: "Taphoota Calali",
-sortBy: "Akkaataa tartiibaa",
-soonest: "Dhihoo jalqabu",
-lowestPrice: "Gatii gadi aanaa",
-mostSpotsAvailable: "Bakka baay'ee qabu",
+    filterGames: "Taphoota calali",
+    sortBy: "Tartiiba",
+    soonest: "Kan dhihoo jalqabu",
+    lowestPrice: "Gatii gadi aanaa",
+    mostSpotsAvailable: "Bakka baay'ee kan qabu",
 
-price: "Gatii",
-anyPrice: "Gatii kamiyyuu",
-free: "Bilisa",
-paid: "Kaffaltii qaba",
+    price: "Gatii",
+    anyPrice: "Gatii kamiyyuu",
+    free: "Bilisa",
+    paid: "Kaffaltii qaba",
 
-skillLevel: "Sadarkaa dandeettii",
-anySkill: "Sadarkaa kamiyyuu",
-beginner: "Jalqabaa",
-intermediate: "Giddugaleessa",
-advanced: "Olaanaa",
+    skillLevel: "Sadarkaa dandeettii",
+    anySkill: "Sadarkaa kamiyyuu",
+    beginner: "Jalqabaa",
+    intermediate: "Giddugaleessa",
+    advanced: "Olaanaa",
 
-gameFormat: "Akkaataa taphaa",
-anyFormat: "Akkaataa kamiyyuu",
+    gameFormat: "Akkaataa taphaa",
+    anyFormat: "Akkaataa kamiyyuu",
 
-reset: "Deebisi",
-showGames: "Taphoota Agarsiisi",
+    reset: "Haqi",
+    showGames: "Taphoota agarsiisi",
   },
 
   gameCard: {
+    viewDetails: "Bal'inaan ilaali",
+    viewGameDetails: "{game}. Odeeffannoo taphaa bal'inaan ilaali.",
+    viewDetailsFor: "Odeeffannoo {game} bal'inaan ilaali",
+    removeFromFavorites: "{game} filannoo keessaa haqi",
+    saveToFavorites: "{game} filannootti dabali",
     gameFull: "Taphi guuteera",
 
     payLater: "Booda kaffala",
@@ -101,17 +111,17 @@ showGames: "Taphoota Agarsiisi",
 
     spotsLeft: "bakka hafe",
 
-    free: "BILISA",
+    free: "Bilisa",
 
     available: "Bakka qaba",
 
-    reserveSpot: "Bakka Qabadhu",
+    reserveSpot: "Bakka qabadhu",
 
     reserving: "Bakka qabaa jira...",
 
-    payOrganizer: "Qopheessaaf Kaffali",
+    payOrganizer: "Qopheessaaf kaffali",
 
-    payAtVenue: "Dirree irratti Kaffali",
+    payAtVenue: "Dirree irratti kaffali",
 
     paymentRequired: "Kaffaltiin barbaachisa",
 
@@ -175,7 +185,7 @@ showGames: "Taphoota Agarsiisi",
 
     couldNotSubmitPayment: "Kaffaltii kee galchuun hin danda'amne.",
 
-    allLevels: "Sadarkaa Hunda",
+    allLevels: "Sadarkaa hunda",
 
     beginner: "Jalqabaa",
 
@@ -187,9 +197,9 @@ showGames: "Taphoota Agarsiisi",
 
     waitlisted: "Tarree eegumsaa keessa",
 
-    joinGame: "Tapha Makami",
+    joinGame: "Tapha makami",
 
-    joinWaitlist: "Tarree Eegumsaa Makami",
+    joinWaitlist: "Tarree eegumsaa makami",
 
     joining: "Makamaa jira...",
 
@@ -199,7 +209,7 @@ showGames: "Taphoota Agarsiisi",
 
     checkingPayment: "Kaffaltii mirkaneessaa jira...",
 
-    checkPayment: "Kaffaltii Mirkaneessi",
+    checkPayment: "Kaffaltii mirkaneessi",
 
     payWithTelebirr: "Telebirriin Kaffali",
 
@@ -248,7 +258,7 @@ showGames: "Taphoota Agarsiisi",
 
     paymentCouldNotStart: "Kaffaltii Telebirr jalqabuun hin danda'amne.",
 
-    bookingCouldNotBeCreated: "Qabannaa kee uumuu hin danda'amne.",
+    bookingCouldNotBeCreated: "Qabannaa kee galmeessuun hin danda'amne.",
 
     waitlistCouldNotBeJoined: "Tarree eegumsaa makamuun hin danda'amne.",
 
@@ -284,7 +294,7 @@ showGames: "Taphoota Agarsiisi",
     startingPayment: "Kaffaltii Telebirr jalqabaa jira...",
 
     paymentReferenceMissing:
-      "Kaffaltiin jalqabameera, garuu wabii kaffaltii argachuun hin danda'amne.",
+      "Kaffaltiin jalqabameera, garuu lakkoofsi wabii kaffaltii hin argamne.",
 
     paymentRequestSent:
       "Gaaffiin Telebirr ergameera. Kaffaltii mirkaneessaa jira...",
@@ -300,6 +310,10 @@ showGames: "Taphoota Agarsiisi",
   },
 
   bookings: {
+    searchPlaceholder: "Tapha, bakka ykn qopheessaa barbaadi",
+    openCalendar: "Kaalaandarii bani",
+    chooseDate: "Guyyaa fili",
+    calendarSubtitle: "Qabannaa dhufaa jiru guyyaadhaan barbaadi",
     title: "Taphoota Koo",
 
     subtitle: "Taphoota qabatte fi seenaa qabannaa kee",
@@ -309,7 +323,7 @@ showGames: "Taphoota Agarsiisi",
     noBookings: "Qabannaan ammatti hin jiru",
 
     noBookingsDescription:
-      "Taphoonni ati makamtuu fi tarree eegumsaa keessa galtu asitti mul'atu.",
+      "Taphoonni ati makamte ykn tarree eegumsaa keessa jirtu asitti mul'atu.",
 
     confirmed: "Mirkanaa'eera",
 
@@ -352,7 +366,7 @@ showGames: "Taphoota Agarsiisi",
 
     paymentConfirmedByOrganizer: "Kaffaltiin qopheessaan mirkanaa'eera",
 
-    payAtVenue: "Dirree irratti Kaffali",
+    payAtVenue: "Dirree irratti kaffali",
 
     payAtVenueInstruction: "Yeroo geessu {amount} ETB kaffali.",
 
@@ -387,7 +401,7 @@ showGames: "Taphoota Agarsiisi",
     couldNotCancelBooking: "Qabannaa haquun hin danda'amne.",
 
     cancelOrganizerPaidMessage:
-      "{game} haquu? Qopheessaaf kallattiin kaffalteetta. Maallaqni deebifamu kamiyyuu qopheessaa waliin irratti walii galuu qabda.",
+      "{game} haquu? Qopheessaaf kallattiin kaffalteetta. Maallaqa deebii argachuuf qopheessaa qunnami.",
 
     // Waitlist / legacy Telebirr-Chapa flow
 
@@ -410,7 +424,7 @@ showGames: "Taphoota Agarsiisi",
 
     checkingPayment: "Kaffaltii mirkaneessaa jira...",
 
-    checkPayment: "Kaffaltii Mirkaneessi",
+    checkPayment: "Kaffaltii mirkaneessi",
 
     refundOrganizer:
       "ETB deebifameera sababni isaas qopheessaan tapha kana haqeera.",
@@ -455,23 +469,25 @@ showGames: "Taphoota Agarsiisi",
 
     cancelNormalMessage:
       "Bakki kee ni gadhiifama; nama tarree eegumsaa keessa jiruuf kennamuu danda'a.",
-      filterBookings: "Qabannoowwan Calali",
-sortBy: "Akkaataa tartiibaa",
-upcomingFirst: "Kan dhufu jalqaba",
-latestFirst: "Kan boodaa jalqaba",
+    filterBookings: "Qabannoowwan calali",
+    sortBy: "Tartiiba",
+    upcomingFirst: "Kan dhufu jalqaba",
+    latestFirst: "Kan boodaa jalqaba",
 
-status: "Haala",
-allBookings: "Qabannoowwan hunda",
-paymentRequired: "Kaffaltiin barbaachisa",
+    status: "Haala",
+    allBookings: "Qabannoowwan hunda",
+    paymentRequired: "Kaffaltiin barbaachisa",
 
-reset: "Deebisi",
-showBookings: "Qabannoowwan Agarsiisi",
+    reset: "Haqi",
+    showBookings: "Qabannoowwan agarsiisi",
   },
 
   createGame: {
+    city: "Magaalaa",
+    googleMapsLinkOptional: "Liinkii Google Maps (dirqama miti)",
     back: "Duubatti",
 
-    title: "Tapha Uumi",
+    title: "Tapha uumi",
 
     subtitle: "Tapha kubbaa miilaa haaraa dabali",
 
@@ -483,7 +499,7 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     distance: "Fageenya",
 
-    gameSchedule: "Sagantaa Taphaa",
+    gameSchedule: "Sagantaa taphaa",
 
     scheduleHint: "Guyyaa fi sa'aatii taphaa yeroo Finfinneetiin galchi.",
 
@@ -505,12 +521,12 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     freeDescription: "Taphattoonni kaffaltii malee makamuu danda'u.",
 
-    payAtVenue: "Dirree irratti Kaffali",
+    payAtVenue: "Dirree irratti kaffali",
 
     payAtVenueDescription:
       "Taphattoonni amma bakka qabatu; yeroo dhufan kaffalu.",
 
-    payOrganizerDirectly: "Qopheessaaf Kallattiin Kaffali",
+    payOrganizerDirectly: "Qopheessaaf kallattiin kaffali",
 
     payOrganizerDescription:
       "Taphattoonni Addis Football alatti kallattiin qopheessaaf kaffalu.",
@@ -528,7 +544,7 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     accountName: "Maqaa akkaawuntii",
 
-    availableSpots: "Bakka jiran",
+    availableSpots: "Bakka hafan",
 
     imageUrlOptional: "URL suuraa (filannoo)",
 
@@ -581,9 +597,14 @@ showBookings: "Qabannoowwan Agarsiisi",
   },
 
   editGame: {
-    manageGames: "Taphoota Bulchi",
+    city: "Magaalaa",
+    cityRequired: "Magaalaan barbaachisa",
+    googleMapsLinkOptional: "Liinkii Google Maps (dirqama miti)",
+    refundsNeedAttention: "Refundiin {count} ammallee hordoffii barbaada.",
+    refundsStartedAutomatically: "Refundiin taphattoota {count} ofumaan jalqabameera.",
+    manageGames: "Taphoota bulchi",
 
-    title: "Tapha Gulaali",
+    title: "Tapha gulaali",
 
     subtitle: "Odeeffannoo taphaa haaromsi",
 
@@ -596,7 +617,7 @@ showBookings: "Qabannoowwan Agarsiisi",
     playersCannotJoin:
       "Taphattoonni kana booda tapha kana seenuu hin danda'an.",
 
-    currentAvailability: "Bakka amma jiru",
+    currentAvailability: "Bakka hafan",
 
     spotsLeft: "bakka hafe",
 
@@ -617,7 +638,7 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     distance: "Fageenya",
 
-    gameSchedule: "Sagantaa Taphaa",
+    gameSchedule: "Sagantaa taphaa",
 
     scheduleHint: "Guyyaa fi sa'aatii yeroo Finfinneetiin",
 
@@ -643,13 +664,13 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     freeDescription: "Taphattoonni kaffaltii malee makamu",
 
-    payAtVenue: "Dirree irratti Kaffali",
+    payAtVenue: "Dirree irratti kaffali",
 
     payAtVenueSubtitle: "Taphattoonni yeroo dhufan kaffalu",
 
     payAtVenueDescription: "Taphattoonni yeroo dhufan kaffalu",
 
-    payOrganizerDirectly: "Qopheessaaf Kallattiin Kaffali",
+    payOrganizerDirectly: "Qopheessaaf kallattiin kaffali",
 
     payOrganizerSubtitle:
       "Taphattoonni Telebirr ykn akkaawuntii biraa keetti kaffalu",
@@ -679,11 +700,11 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     imageUrlOptional: "URL suuraa (filannoo)",
 
-    saveChanges: "Jijjiirama Olkaa'i",
+    saveChanges: "Jijjiirama olkaa'i",
 
     saving: "Olkaa'aa jira...",
 
-    cancelGame: "Tapha Haqi",
+    cancelGame: "Tapha haqi",
 
     cancelling: "Haqaa jira...",
 
@@ -695,9 +716,9 @@ showBookings: "Qabannoowwan Agarsiisi",
     cancelGameMessage:
       "Kun tapha kana ni haqa; taphattoonni haaraan akka hin makamne taasisa.",
 
-    keepGame: "Tapha Tursiisi",
+    keepGame: "Tapha tursiisi",
 
-    confirmCancel: "Tapha Haqi",
+    confirmCancel: "Tapha haqi",
 
     missingInformation: "Odeeffannoon hir'ateera",
 
@@ -754,19 +775,20 @@ showBookings: "Qabannoowwan Agarsiisi",
   },
 
   manageGames: {
+    organizerAccess: "Seensa qopheessaa — taphoota kee qofa ilaalaa jirta",
     loading: "Taphoota fe'aa jira...",
 
     back: "Duubatti",
 
-    title: "Taphoota Bulchi",
+    title: "Taphoota bulchi",
 
     adminSubtitle: "Taphoota kubbaa miilaa hunda bulchi",
 
     organizerSubtitle: "Taphoota kubbaa miilaa kee bulchi",
 
-    adminAccess: "Seensa bulchaa — taphoota hunda ilaalaa jirta",
+    adminAccess: "Taphoota hunda ilaaluu dandeessa",
 
-    organizerAccess: "Seensa qopheessaa — taphoota kee qofa ilaalaa jirta",
+    organizerAccess: "Taphoota kee qofa ilaaluu dandeessa",
 
     noGames: "Taphoonni hin jiran",
 
@@ -774,7 +796,7 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     createFirstGame: "Tapha kubbaa miilaa kee isa jalqabaa uumi.",
 
-    createGame: "Tapha Uumi",
+    createGame: "Tapha uumi",
 
     cancelled: "Haqameera",
 
@@ -798,80 +820,66 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     organizer: "Qopheessaa",
 
-    viewCancelledGame: "Tapha Haqame Ilaali",
+    viewCancelledGame: "Tapha haqame ilaali",
 
-    editGame: "Tapha Gulaali",
+    editGame: "Tapha gulaali",
   },
 
   paymentRequests: {
+    title: "Gaaffii Kaffaltii",
+    subtitle: "Kaffaltii taphattootaa ilaaliitii mirkaneessi",
+    back: "Deebi'i",
+    goBack: "Duubatti deebi'i",
+
     error: "Dogoggora",
-
-    mustBeSignedIn: "Jalqaba akkaawuntii keetti seenuu qabda.",
-
-    notAllowed: "Hayyamni hin jiru",
-
+    mustBeSignedIn: "Seenuun si barbaachisa.",
+    notAllowed: "Hayyama hin qabdu",
     organizersAdminsOnly:
-      "Gaaffii kaffaltii ilaaluu kan danda'an qopheessitootaa fi bulchitoota qofa.",
+      "Gaaffii kaffaltii ilaalu kan danda'an qopheessitootaa fi adminoota qofa.",
 
-    footballGame: "Tapha Kubbaa Miilaa",
-
+    footballGame: "Tapha kubbaa miilaa",
     playerFallback: "Taphataa",
 
     couldNotLoadPayments: "Kaffaltiiwwan fe'uun hin danda'amne",
-
-    pleaseTryAgain: "Maaloo irra deebi'ii yaali.",
-
+    pleaseTryAgain: "Irra deebi'ii yaali.",
     paymentCouldNotBeConfirmed: "Kaffaltii mirkaneessuun hin danda'amne.",
-
     couldNotConfirmPayment: "Kaffaltii mirkaneessuun hin danda'amne",
 
-    recentlySubmitted: "Dhiyeenya kana galfame",
-
-    loading: "Gaaffiiwwan kaffaltii fe'aa jira...",
-
-    title: "Gaaffiiwwan Kaffaltii",
-
-    subtitle: "Akkaawuntii kee erga ilaaltee booda kaffaltii mirkaneessi",
+    recentlySubmitted: "Dhiheenyatti ergame",
+    loading: "Gaaffii kaffaltii fe'aa jira...",
 
     noRequests: "Gaaffiin kaffaltii hin jiru",
-
     noRequestsDescription:
-      "Kaffaltiin taphattootaa mirkaneessa eegaa jiru asitti mul'ata.",
+      "Kaffaltiin taphataa mirkaneeffamuu eeggatu hin jiru.",
 
-    submitted: "Galfameera",
-
+    submitted: "Ergameera",
     player: "Taphataa",
-
     phone: "Bilbila",
-
     method: "Mala kaffaltii",
-
-    organizerPayment: "Kaffaltii qopheessaa",
-
-    amountToVerify: "Hanga kaffaltii mirkaneessuu",
-
-    paymentFallback: "kaffaltii",
+    organizerPayment: "Kaffaltii qopheessaaf",
+    amountToVerify: "Maallaqa mirkaneessuu",
+    paymentFallback: "herrega kaffaltii",
 
     checkAccountBeforeConfirming:
-      "Osoo hin mirkaneessin dura akkaawuntii {provider} kee ilaali.",
+      "Mirkaneessuu kee dura herrega {provider} kee ilaalii kaffaltiin akka siif gale mirkaneeffadhu.",
 
-    markPaid: "Akka Kaffalame Mallatteessi",
+    markPaid: "Kaffalameera",
   },
 
   profile: {
     title: "Profaayilii",
 
-    paymentRequests: "Gaaffiiwwan Kaffaltii",
+    paymentRequests: "Gaaffiiwwan kaffaltii",
 
     paymentRequestsSubtitle: "Kaffaltii taphattootaa mirkaneessi",
 
     subtitle: "Odeeffannoo taphataa kee",
 
-    fullName: "Maqaa Guutuu",
+    fullName: "Maqaa guutuu",
 
     phone: "Bilbila",
 
-    skillLevel: "Sadarkaa Dandeettii",
+    skillLevel: "Sadarkaa dandeettii",
 
     beginner: "Jalqabaa",
 
@@ -879,17 +887,17 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     advanced: "Olaanaa",
 
-    saveProfile: "Profaayilii Olkaa'i",
+    saveProfile: "Profaayilii olkaa'i",
 
-    createGame: "Tapha Uumi",
+    createGame: "Tapha uumi",
 
-    manageGames: "Taphoota Bulchi",
+    manageGames: "Taphoota bulchi",
 
     signOut: "Ba'i",
 
     language: "Afaan",
 
-    footballPlayer: "Taphataa Kubbaa Miilaa",
+    footballPlayer: "Taphataa kubbaa miilaa",
 
     phoneNumber: "Lakkoofsa bilbilaa",
 
@@ -901,7 +909,7 @@ showBookings: "Qabannoowwan Agarsiisi",
 
     phoneHelp: "Lakkoofsi bilbilaa kee akkaawuntii kee waliin walqabateera.",
 
-    adminTools: "Meeshaalee Bulchaa",
+    adminTools: "Meeshaalee bulchaa",
 
     adminToolsSubtitle: "Taphoota kubbaa miilaa bulchi",
 
@@ -949,6 +957,40 @@ showBookings: "Qabannoowwan Agarsiisi",
       "Google'n seenuun xumurameera, garuu appichi session uumuu hin dandeenye.",
     somethingWrong: "Rakkoon uumameera",
     tryAgain: "Google'n itti fufuun hin danda'amne. Irra deebi'ii yaali.",
+  },
+  gameDetails: {
+    discover: "Barbaadi",
+    gameNotFound: "Tapha hin argamne.",
+    couldNotLoadGame: "Tapha kana fe'uu hin dandeenye.",
+    gameUnavailable: "Taphi kun hin jiru",
+    gameCouldNotBeFound: "Tapha kana argachuun hin danda'amne.",
+
+    gameDetails: "Bal'ina taphaa",
+    notSpecified: "Hin ibsamne",
+    format: "Gosa taphaa",
+    allLevels: "Sadarkaa hunda",
+    skillLevel: "Sadarkaa dandeettii",
+
+    gameFull: "Taphi guuteera",
+    spotLeft: "Bakka {count} hafe",
+    spotsLeft: "Bakka {count} hafan",
+    availability: "Bakka hafe",
+
+    hostedBy: "Qopheessaa",
+    organizer: "Qopheessaa",
+    gameOrganizer: "Qopheessaa taphaa",
+
+    location: "Bakka",
+    viewOnMap: "Kaartaa irratti ilaali",
+
+    payment: "Kaffaltii",
+    free: "Bilisaa",
+    noPaymentRequired: "Tapha kanaaf kaffaltiin hin barbaachisu.",
+    paymentAtVenue: "Kaffaltiin bakka taphaatti kaffalama.",
+    organizerPaymentInstructions:
+      "Bakka kee erga qabatte booda odeeffannoon kaffaltii siif mul'ata.",
+    paymentDetailsAfterReservation:
+      "Bakka kee yeroo qabattu odeeffannoon kaffaltii siif mul'ata.",
   },
 };
 

@@ -35,9 +35,7 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const confirmColor = destructive
-    ? "#FF747A"
-    : COLORS.primary;
+  const confirmColor = destructive ? "#C13515" : "#087EA4";
 
   return (
     <Modal
@@ -76,18 +74,14 @@ export default function ConfirmModal({
                   ? "warning-outline"
                   : "help-circle-outline"
               }
-              size={28}
+              size={27}
               color={confirmColor}
             />
           </View>
 
-          <Text style={styles.title}>
-            {title}
-          </Text>
+          <Text style={styles.title}>{title}</Text>
 
-          <Text style={styles.message}>
-            {message}
-          </Text>
+          <Text style={styles.message}>{message}</Text>
 
           <View style={styles.buttons}>
             <Pressable
@@ -95,6 +89,7 @@ export default function ConfirmModal({
                 styles.button,
                 styles.cancelButton,
                 pressed && styles.pressed,
+                loading && styles.disabled,
               ]}
               onPress={onCancel}
               disabled={loading}
@@ -123,18 +118,22 @@ export default function ConfirmModal({
                     : "checkmark"
                 }
                 size={18}
-                color={confirmColor}
+                color={
+                  destructive
+                    ? "#C13515"
+                    : "#07111F"
+                }
               />
 
               <Text
                 style={[
                   styles.confirmButtonText,
-                  { color: confirmColor },
+                  destructive
+                    ? styles.destructiveButtonText
+                    : styles.primaryButtonText,
                 ]}
               >
-                {loading
-                  ? "Please wait..."
-                  : confirmText}
+                {loading ? "Please wait..." : confirmText}
               </Text>
             </Pressable>
           </View>
@@ -147,7 +146,7 @@ export default function ConfirmModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.72)",
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
@@ -156,42 +155,52 @@ const styles = StyleSheet.create({
   modal: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#E5E5E5",
     padding: 22,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+
+    elevation: 8,
   },
 
   iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 18,
   },
 
   normalIconContainer: {
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: "#EAF8FC",
   },
 
   destructiveIconContainer: {
-    backgroundColor: "#351E20",
+    backgroundColor: "#FDEEEE",
   },
 
   title: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.4,
   },
 
   message: {
-    color: COLORS.textSecondary,
+    color: "#717171",
     fontSize: 15,
     lineHeight: 22,
-    marginTop: 9,
+    marginTop: 8,
   },
 
   buttons: {
@@ -208,39 +217,48 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: 6,
+    paddingHorizontal: 12,
   },
 
   cancelButton: {
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#DDDDDD",
   },
 
   cancelButtonText: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 15,
     fontWeight: "700",
   },
 
   confirmButton: {
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: COLORS.primary,
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
 
   destructiveButton: {
-    backgroundColor: "#351E20",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#7A3437",
+    borderColor: "#E0A6A6",
   },
 
   confirmButtonText: {
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "700",
+  },
+
+  primaryButtonText: {
+    color: "#07111F",
+  },
+
+  destructiveButtonText: {
+    color: "#C13515",
   },
 
   pressed: {
-    opacity: 0.75,
+    opacity: 0.72,
   },
 
   disabled: {

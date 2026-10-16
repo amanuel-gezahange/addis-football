@@ -24,6 +24,11 @@ const am = {
   },
 
   discover: {
+    allEthiopia: "መላው ኢትዮጵያ",
+    chooseCity: "ከተማ ይምረጡ",
+    openCalendar: "የቀን መቁጠሪያ ይክፈቱ",
+    chooseDate: "ቀን ይምረጡ",
+    calendarSubtitle: "በሚፈልጉት የወደፊት ቀን ጨዋታ ይፈልጉ",
     title: "ጨዋታዎች",
 
     subtitle: "በአዲስ አበባ እግር ኳስ ይጫወቱ",
@@ -44,9 +49,9 @@ const am = {
 
     noGamesFound: "ምንም ጨዋታ አልተገኘም",
 
-    noGamesForDay: "ለዚህ ቀን የተያዘ መጪ ጨዋታ የለም።",
+    noGamesForDay: "በዚህ ቀን ጨዋታ የለም።",
 
-    noSearchResults: "ሌላ ፍለጋ ይሞክሩ ወይም ሌላ ቀን ይምረጡ።",
+    noSearchResults: "ሌላ ቃል ይፈልጉ ወይም ሌላ ቀን ይምረጡ።",
 
     available: "ቦታ አለ",
 
@@ -62,30 +67,35 @@ const am = {
 
     payWithTelebirr: "በቴሌብር ክፈል",
     filterGames: "ጨዋታዎችን አጣራ",
-sortBy: "ደርድር በ",
-soonest: "በቅርብ ጊዜ",
-lowestPrice: "ዝቅተኛ ዋጋ",
-mostSpotsAvailable: "ብዙ ክፍት ቦታዎች",
+    sortBy: "አደራደር",
+    soonest: "በቅርብ ጊዜ",
+    lowestPrice: "ዝቅተኛ ዋጋ",
+    mostSpotsAvailable: "ብዙ ቦታ ያለው",
 
-price: "ዋጋ",
-anyPrice: "ማንኛውም ዋጋ",
-free: "ነፃ",
-paid: "የሚከፈልበት",
+    price: "ዋጋ",
+    anyPrice: "ማንኛውም ዋጋ",
+    free: "ነፃ",
+    paid: "የሚከፈልበት",
 
-skillLevel: "የችሎታ ደረጃ",
-anySkill: "ማንኛውም ደረጃ",
-beginner: "ጀማሪ",
-intermediate: "መካከለኛ",
-advanced: "ከፍተኛ",
+    skillLevel: "የችሎታ ደረጃ",
+    anySkill: "ማንኛውም ደረጃ",
+    beginner: "ጀማሪ",
+    intermediate: "መካከለኛ",
+    advanced: "ከፍተኛ",
 
-gameFormat: "የጨዋታ አይነት",
-anyFormat: "ማንኛውም አይነት",
+    gameFormat: "የጨዋታ አይነት",
+    anyFormat: "ማንኛውም አይነት",
 
-reset: "ዳግም አስጀምር",
-showGames: "ጨዋታዎችን አሳይ",
+    reset: "እንደነበረ መልስ",
+    showGames: "ጨዋታዎችን አሳይ",
   },
 
   gameCard: {
+    viewDetails: "ዝርዝር ይመልከቱ",
+    viewGameDetails: "{game}። የጨዋታውን ዝርዝር ይመልከቱ።",
+    viewDetailsFor: "የ{game}ን ዝርዝር ይመልከቱ",
+    removeFromFavorites: "{game}ን ከተወዳጆች ያስወግዱ",
+    saveToFavorites: "{game}ን ወደ ተወዳጆች ያክሉ",
     livePaid: "ተከፍሏል",
 
     payLater: "በኋላ እከፍላለሁ",
@@ -278,6 +288,10 @@ showGames: "ጨዋታዎችን አሳይ",
   },
 
   bookings: {
+    searchPlaceholder: "ጨዋታ፣ ቦታ ወይም አዘጋጅ ይፈልጉ",
+    openCalendar: "የቀን መቁጠሪያ ይክፈቱ",
+    chooseDate: "ቀን ይምረጡ",
+    calendarSubtitle: "የሚመጡ ቦታ ማስያዣዎችዎን በቀን ይፈልጉ",
     title: "የእኔ ጨዋታዎች",
 
     subtitle: "የጨዋታ ምዝገባዎችዎ እና ታሪክ",
@@ -292,7 +306,7 @@ showGames: "ጨዋታዎችን አሳይ",
 
     waitlisted: "በተጠባባቂ ዝርዝር",
 
-    paymentPending: "ክፍያ በመጠባበቅ ላይ",
+    paymentPending: "ክፍያ ይጠበቃል",
 
     cancelled: "ተሰርዟል",
 
@@ -347,7 +361,7 @@ showGames: "ጨዋታዎችን አሳይ",
 
     organizer: "አዘጋጅ",
 
-    paymentContactNumber: "የክፍያ/መገናኛ ቁጥር",
+    paymentContactNumber: "የክፍያ ስልክ ቁጥር",
 
     callOrganizer: "አዘጋጁን ይደውሉ",
 
@@ -364,7 +378,7 @@ showGames: "ጨዋታዎችን አሳይ",
     couldNotCancelBooking: "ምዝገባውን መሰረዝ አልተቻለም።",
 
     cancelOrganizerPaidMessage:
-      "{game} ይሰረዝ? ለአዘጋጁ በቀጥታ ከፍለዋል። ማንኛውም ተመላሽ ክፍያ ከአዘጋጁ ጋር መስተናገድ አለበት።",
+      "{game} ይሰረዝ? ለአዘጋጁ በቀጥታ ከፍለዋል። ስለ ተመላሽ ክፍያ አዘጋጁን ያነጋግሩ።",
 
     // Waitlist / legacy Telebirr-Chapa flow
 
@@ -424,19 +438,21 @@ showGames: "ጨዋታዎችን አሳይ",
 
     cancelNormalMessage: "ቦታዎ ይለቀቃል እና በተጠባባቂ ዝርዝር ላይ ላለ ሌላ ተጫዋች ሊሰጥ ይችላል።",
     filterBookings: "ምዝገባዎችን አጣራ",
-sortBy: "ደርድር በ",
-upcomingFirst: "ቅርብ ጨዋታዎች መጀመሪያ",
-latestFirst: "የኋለኛ ጨዋታዎች መጀመሪያ",
+    sortBy: "አደራደር",
+    upcomingFirst: "ቅርብ ጨዋታዎች መጀመሪያ",
+    latestFirst: "አዲሶቹ መጀመሪያ",
 
-status: "ሁኔታ",
-allBookings: "ሁሉም ምዝገባዎች",
-paymentRequired: "ክፍያ ያስፈልጋል",
+    status: "ሁኔታ",
+    allBookings: "ሁሉም ምዝገባዎች",
+    paymentRequired: "ክፍያ ያስፈልጋል",
 
-reset: "ዳግም አስጀምር",
-showBookings: "ምዝገባዎችን አሳይ",
+    reset: "እንደነበረ መልስ",
+    showBookings: "ምዝገባዎችን አሳይ",
   },
 
   createGame: {
+    city: "ከተማ",
+    googleMapsLinkOptional: "የGoogle Maps ሊንክ (አማራጭ)",
     back: "ተመለስ",
 
     title: "ጨዋታ ፍጠር",
@@ -493,7 +509,7 @@ showBookings: "ምዝገባዎችን አሳይ",
 
     accountName: "የአካውንት ስም",
 
-    availableSpots: "ያሉ ቦታዎች",
+    availableSpots: "የቀሩ ቦታዎች",
 
     imageUrlOptional: "የምስል URL (አማራጭ)",
 
@@ -545,6 +561,11 @@ showBookings: "ምዝገባዎችን አሳይ",
   },
 
   editGame: {
+    city: "ከተማ",
+    cityRequired: "ከተማ ያስፈልጋል",
+    googleMapsLinkOptional: "የGoogle Maps ሊንክ (አማራጭ)",
+    refundsNeedAttention: "{count} ተመላሽ ክፍያ አሁንም ክትትል ያስፈልገዋል።",
+    refundsStartedAutomatically: "ለ{count} ተጫዋቾች ተመላሽ ክፍያ በራስ-ሰር ተጀምሯል።",
     manageGames: "ጨዋታዎችን አስተዳድር",
 
     title: "ጨዋታ አርትዕ",
@@ -559,7 +580,7 @@ showBookings: "ምዝገባዎችን አሳይ",
 
     playersCannotJoin: "ተጫዋቾች ከእንግዲህ ይህን ጨዋታ መቀላቀል አይችሉም።",
 
-    currentAvailability: "አሁን ያለው ቦታ",
+    currentAvailability: "የቀሩ ቦታዎች",
 
     spotsLeft: "ቦታዎች ቀርተዋል",
 
@@ -625,9 +646,9 @@ showBookings: "ምዝገባዎችን አሳይ",
 
     organizerPaymentDetailsHint: "ተጫዋቾች ቦታ ከያዙ በኋላ ይህን መረጃ ያያሉ።",
 
-    paymentProvider: "የክፍያ አቅራቢ",
+    paymentProvider: "የክፍያ ዘዴ",
 
-    paymentMethod: "የክፍያ አቅራቢ",
+    paymentMethod: "የክፍያ ዘዴ",
 
     paymentPhoneNumber: "የክፍያ ስልክ ቁጥር",
 
@@ -709,6 +730,7 @@ showBookings: "ምዝገባዎችን አሳይ",
   },
 
   manageGames: {
+    organizerAccess: "የአዘጋጅ መዳረሻ — የራስዎን ጨዋታዎች ብቻ እያዩ ነው",
     loading: "ጨዋታዎችን በመጫን ላይ...",
 
     back: "ተመለስ",
@@ -719,9 +741,9 @@ showBookings: "ምዝገባዎችን አሳይ",
 
     organizerSubtitle: "የእርስዎን የእግር ኳስ ጨዋታዎች ያስተዳድሩ",
 
-    adminAccess: "የአስተዳዳሪ መዳረሻ — ሁሉንም ጨዋታዎች በማየት ላይ",
+    adminAccess: "ሁሉንም ጨዋታዎች ማየት ይችላሉ",
 
-    organizerAccess: "የአዘጋጅ መዳረሻ — የእርስዎን ጨዋታዎች ብቻ በማየት ላይ",
+    organizerAccess: "የእርስዎን ጨዋታዎች ብቻ ማየት ይችላሉ",
 
     noGames: "ጨዋታ የለም",
 
@@ -759,55 +781,42 @@ showBookings: "ምዝገባዎችን አሳይ",
   },
 
   paymentRequests: {
+    title: "የክፍያ ጥያቄዎች",
+    subtitle: "የተጫዋቾችን ክፍያ ይመልከቱና ያረጋግጡ",
+    back: "ተመለስ",
+    goBack: "ወደኋላ ተመለስ",
+
     error: "ስህተት",
-
-    mustBeSignedIn: "መጀመሪያ ወደ መለያዎ መግባት አለብዎት።",
-
+    mustBeSignedIn: "መግባት ያስፈልግዎታል።",
     notAllowed: "ፈቃድ የለዎትም",
-
-    organizersAdminsOnly: "የክፍያ ጥያቄዎችን ማየት የሚችሉት አዘጋጆችና አስተዳዳሪዎች ብቻ ናቸው።",
+    organizersAdminsOnly: "የክፍያ ጥያቄዎችን ማየት የሚችሉት አዘጋጆችና አድሚኖች ብቻ ናቸው።",
 
     footballGame: "የእግር ኳስ ጨዋታ",
-
     playerFallback: "ተጫዋች",
 
     couldNotLoadPayments: "ክፍያዎችን መጫን አልተቻለም",
-
-    pleaseTryAgain: "እባክዎ እንደገና ይሞክሩ።",
-
+    pleaseTryAgain: "እንደገና ይሞክሩ።",
     paymentCouldNotBeConfirmed: "ክፍያውን ማረጋገጥ አልተቻለም።",
-
     couldNotConfirmPayment: "ክፍያውን ማረጋገጥ አልተቻለም",
 
-    recentlySubmitted: "በቅርቡ ተልኳል",
-
-    loading: "የክፍያ ጥያቄዎችን በመጫን ላይ...",
-
-    title: "የክፍያ ጥያቄዎች",
-
-    subtitle: "አካውንትዎን ካረጋገጡ በኋላ ክፍያዎችን ያረጋግጡ",
+    recentlySubmitted: "በቅርቡ የተላከ",
+    loading: "የክፍያ ጥያቄዎች እየተጫኑ ነው...",
 
     noRequests: "የክፍያ ጥያቄ የለም",
-
-    noRequestsDescription: "ማረጋገጫ የሚጠብቁ የተጫዋቾች ክፍያዎች እዚህ ይታያሉ።",
+    noRequestsDescription: "ማረጋገጫ የሚጠብቅ የተጫዋች ክፍያ የለም።",
 
     submitted: "ተልኳል",
-
     player: "ተጫዋች",
-
     phone: "ስልክ",
+    method: "የክፍያ መንገድ",
+    organizerPayment: "ለአዘጋጅ የተከፈለ",
+    amountToVerify: "የሚረጋገጥ መጠን",
+    paymentFallback: "የክፍያ አካውንት",
 
-    method: "የክፍያ ዘዴ",
+    checkAccountBeforeConfirming:
+      "ከማረጋገጥዎ በፊት የ{provider} አካውንትዎን ይመልከቱና ክፍያው መግባቱን ያረጋግጡ።",
 
-    organizerPayment: "የአዘጋጅ ክፍያ",
-
-    amountToVerify: "የሚረጋገጥ የክፍያ መጠን",
-
-    paymentFallback: "ክፍያ",
-
-    checkAccountBeforeConfirming: "ከማረጋገጥዎ በፊት የ{provider} አካውንትዎን ያረጋግጡ።",
-
-    markPaid: "እንደተከፈለ ምልክት ያድርጉ",
+    markPaid: "ተከፍሏል ብለው ያረጋግጡ",
   },
 
   profile: {
@@ -853,7 +862,7 @@ showBookings: "ምዝገባዎችን አሳይ",
 
     phoneHelp: "የስልክ ቁጥርዎ ከመለያዎ ጋር ተገናኝቷል።",
 
-    adminTools: "የአስተዳዳሪ መሳሪያዎች",
+    adminTools: "የአስተዳዳሪ አማራጮች",
 
     adminToolsSubtitle: "የእግር ኳስ ጨዋታዎችን ያስተዳድሩ",
 
@@ -893,13 +902,47 @@ showBookings: "ምዝገባዎችን አሳይ",
     tagline: "ጨዋታ ያግኙ። ይቀላቀሉ። ይጫወቱ።",
     continueGoogle: "በGoogle ይቀጥሉ",
     connecting: "በመገናኘት ላይ...",
-    helper: "በአንድ ንክኪ ይግቡ ወይም መለያ ይፍጠሩ",
+    helper: "በአንድ ጠቅታ ይግቡ ወይም መለያ ይፍጠሩ",
 
     signInFailed: "መግባት አልተሳካም",
     unableToStart: "በGoogle መግባት መጀመር አልተቻለም።",
     sessionFailed: "በGoogle መግባት ተጠናቋል፣ ግን መተግበሪያው የመግቢያ ክፍለ ጊዜ መፍጠር አልቻለም።",
     somethingWrong: "ችግር ተፈጥሯል",
     tryAgain: "በGoogle መቀጠል አልተቻለም። እንደገና ይሞክሩ።",
+  },
+  gameDetails: {
+    discover: "ፈልግ",
+    gameNotFound: "ጨዋታው አልተገኘም።",
+    couldNotLoadGame: "ጨዋታውን መጫን አልተቻለም።",
+    gameUnavailable: "ጨዋታው አይገኝም",
+    gameCouldNotBeFound: "ይህ ጨዋታ ሊገኝ አልቻለም።",
+
+    gameDetails: "የጨዋታ ዝርዝር",
+    notSpecified: "አልተገለጸም",
+    format: "የጨዋታ አይነት",
+    allLevels: "ሁሉም ደረጃ",
+    skillLevel: "የችሎታ ደረጃ",
+
+    gameFull: "ጨዋታው ሞልቷል",
+    spotLeft: "{count} ቦታ ቀርቷል",
+    spotsLeft: "{count} ቦታዎች ቀርተዋል",
+    availability: "የቀረ ቦታ",
+
+    hostedBy: "አዘጋጅ",
+    organizer: "አዘጋጅ",
+    gameOrganizer: "የጨዋታ አዘጋጅ",
+
+    location: "ቦታ",
+    viewOnMap: "በካርታ ይመልከቱ",
+
+    payment: "ክፍያ",
+    free: "ነፃ",
+    noPaymentRequired: "ለዚህ ጨዋታ ክፍያ አያስፈልግም።",
+    paymentAtVenue: "ክፍያው በጨዋታው ቦታ ይከፈላል።",
+    organizerPaymentInstructions:
+      "ቦታዎን ካስያዙ በኋላ የክፍያ መረጃ ይታያል።",
+    paymentDetailsAfterReservation:
+      "ቦታዎን ሲያስይዙ የክፍያ መረጃ ይታያል።",
   },
 };
 

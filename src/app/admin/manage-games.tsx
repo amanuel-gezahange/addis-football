@@ -1,9 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-
 import { router, useFocusEffect } from "expo-router";
-
 import { useCallback, useState } from "react";
-
 import {
   ActivityIndicator,
   Pressable,
@@ -15,45 +12,28 @@ import {
 } from "react-native";
 
 import { COLORS } from "../../constants/colors";
-
-import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { supabase } from "../../lib/supabase";
 
 type UserRole = "admin" | "organizer" | "player";
 
 type Game = {
   id: number;
-
   title: string;
-
   organizer: string;
-
   area: string;
-
   distance: string | null;
-
   time: string;
-
   format: string;
-
   skill: string;
-
   price: number;
-
   payment_method: "free" | "venue" | "organizer";
-
   payment_provider: string | null;
-
   payment_phone: string | null;
-
   payment_account_name: string | null;
-
   spots_left: number;
-
   status: string;
-
   image_url: string | null;
-
   created_by: string | null;
 };
 
@@ -61,9 +41,7 @@ export default function ManageGamesScreen() {
   const { t } = useLanguage();
 
   const [games, setGames] = useState<Game[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [role, setRole] = useState<UserRole | null>(null);
 
   useFocusEffect(
@@ -77,47 +55,33 @@ export default function ManageGamesScreen() {
 
     const {
       data: { user },
-
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
       console.log(
         "Manage games auth error:",
-
         userError?.message || "No user",
       );
 
       setGames([]);
-
       setRole(null);
-
       setLoading(false);
 
       return;
     }
 
     const { data: profile, error: profileError } = await supabase
-
       .from("profiles")
-
       .select("role")
-
       .eq("id", user.id)
-
       .maybeSingle();
 
     if (profileError) {
-      console.log(
-        "Role check error:",
-
-        profileError.message,
-      );
+      console.log("Role check error:", profileError.message);
 
       setGames([]);
-
       setRole(null);
-
       setLoading(false);
 
       return;
@@ -129,9 +93,7 @@ export default function ManageGamesScreen() {
       console.log("User does not have permission to manage games.");
 
       setGames([]);
-
       setRole(userRole || "player");
-
       setLoading(false);
 
       return;
@@ -140,95 +102,36 @@ export default function ManageGamesScreen() {
     setRole(userRole);
 
     /*
-
-
-
       ADMIN:
-
-
-
       sees every game.
 
-
-
       ORGANIZER:
-
-
-
       sees only games where
-
-
-
       created_by = their user ID.
-
-
-
     */
 
     let gamesQuery = supabase.from("games").select(`
-
-
-
-        id,
-
-
-
-        title,
-
-
-
-        organizer,
-
-
-
-        area,
-
-
-
-        distance,
-
-
-
-        time,
-
-
-
-        format,
-
-
-
-        skill,
-
-
-
-        price,
-
-
-
-        spots_left,
-
-
-
-        status,
-
-
-
-        image_url,
-
-
-
-        created_by
-
-
-
-      `);
+      id,
+      title,
+      organizer,
+      area,
+      distance,
+      time,
+      format,
+      skill,
+      price,
+      spots_left,
+      status,
+      image_url,
+      created_by,
+      payment_method,
+      payment_provider,
+      payment_phone,
+      payment_account_name
+    `);
 
     if (userRole === "organizer") {
-      gamesQuery = gamesQuery.eq(
-        "created_by",
-
-        user.id,
-      );
+      gamesQuery = gamesQuery.eq("created_by", user.id);
     }
 
     const { data, error } = await gamesQuery.order("id", {
@@ -236,32 +139,43 @@ export default function ManageGamesScreen() {
     });
 
     if (error) {
-      console.log(
-        "Manage games error:",
-
-        error.message,
-      );
+      console.log("Manage games error:", error.message);
 
       setGames([]);
-
       setLoading(false);
 
       return;
     }
 
     setGames((data || []) as Game[]);
-
     setLoading(false);
   }
 
   function openEditGame(game: Game) {
     router.push({
       pathname: "/admin/edit-game",
-
       params: {
         id: String(game.id),
       },
     });
+  }
+
+  function getSkillLabel(skill: string) {
+    const normalizedSkill = skill.trim().toLowerCase();
+
+    if (normalizedSkill === "beginner") {
+      return t("discover.beginner");
+    }
+
+    if (normalizedSkill === "intermediate") {
+      return t("discover.intermediate");
+    }
+
+    if (normalizedSkill === "advanced") {
+      return t("discover.advanced");
+    }
+
+    return skill;
   }
 
   if (loading) {
@@ -270,11 +184,12 @@ export default function ManageGamesScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator
             size="large"
-
             color={COLORS.primary}
           />
 
-          <Text style={styles.loadingText}>{t("manageGames.loading")}</Text>
+          <Text style={styles.loadingText}>
+            {t("manageGames.loading")}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -284,34 +199,32 @@ export default function ManageGamesScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
-
         contentContainerStyle={styles.content}
-
         showsVerticalScrollIndicator={false}
       >
         <Pressable
           style={({ pressed }) => [
             styles.backButton,
-
             pressed && styles.pressed,
           ]}
-
           onPress={() => router.replace("/(tabs)/profile")}
         >
           <Ionicons
             name="arrow-back"
-
             size={22}
-
             color={COLORS.primary}
           />
 
-          <Text style={styles.backText}>{t("manageGames.back")}</Text>
+          <Text style={styles.backText}>
+            {t("manageGames.back")}
+          </Text>
         </Pressable>
 
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{t("manageGames.title")}</Text>
+            <Text style={styles.title}>
+              {t("manageGames.title")}
+            </Text>
 
             <Text style={styles.subtitle}>
               {role === "admin"
@@ -324,17 +237,13 @@ export default function ManageGamesScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.addButton,
-
                 pressed && styles.addButtonPressed,
               ]}
-
               onPress={() => router.push("/admin/create-game")}
             >
               <Ionicons
                 name="add"
-
                 size={25}
-
                 color="#07111F"
               />
             </Pressable>
@@ -345,9 +254,7 @@ export default function ManageGamesScreen() {
           <View style={styles.roleBanner}>
             <Ionicons
               name="shield-checkmark-outline"
-
               size={18}
-
               color={COLORS.primary}
             />
 
@@ -361,14 +268,12 @@ export default function ManageGamesScreen() {
           <View style={styles.roleBanner}>
             <Ionicons
               name="person-outline"
-
               size={18}
-
               color={COLORS.primary}
             />
 
             <Text style={styles.roleBannerText}>
-              Organizer access — viewing only your games
+              {t("manageGames.organizerAccess")}
             </Text>
           </View>
         )}
@@ -378,14 +283,14 @@ export default function ManageGamesScreen() {
             <View style={styles.emptyIcon}>
               <Ionicons
                 name="football-outline"
-
                 size={34}
-
                 color={COLORS.primary}
               />
             </View>
 
-            <Text style={styles.emptyTitle}>{t("manageGames.noGames")}</Text>
+            <Text style={styles.emptyTitle}>
+              {t("manageGames.noGames")}
+            </Text>
 
             <Text style={styles.emptyText}>
               {role === "organizer"
@@ -397,10 +302,8 @@ export default function ManageGamesScreen() {
               <Pressable
                 style={({ pressed }) => [
                   styles.createButton,
-
                   pressed && styles.createButtonPressed,
                 ]}
-
                 onPress={() => router.push("/admin/create-game")}
               >
                 <Text style={styles.createButtonText}>
@@ -427,14 +330,15 @@ export default function ManageGamesScreen() {
               return (
                 <View
                   key={game.id}
-
-                  style={[styles.card, isCancelled && styles.cancelledCard]}
+                  style={[
+                    styles.card,
+                    isCancelled && styles.cancelledCard,
+                  ]}
                 >
                   <View style={styles.cardTop}>
                     <View
                       style={[
                         styles.statusBadge,
-
                         isCancelled
                           ? styles.cancelledBadge
                           : isFull
@@ -445,7 +349,6 @@ export default function ManageGamesScreen() {
                       <View
                         style={[
                           styles.statusDot,
-
                           isCancelled
                             ? styles.cancelledDot
                             : isFull
@@ -457,7 +360,6 @@ export default function ManageGamesScreen() {
                       <Text
                         style={[
                           styles.statusText,
-
                           isCancelled
                             ? styles.cancelledText
                             : isFull
@@ -469,13 +371,14 @@ export default function ManageGamesScreen() {
                       </Text>
                     </View>
 
-                    <Text style={styles.gameId}>\#{game.id}</Text>
+                    <Text style={styles.gameId}>
+                      #{game.id}
+                    </Text>
                   </View>
 
                   <Text
                     style={[
                       styles.gameTitle,
-
                       isCancelled && styles.cancelledGameTitle,
                     ]}
                   >
@@ -489,15 +392,12 @@ export default function ManageGamesScreen() {
                   <View style={styles.infoRow}>
                     <Ionicons
                       name="location-outline"
-
                       size={18}
-
                       color={COLORS.textSecondary}
                     />
 
                     <Text style={styles.infoText}>
                       {game.area}
-
                       {game.distance ? ` • ${game.distance}` : ""}
                     </Text>
                   </View>
@@ -505,13 +405,13 @@ export default function ManageGamesScreen() {
                   <View style={styles.infoRow}>
                     <Ionicons
                       name="time-outline"
-
                       size={18}
-
                       color={COLORS.textSecondary}
                     />
 
-                    <Text style={styles.infoText}>{game.time}</Text>
+                    <Text style={styles.infoText}>
+                      {game.time}
+                    </Text>
                   </View>
 
                   <View style={styles.detailsRow}>
@@ -520,7 +420,9 @@ export default function ManageGamesScreen() {
                         {t("manageGames.format")}
                       </Text>
 
-                      <Text style={styles.detailValue}>{game.format}</Text>
+                      <Text style={styles.detailValue}>
+                        {game.format}
+                      </Text>
                     </View>
 
                     <View style={styles.detail}>
@@ -528,7 +430,9 @@ export default function ManageGamesScreen() {
                         {t("manageGames.skill")}
                       </Text>
 
-                      <Text style={styles.detailValue}>{game.skill}</Text>
+                      <Text style={styles.detailValue}>
+                        {getSkillLabel(game.skill)}
+                      </Text>
                     </View>
 
                     <View style={styles.detail}>
@@ -536,7 +440,9 @@ export default function ManageGamesScreen() {
                         {t("manageGames.spots")}
                       </Text>
 
-                      <Text style={styles.detailValue}>{game.spots_left}</Text>
+                      <Text style={styles.detailValue}>
+                        {game.spots_left}
+                      </Text>
                     </View>
 
                     <View style={styles.detail}>
@@ -549,7 +455,10 @@ export default function ManageGamesScreen() {
                           ? t("manageGames.free")
                           : game.payment_method === "venue"
                             ? `${t("manageGames.venue")} · ${game.price} ETB`
-                            : `${game.payment_provider || t("manageGames.organizer")} · ${game.price} ETB`}
+                            : `${
+                                game.payment_provider ||
+                                t("manageGames.organizer")
+                              } · ${game.price} ETB`}
                       </Text>
                     </View>
                   </View>
@@ -558,17 +467,13 @@ export default function ManageGamesScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.viewButton,
-
                         pressed && styles.pressed,
                       ]}
-
                       onPress={() => openEditGame(game)}
                     >
                       <Ionicons
                         name="eye-outline"
-
                         size={20}
-
                         color={COLORS.textSecondary}
                       />
 
@@ -578,9 +483,7 @@ export default function ManageGamesScreen() {
 
                       <Ionicons
                         name="chevron-forward"
-
                         size={19}
-
                         color={COLORS.textMuted}
                       />
                     </Pressable>
@@ -588,17 +491,13 @@ export default function ManageGamesScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.editButton,
-
                         pressed && styles.pressed,
                       ]}
-
                       onPress={() => openEditGame(game)}
                     >
                       <Ionicons
                         name="create-outline"
-
                         size={20}
-
                         color={COLORS.primary}
                       />
 
@@ -608,9 +507,7 @@ export default function ManageGamesScreen() {
 
                       <Ionicons
                         name="chevron-forward"
-
                         size={19}
-
                         color={COLORS.textMuted}
                       />
                     </Pressable>
@@ -630,51 +527,38 @@ export default function ManageGamesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-
     backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
-
     backgroundColor: "#FFFFFF",
   },
 
   content: {
     paddingHorizontal: 20,
-
     paddingTop: 16,
   },
 
   loadingContainer: {
     flex: 1,
-
     alignItems: "center",
-
     justifyContent: "center",
-
     backgroundColor: "#FFFFFF",
   },
 
   loadingText: {
     color: COLORS.textSecondary,
-
     fontSize: 15,
-
     marginTop: 14,
   },
 
   backButton: {
     flexDirection: "row",
-
     alignItems: "center",
-
     alignSelf: "flex-start",
-
     gap: 5,
-
     paddingVertical: 7,
-
     marginBottom: 14,
   },
 
@@ -686,11 +570,8 @@ const styles = StyleSheet.create({
 
   headerRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 14,
-
     marginBottom: 18,
   },
 
@@ -715,11 +596,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-
     backgroundColor: COLORS.primary,
-
     alignItems: "center",
-
     justifyContent: "center",
   },
 
@@ -733,15 +611,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#CDEFF8",
     backgroundColor: "#F2FBFE",
-
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 8,
-
     paddingHorizontal: 13,
-
     marginBottom: 20,
   },
 
@@ -753,57 +626,39 @@ const styles = StyleSheet.create({
 
   emptyContainer: {
     alignItems: "center",
-
     paddingTop: 70,
   },
 
   emptyIcon: {
     width: 68,
-
     height: 68,
-
     borderRadius: 34,
-
-    backgroundColor: COLORS.surfaceAlt,
-
+    backgroundColor: "#EAF8FC",
     alignItems: "center",
-
     justifyContent: "center",
   },
 
   emptyTitle: {
     color: COLORS.text,
-
     fontSize: 21,
-
     fontWeight: "800",
-
     marginTop: 18,
   },
 
   emptyText: {
     color: COLORS.textSecondary,
-
     fontSize: 15,
-
     marginTop: 6,
-
     textAlign: "center",
   },
 
   createButton: {
     height: 50,
-
     paddingHorizontal: 24,
-
     borderRadius: 14,
-
     backgroundColor: COLORS.primary,
-
     alignItems: "center",
-
     justifyContent: "center",
-
     marginTop: 22,
   },
 
@@ -836,25 +691,17 @@ const styles = StyleSheet.create({
 
   cardTop: {
     flexDirection: "row",
-
     justifyContent: "space-between",
-
     alignItems: "center",
-
     marginBottom: 12,
   },
 
   statusBadge: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 6,
-
     paddingHorizontal: 10,
-
     paddingVertical: 6,
-
     borderRadius: 20,
   },
 
@@ -872,9 +719,7 @@ const styles = StyleSheet.create({
 
   statusDot: {
     width: 7,
-
     height: 7,
-
     borderRadius: 4,
   },
 
@@ -892,7 +737,6 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: 12,
-
     fontWeight: "800",
   },
 
@@ -933,11 +777,8 @@ const styles = StyleSheet.create({
 
   infoRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 7,
-
     marginTop: 8,
   },
 
@@ -984,13 +825,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
     marginTop: 14,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     paddingHorizontal: 14,
-
     gap: 8,
   },
 
@@ -1007,13 +844,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
     marginTop: 14,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     paddingHorizontal: 14,
-
     gap: 8,
   },
 

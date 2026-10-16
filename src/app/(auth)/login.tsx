@@ -45,8 +45,7 @@ export default function LoginScreen() {
       setLoading(true);
 
       // WEB:
-      // Use the real production website callback.
-      // This performs a full-page browser redirect instead of a popup.
+      // Use the current website origin for the callback.
       if (Platform.OS === "web") {
         const redirectTo = `${window.location.origin}/auth/callback`;
 
@@ -68,8 +67,7 @@ export default function LoginScreen() {
           setLoading(false);
         }
 
-        // On success Supabase redirects the browser,
-        // so nothing else needs to happen here.
+        // On success Supabase redirects the browser.
         return;
       }
 
@@ -439,14 +437,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor:
-      COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   screen: {
     flex: 1,
-    backgroundColor:
-      COLORS.background,
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     paddingBottom: 18,
   },
@@ -480,20 +476,18 @@ const styles = StyleSheet.create({
   },
 
   languageButtonActive: {
-    backgroundColor:
-      COLORS.surfaceAlt,
-
-    borderColor: COLORS.border,
+    backgroundColor: "#EAF8FC",
+    borderColor: "#CBEFF8",
   },
 
   languageText: {
-    color: COLORS.textMuted,
+    color: "#717171",
     fontSize: 13,
     fontWeight: "600",
   },
 
   languageTextActive: {
-    color: COLORS.primary,
+    color: "#087EA4",
     fontWeight: "800",
   },
 
@@ -518,17 +512,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
 
-    backgroundColor:
-      COLORS.surfaceAlt,
+    backgroundColor: "#EAF8FC",
 
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#CBEFF8",
 
     marginBottom: 24,
   },
 
   title: {
-    color: COLORS.text,
+    color: "#222222",
 
     fontSize: 34,
     lineHeight: 42,
@@ -540,8 +533,7 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color:
-      COLORS.textSecondary,
+    color: "#717171",
 
     fontSize: 17,
     lineHeight: 25,
@@ -564,18 +556,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
 
     borderWidth: 1,
-    borderColor: "#DADCE0",
+    borderColor: "#DDDDDD",
 
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
 
     paddingHorizontal: 20,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+
+    elevation: 1,
   },
 
   googleButtonPressed: {
-    opacity: 0.88,
-
+    backgroundColor: "#F7F7F7",
     transform: [
       {
         scale: 0.99,
@@ -584,7 +585,7 @@ const styles = StyleSheet.create({
   },
 
   googleButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.65,
   },
 
   googleIcon: {
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
   },
 
   googleButtonText: {
-    color: "#202124",
+    color: "#222222",
 
     fontSize: 16,
     fontWeight: "700",
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
   },
 
   helperText: {
-    color: COLORS.textMuted,
+    color: "#717171",
 
     fontSize: 13,
     lineHeight: 20,
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    color: COLORS.textMuted,
+    color: "#A0A0A0",
 
     fontSize: 12,
 

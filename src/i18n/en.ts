@@ -24,6 +24,11 @@ const en = {
   },
 
   discover: {
+    allEthiopia: "All Ethiopia",
+    chooseCity: "Choose a city",
+    openCalendar: "Open calendar",
+    chooseDate: "Choose a date",
+    calendarSubtitle: "Find games on any future date",
     title: "Discover",
 
     subtitle: "Play football in Addis Ababa",
@@ -86,6 +91,11 @@ const en = {
   },
 
   gameCard: {
+    viewDetails: "View details",
+    viewGameDetails: "{game}. View game details.",
+    viewDetailsFor: "View details for {game}",
+    removeFromFavorites: "Remove {game} from favorites",
+    saveToFavorites: "Save {game} to favorites",
     available: "Available",
 
     payLater: "Pay later",
@@ -295,6 +305,10 @@ const en = {
   },
 
   bookings: {
+    searchPlaceholder: "Search by game, location, or organizer",
+    openCalendar: "Open calendar",
+    chooseDate: "Choose a date",
+    calendarSubtitle: "Filter your upcoming bookings by date",
     title: "Bookings",
 
     subtitle: "Your games and booking history",
@@ -464,6 +478,8 @@ const en = {
   },
 
   createGame: {
+    city: "City",
+    googleMapsLinkOptional: "Google Maps link (optional)",
     back: "Back",
 
     title: "Create Game",
@@ -593,6 +609,11 @@ const en = {
   },
 
   editGame: {
+    city: "City",
+    cityRequired: "City is required",
+    googleMapsLinkOptional: "Google Maps link (optional)",
+    refundsNeedAttention: "{count} refund(s) still require attention.",
+    refundsStartedAutomatically: "{count} player refund(s) started automatically.",
     manageGames: "Manage Games",
 
     title: "Edit Game",
@@ -763,6 +784,7 @@ const en = {
 
   manageGames: {
     loading: "Loading games...",
+    organizerAccess: "Organizer access — viewing only your games",
 
     back: "Back",
 
@@ -812,58 +834,42 @@ const en = {
   },
 
   paymentRequests: {
+    title: "Payment Requests",
+    subtitle: "Review and confirm player payments",
+    back: "Back",
+    goBack: "Go back",
+
     error: "Error",
-
     mustBeSignedIn: "You must be signed in.",
-
     notAllowed: "Not allowed",
+    organizersAdminsOnly: "Only organizers and admins can view payment requests.",
 
-    organizersAdminsOnly:
-      "Only organizers and admins can view payment requests.",
-
-    footballGame: "Football Game",
-
+    footballGame: "Football game",
     playerFallback: "Player",
 
     couldNotLoadPayments: "Could not load payments",
-
     pleaseTryAgain: "Please try again.",
-
     paymentCouldNotBeConfirmed: "Payment could not be confirmed.",
-
     couldNotConfirmPayment: "Could not confirm payment",
 
     recentlySubmitted: "Recently submitted",
-
     loading: "Loading payment requests...",
 
-    title: "Payment Requests",
-
-    subtitle: "Confirm payments after checking your account",
-
     noRequests: "No payment requests",
-
-    noRequestsDescription:
-      "Player payments waiting for confirmation will appear here.",
+    noRequestsDescription: "There are no player payments waiting for confirmation.",
 
     submitted: "Submitted",
-
     player: "Player",
-
     phone: "Phone",
-
     method: "Method",
-
     organizerPayment: "Organizer payment",
-
     amountToVerify: "Amount to verify",
-
-    paymentFallback: "payment",
+    paymentFallback: "payment account",
 
     checkAccountBeforeConfirming:
-      "Check your {provider} account before confirming.",
+      "Check your {provider} account and make sure you received the payment before confirming.",
 
-    markPaid: "Mark Paid",
+    markPaid: "Mark as paid",
   },
 
   profile: {
@@ -936,6 +942,41 @@ const en = {
     profileUpdated: "Your profile has been updated.",
 
     signOutFailed: "Sign out failed",
+  },
+
+  gameDetails: {
+    discover: "Discover",
+    gameNotFound: "Game not found.",
+    couldNotLoadGame: "We couldn't load this game.",
+    gameUnavailable: "Game unavailable",
+    gameCouldNotBeFound: "This game could not be found.",
+
+    gameDetails: "Game details",
+    notSpecified: "Not specified",
+    format: "Format",
+    allLevels: "All levels",
+    skillLevel: "Skill level",
+
+    gameFull: "Game full",
+    spotLeft: "{count} spot left",
+    spotsLeft: "{count} spots left",
+    availability: "Availability",
+
+    hostedBy: "Hosted by",
+    organizer: "Organizer",
+    gameOrganizer: "Game organizer",
+
+    location: "Location",
+    viewOnMap: "View on map",
+
+    payment: "Payment",
+    free: "Free",
+    noPaymentRequired: "No payment is required for this game.",
+    paymentAtVenue: "Payment is made at the venue.",
+    organizerPaymentInstructions:
+      "Payment instructions are provided after you reserve your spot.",
+    paymentDetailsAfterReservation:
+      "Payment details will be provided when you reserve.",
   },
 };
 

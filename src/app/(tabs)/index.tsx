@@ -455,7 +455,11 @@ export default function HomeScreen() {
                   color={COLORS.textSecondary}
                 />
 
-                <Text style={styles.locationText}>{selectedCity}</Text>
+                <Text style={styles.locationText}>
+                  {selectedCity === "All Ethiopia"
+                    ? t("discover.allEthiopia")
+                    : selectedCity}
+                </Text>
 
                 <Ionicons
                   name="chevron-down"
@@ -577,7 +581,7 @@ export default function HomeScreen() {
               ]}
               onPress={() => setCalendarVisible(true)}
               accessibilityRole="button"
-              accessibilityLabel="Open calendar"
+              accessibilityLabel={t("discover.openCalendar")}
             >
               <Ionicons
                 name="calendar-outline"
@@ -696,7 +700,9 @@ export default function HomeScreen() {
               onPress={(event) => event.stopPropagation()}
             >
               <View style={styles.calendarHeader}>
-                <Text style={styles.calendarTitle}>Choose a city</Text>
+                <Text style={styles.calendarTitle}>
+                  {t("discover.chooseCity")}
+                </Text>
 
                 <Pressable
                   style={styles.calendarCloseButton}
@@ -737,7 +743,9 @@ export default function HomeScreen() {
                           selected && styles.cityOptionTextSelected,
                         ]}
                       >
-                        {city}
+                        {city === "All Ethiopia"
+                          ? t("discover.allEthiopia")
+                          : city}
                       </Text>
                     </Pressable>
                   );
@@ -766,19 +774,11 @@ export default function HomeScreen() {
               <View style={styles.calendarHeader}>
                 <View>
                   <Text style={styles.calendarTitle}>
-                    {language === "am"
-                      ? "ቀን ይምረጡ"
-                      : language === "om"
-                        ? "Guyyaa fili"
-                        : "Choose a date"}
+                    {t("discover.chooseDate")}
                   </Text>
 
                   <Text style={styles.calendarSubtitle}>
-                    {language === "am"
-                      ? "የወደፊት ቀን ጨዋታ ይፈልጉ"
-                      : language === "om"
-                        ? "Guyyaa fuulduraa irratti tapha barbaadi"
-                        : "Find games on any future date"}
+                    {t("discover.calendarSubtitle")}
                   </Text>
                 </View>
 

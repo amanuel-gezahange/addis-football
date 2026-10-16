@@ -448,24 +448,16 @@ export default function CreateGameScreen() {
           />
 
           <Field
-            label="City"
-
+            label={t("createGame.city")}
             value={city}
-
             onChangeText={setCity}
-
             placeholder="Addis Ababa"
           />
-
           <Field
-            label="Google Maps link (optional)"
-
+            label={t("createGame.googleMapsLinkOptional")}
             value={mapsUrl}
-
             onChangeText={setMapsUrl}
-
             placeholder="https://maps.google.com/..."
-
             autoCapitalize="none"
           />
 
@@ -552,7 +544,7 @@ export default function CreateGameScreen() {
 
             onChangeText={setSkill}
 
-            placeholder="Intermediate"
+            placeholder={t("discover.intermediate")}
           />
 
           {/* PAYMENT SECTION */}

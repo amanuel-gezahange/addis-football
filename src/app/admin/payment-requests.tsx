@@ -357,18 +357,18 @@ export default function PaymentRequestsScreen() {
                     onPress={() => router.replace("/(tabs)/profile")}
                     hitSlop={10}
                     accessibilityRole="button"
-                    accessibilityLabel="Go back"
+                    accessibilityLabel={t("paymentRequests.goBack")}
                 >
                     <Ionicons name="arrow-back" size={20} color="#087EA4" />
-                    <Text style={styles.backText}>Back</Text>
+                    <Text style={styles.backText}>
+                        {t("paymentRequests.back")}
+                    </Text>
                 </Pressable>
 
-                <Text style={styles.title}>
-                    {t("paymentRequests.title")}
-                </Text>
+                <Text style={styles.title}>{t("paymentRequests.title")}</Text>
 
                 <Text style={styles.subtitle}>
-                    Review and confirm player payments
+                    {t("paymentRequests.subtitle")}
                 </Text>
             </View>
 
