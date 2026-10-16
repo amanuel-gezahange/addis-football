@@ -266,17 +266,35 @@ export default function BookingsScreen() {
         }
       }
 
-      // Search filter.
+      // Search across all useful booking/game information.
       if (cleanSearch) {
-        const title = (game.title ?? "").toLowerCase();
-        const area = (game.area ?? "").toLowerCase();
-        const organizer = (game.organizer ?? "").toLowerCase();
+        const searchableValues = [
+          game.title,
+          game.area,
+          game.organizer,
+          game.distance,
+          game.time,
+          game.format,
+          game.skill,
+          game.payment_method,
+          game.payment_provider,
+          game.payment_account_name,
+          game.price?.toString(),
+          booking.price_paid?.toString(),
 
-        if (
-          !title.includes(cleanSearch) &&
-          !area.includes(cleanSearch) &&
-          !organizer.includes(cleanSearch)
-        ) {
+          game.payment_method === "free" ? "free" : null,
+
+          game.price != null ? `${game.price} etb` : null,
+          booking.price_paid != null ? `${booking.price_paid} etb` : null,
+        ];
+
+        const matchesSearch = searchableValues.some((value) =>
+          String(value ?? "")
+            .toLowerCase()
+            .includes(cleanSearch),
+        );
+
+        if (!matchesSearch) {
           return false;
         }
       }
@@ -300,6 +318,7 @@ export default function BookingsScreen() {
     }
 
     // Search: use the same relevance behavior as Discover.
+    // Search: rank stronger matches first, like Discover.
     const getSearchScore = (booking: Booking) => {
       const game = booking.games;
 
@@ -333,7 +352,6 @@ export default function BookingsScreen() {
         return scoreDifference;
       }
 
-      // Same search score: nearest game first.
       const aTime = a.games?.starts_at
         ? new Date(a.games.starts_at).getTime()
         : Number.MAX_SAFE_INTEGER;
