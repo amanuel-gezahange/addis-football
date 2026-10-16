@@ -536,39 +536,57 @@ export default function HomeScreen() {
 
           {/* DATE SELECTOR */}
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dateRow}
-          >
-            {dates.map((item) => {
-              const active = selectedDate === item.key;
+          <View style={styles.dateSelectorRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.dateRow}
+              style={styles.dateScroll}
+            >
+              {dates.map((item) => {
+                const active = selectedDate === item.key;
 
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setSelectedDate(item.key)}
-                  style={({ pressed }) => [
-                    styles.dateButton,
-                    active && styles.dateButtonActive,
-                    pressed && styles.dateButtonPressed,
-                  ]}
-                >
-                  <Text
-                    style={[styles.dateDay, active && styles.dateTextActive]}
+                return (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => setSelectedDate(item.key)}
+                    style={({ pressed }) => [
+                      styles.dateButton,
+                      active && styles.dateButtonActive,
+                      pressed && styles.dateButtonPressed,
+                    ]}
                   >
-                    {item.day}
-                  </Text>
+                    <Text
+                      style={[styles.dateDay, active && styles.dateTextActive]}
+                    >
+                      {item.day}
+                    </Text>
 
-                  <Text
-                    style={[styles.dateNumber, active && styles.dateTextActive]}
-                  >
-                    {item.date}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+                    <Text
+                      style={[
+                        styles.dateNumber,
+                        active && styles.dateTextActive,
+                      ]}
+                    >
+                      {item.date}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <Pressable
+              style={styles.dateCalendarButton}
+              onPress={() => setCalendarVisible(true)}
+              hitSlop={6}
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={COLORS.primary}
+              />
+            </Pressable>
+          </View>
 
           {/* SELECTED DATE */}
 
@@ -1554,6 +1572,29 @@ const styles = StyleSheet.create({
 
   searchFilterButtonActive: {
     backgroundColor: COLORS.primary,
+  },
+
+  dateSelectorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 6,
+  },
+
+  dateScroll: {
+    flex: 1,
+  },
+
+  dateCalendarButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
 
   dateRow: {
