@@ -219,15 +219,15 @@ export default function HomeScreen() {
       return;
     }
 
-const mappedGames = (data || []).map((game) => ({
-  ...game,
+    const mappedGames = (data || []).map((game) => ({
+      ...game,
 
-  id: String(game.id),
+      id: String(game.id),
 
-  spotsLeft: game.spots_left,
+      spotsLeft: game.spots_left,
 
-  image: game.image_url ?? "",
-})) as DiscoverGame[];
+      image: game.image_url ?? "",
+    })) as DiscoverGame[];
 
     setGames(mappedGames);
     setLoading(false);
@@ -891,8 +891,16 @@ function EthiopianCalendar({
 
   const weekdays =
     language === "om"
-      ? ["Dil", "Wix", "Kib", "Rob", "Kam", "Jim", "San"]
-      : ["እሑ", "ሰኞ", "ማክ", "ረቡ", "ሐሙ", "ዓር", "ቅዳ"];
+      ? [
+          "Dilbata",
+          "Wiixata",
+          "Kibxata",
+          "Roobii",
+          "Kamiisa",
+          "Jimaata",
+          "Sanbata",
+        ]
+      : ["ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
 
   const daysInMonth =
     viewMonth <= 12 ? 30 : isEthiopianLeapYear(viewYear) ? 6 : 5;

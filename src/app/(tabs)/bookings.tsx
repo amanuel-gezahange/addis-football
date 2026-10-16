@@ -1702,7 +1702,7 @@ function EthiopianCalendar({
           "Jimaata",
           "Sanbata",
         ]
-      : ["እሁድ", "ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
+      : ["ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
 
   const daysInMonth =
     viewMonth <= 12 ? 30 : isEthiopianLeapYear(viewYear) ? 6 : 5;
