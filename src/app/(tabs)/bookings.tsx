@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Fuse from "fuse.js";
 
 import { useFocusEffect } from "expo-router";
 
@@ -238,11 +239,65 @@ export default function BookingsScreen() {
     }
   }
 
+  const searchableBookings = useMemo(
+    () =>
+      bookings.map((booking) => ({
+        ...booking,
+        searchTitle: booking.games?.title ?? "",
+        searchOrganizer: booking.games?.organizer ?? "",
+        searchArea: booking.games?.area ?? "",
+        searchDistance: booking.games?.distance ?? "",
+        searchTime: booking.games?.time ?? "",
+        searchFormat: booking.games?.format ?? "",
+        searchSkill: booking.games?.skill ?? "",
+        searchPrice: booking.games?.price ?? "",
+        searchPricePaid: booking.price_paid ?? "",
+        searchPaymentMethod: booking.games?.payment_method ?? "",
+        searchPaymentProvider: booking.games?.payment_provider ?? "",
+        searchPaymentPhone: booking.games?.payment_phone ?? "",
+        searchPaymentAccountName: booking.games?.payment_account_name ?? "",
+        searchBookingStatus: booking.status,
+        searchPaymentStatus: booking.payment_status ?? "",
+      })),
+    [bookings],
+  );
+
+  const bookingFuse = useMemo(
+    () =>
+      new Fuse(searchableBookings, {
+        keys: [
+          { name: "searchTitle", weight: 3 },
+          { name: "searchArea", weight: 3 },
+          { name: "searchOrganizer", weight: 2 },
+          { name: "searchFormat", weight: 1.5 },
+          { name: "searchSkill", weight: 1.5 },
+          { name: "searchPaymentProvider", weight: 1 },
+          { name: "searchPaymentAccountName", weight: 1 },
+          { name: "searchPaymentPhone", weight: 1 },
+          { name: "searchPrice", weight: 1 },
+          { name: "searchPricePaid", weight: 1 },
+          { name: "searchPaymentMethod", weight: 1 },
+          { name: "searchBookingStatus", weight: 1 },
+          { name: "searchPaymentStatus", weight: 1 },
+          { name: "searchDistance", weight: 0.5 },
+          { name: "searchTime", weight: 0.5 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      }),
+    [searchableBookings],
+  );
+
   const visibleBookings = useMemo(() => {
     const now = Date.now();
-    const cleanSearch = search.trim().toLowerCase();
+    const cleanSearch = search.trim();
 
-    return bookings
+    const source = cleanSearch
+      ? bookingFuse.search(cleanSearch).map((result) => result.item)
+      : searchableBookings;
+
+    return source
       .filter((booking) => {
         const game = booking.games;
 
@@ -267,12 +322,16 @@ export default function BookingsScreen() {
           return false;
         }
 
-        // Calendar filter.
+        // While searching, Fuse handles discovery across all upcoming bookings.
+        // Date and booking-status filters are temporarily ignored.
+        if (cleanSearch) {
+          return true;
+        }
+
         if (selectedDate && getAddisDateKey(game.starts_at) !== selectedDate) {
           return false;
         }
 
-        // Booking status filter.
         if (
           bookingStatusFilter === "confirmed" &&
           booking.status !== "confirmed"
@@ -297,70 +356,14 @@ export default function BookingsScreen() {
           return false;
         }
 
-        // Search EVERYTHING useful about the booking.
-        if (cleanSearch) {
-          const searchableText = [
-            // Game
-            game.title,
-            game.organizer,
-            game.area,
-            game.distance,
-            game.time,
-            game.format,
-            game.skill,
-
-            // Price / currency
-            game.price,
-            `${game.price} ETB`,
-            `${game.price} birr`,
-            booking.price_paid,
-            booking.price_paid != null ? `${booking.price_paid} ETB` : null,
-            booking.price_paid != null ? `${booking.price_paid} birr` : null,
-            game.payment_method !== "free" ? "ETB" : null,
-            game.payment_method !== "free" ? "birr" : null,
-
-            // Payment
-            game.payment_method,
-            game.payment_provider,
-            game.payment_phone,
-            game.payment_account_name,
-
-            game.payment_method === "free" ? "free" : null,
-
-            game.payment_method === "venue" ? "venue pay at venue" : null,
-
-            game.payment_method === "organizer"
-              ? "organizer pay organizer"
-              : null,
-
-            // Booking
-            booking.status,
-            booking.payment_status,
-
-            booking.status === "confirmed" ? "confirmed" : null,
-
-            booking.status === "waitlisted" ? "waitlisted waitlist" : null,
-
-            booking.status === "pending_payment" ? "pending payment" : null,
-
-            booking.payment_status === "submitted"
-              ? "submitted waiting organizer"
-              : null,
-
-            booking.payment_status === "paid" ? "paid payment confirmed" : null,
-          ]
-            .filter((value) => value !== null && value !== undefined)
-            .map((value) => String(value).toLowerCase())
-            .join(" ");
-
-          if (!searchableText.includes(cleanSearch)) {
-            return false;
-          }
-        }
-
         return true;
       })
       .sort((a, b) => {
+        // Preserve Fuse relevance order while searching.
+        if (cleanSearch) {
+          return 0;
+        }
+
         const aTime = a.games?.starts_at
           ? new Date(a.games.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -371,7 +374,14 @@ export default function BookingsScreen() {
 
         return bookingSortBy === "latest" ? bTime - aTime : aTime - bTime;
       });
-  }, [bookings, search, selectedDate, bookingStatusFilter, bookingSortBy]);
+  }, [
+    searchableBookings,
+    bookingFuse,
+    search,
+    selectedDate,
+    bookingStatusFilter,
+    bookingSortBy,
+  ]);
 
   async function submitOrganizerPayment(booking: Booking) {
     if (
@@ -555,7 +565,7 @@ export default function BookingsScreen() {
 
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={22} color={COLORS.text} />
+            <Ionicons name="search" size={24} color={COLORS.text} />
 
             <TextInput
               value={search}
@@ -575,46 +585,55 @@ export default function BookingsScreen() {
             />
 
             {search.length > 0 && (
-              <Pressable onPress={() => setSearch("")}>
+              <Pressable
+                style={styles.searchActionButton}
+                onPress={() => setSearch("")}
+                hitSlop={8}
+              >
                 <Ionicons
-                  name="close-circle"
-                  size={21}
-                  color={COLORS.textMuted}
+                  name="close"
+                  size={23}
+                  color={COLORS.textSecondary}
                 />
               </Pressable>
             )}
+
+            <View style={styles.searchDivider} />
+
+            <Pressable
+              style={[
+                styles.searchFilterButton,
+                (bookingStatusFilter !== "all" ||
+                  bookingSortBy !== "upcoming") &&
+                  styles.searchFilterButtonActive,
+              ]}
+              onPress={() => setBookingFilterVisible(true)}
+              hitSlop={6}
+            >
+              <Ionicons
+                name="options-outline"
+                size={24}
+                color={
+                  bookingStatusFilter !== "all" ||
+                  bookingSortBy !== "upcoming"
+                    ? "#fff"
+                    : COLORS.primary
+                }
+              />
+            </Pressable>
           </View>
 
           <Pressable
             style={[
-              styles.filterButton,
-              (bookingStatusFilter !== "all" || bookingSortBy !== "upcoming") &&
-                styles.bookingFilterButtonActive,
-            ]}
-            onPress={() => setBookingFilterVisible(true)}
-          >
-            <Ionicons
-              name="options-outline"
-              size={25}
-              color={
-                bookingStatusFilter !== "all" || bookingSortBy !== "upcoming"
-                  ? "#fff"
-                  : COLORS.primary
-              }
-            />
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.filterButton,
-              selectedDate && styles.filterButtonActive,
+              styles.calendarButton,
+              selectedDate && styles.calendarButtonActive,
             ]}
             onPress={() => setCalendarVisible(true)}
           >
             <Ionicons
               name="calendar-outline"
-              size={25}
-              color={COLORS.primary}
+              size={24}
+              color={selectedDate ? "#fff" : COLORS.primary}
             />
           </Pressable>
         </View>
@@ -2118,8 +2137,9 @@ const styles = StyleSheet.create({
   },
   searchRow: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 18,
   },
 
   searchBox: {
@@ -2130,22 +2150,51 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 18,
+    paddingLeft: 18,
+    paddingRight: 7,
     backgroundColor: COLORS.surface,
   },
 
   searchInput: {
     flex: 1,
     marginLeft: 11,
-    marginRight: 8,
+    marginRight: 4,
     color: COLORS.text,
     fontSize: 16,
+    minWidth: 0,
   },
 
-  filterButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+  searchActionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  searchDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 30,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 4,
+  },
+
+  searchFilterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  searchFilterButtonActive: {
+    backgroundColor: COLORS.primary,
+  },
+
+  calendarButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: COLORS.surface,
@@ -2153,7 +2202,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  filterButtonActive: {
+  calendarButtonActive: {
+    backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
 

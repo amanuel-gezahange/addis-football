@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Fuse from "fuse.js";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
@@ -260,18 +261,39 @@ export default function HomeScreen() {
     }).format(new Date(timestamp));
   }
 
-  const visibleGames = useMemo(() => {
-    const cleanSearch = search.trim().toLowerCase();
+  const fuse = useMemo(
+    () =>
+      new Fuse(games, {
+        keys: [
+          { name: "title", weight: 3 },
+          { name: "area", weight: 3 },
+          { name: "city", weight: 2 },
+          { name: "organizer", weight: 2 },
+          { name: "format", weight: 1.5 },
+          { name: "skill", weight: 1.5 },
+          { name: "payment_provider", weight: 1 },
+          { name: "payment_account_name", weight: 1 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      }),
+    [games],
+  );
 
-    return games
-      .filter((game) => {
+  const visibleGames = useMemo(() => {
+    const cleanSearch = search.trim();
+
+    // Search mode: Fuse handles matching, typo tolerance, and relevance.
+    // Keep the selected city, but ignore date and advanced filters while searching.
+    if (cleanSearch) {
+      const searchResults = fuse.search(cleanSearch).map((result) => result.item);
+
+      return searchResults.filter((game) => {
         if (!game.starts_at) {
           return false;
         }
 
-        const gameDate = getAddisDateKey(game.starts_at);
-
-        // City
         if (
           selectedCity !== "All Ethiopia" &&
           (game.city || "Addis Ababa").toLowerCase() !==
@@ -280,12 +302,31 @@ export default function HomeScreen() {
           return false;
         }
 
-        // Date
-        if (!cleanSearch && selectedDate && gameDate !== selectedDate) {
+        return true;
+      });
+    }
+
+    // Normal browsing mode.
+    return games
+      .filter((game) => {
+        if (!game.starts_at) {
           return false;
         }
 
-        // Skill
+        if (
+          selectedCity !== "All Ethiopia" &&
+          (game.city || "Addis Ababa").toLowerCase() !==
+            selectedCity.toLowerCase()
+        ) {
+          return false;
+        }
+
+        const gameDate = getAddisDateKey(game.starts_at);
+
+        if (selectedDate && gameDate !== selectedDate) {
+          return false;
+        }
+
         if (
           skillFilter &&
           game.skill.toLowerCase() !== skillFilter.toLowerCase()
@@ -293,7 +334,6 @@ export default function HomeScreen() {
           return false;
         }
 
-        // Format
         if (
           formatFilter &&
           game.format.toLowerCase() !== formatFilter.toLowerCase()
@@ -301,51 +341,12 @@ export default function HomeScreen() {
           return false;
         }
 
-        // Free / Paid
         if (priceFilter === "free" && game.payment_method !== "free") {
           return false;
         }
 
         if (priceFilter === "paid" && game.payment_method === "free") {
           return false;
-        }
-
-        // Search
-        if (cleanSearch) {
-          const searchableText = [
-            game.title,
-            game.organizer,
-            game.area,
-            game.city,
-            game.distance,
-            game.time,
-            game.format,
-            game.skill,
-            game.price,
-            game.payment_method !== "free" ? `${game.price} ETB` : null,
-            game.payment_method !== "free" ? `${game.price} birr` : null,
-            game.payment_method !== "free" ? "ETB" : null,
-            game.payment_method !== "free" ? "birr" : null,
-            game.spots_left,
-            `${game.spots_left} spots`,
-            `${game.spots_left} spots left`,
-            game.payment_method,
-            game.payment_provider,
-            game.payment_phone,
-            game.payment_account_name,
-            game.payment_method === "free" ? "free" : null,
-            game.payment_method === "venue" ? "venue pay at venue" : null,
-            game.payment_method === "organizer"
-              ? "organizer pay organizer"
-              : null,
-          ]
-            .filter((value) => value !== null && value !== undefined)
-            .map((value) => String(value).toLowerCase())
-            .join(" ");
-
-          if (!searchableText.includes(cleanSearch)) {
-            return false;
-          }
         }
 
         return true;
@@ -359,7 +360,6 @@ export default function HomeScreen() {
           return b.spots_left - a.spots_left;
         }
 
-        // Default: soonest
         const aTime = a.starts_at
           ? new Date(a.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -372,6 +372,7 @@ export default function HomeScreen() {
       });
   }, [
     games,
+    fuse,
     search,
     selectedDate,
     selectedCity,
@@ -474,51 +475,47 @@ export default function HomeScreen() {
               />
 
               {search.length > 0 && (
-                <Pressable onPress={() => setSearch("")}>
+                <Pressable
+                  style={styles.searchActionButton}
+                  onPress={() => setSearch("")}
+                  hitSlop={8}
+                >
                   <Ionicons
-                    name="close-circle"
-                    size={21}
-                    color={COLORS.textMuted}
+                    name="close"
+                    size={23}
+                    color={COLORS.textSecondary}
                   />
                 </Pressable>
               )}
+
+              <View style={styles.searchDivider} />
+
+              <Pressable
+                style={[
+                  styles.searchFilterButton,
+                  (skillFilter ||
+                    formatFilter ||
+                    priceFilter ||
+                    sortBy !== "soonest") &&
+                    styles.searchFilterButtonActive,
+                ]}
+                onPress={() => setFilterModalVisible(true)}
+                hitSlop={6}
+              >
+                <Ionicons
+                  name="options-outline"
+                  size={24}
+                  color={
+                    skillFilter ||
+                    formatFilter ||
+                    priceFilter ||
+                    sortBy !== "soonest"
+                      ? "#fff"
+                      : COLORS.primary
+                  }
+                />
+              </Pressable>
             </View>
-
-            <Pressable
-              style={[
-                styles.filterButton,
-                (skillFilter ||
-                  formatFilter ||
-                  priceFilter ||
-                  sortBy !== "soonest") &&
-                  styles.filterButtonActive,
-              ]}
-              onPress={() => setFilterModalVisible(true)}
-            >
-              <Ionicons
-                name="options-outline"
-                size={25}
-                color={
-                  skillFilter ||
-                  formatFilter ||
-                  priceFilter ||
-                  sortBy !== "soonest"
-                    ? "#fff"
-                    : COLORS.primary
-                }
-              />
-            </Pressable>
-
-            <Pressable
-              style={styles.filterButton}
-              onPress={() => setCalendarVisible(true)}
-            >
-              <Ionicons
-                name="calendar-outline"
-                size={25}
-                color={COLORS.primary}
-              />
-            </Pressable>
           </View>
 
           {/* DATE SELECTOR */}
@@ -1491,7 +1488,6 @@ const styles = StyleSheet.create({
 
   searchRow: {
     flexDirection: "row",
-    gap: 10,
     marginBottom: 20,
   },
 
@@ -1503,27 +1499,45 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 18,
+    paddingLeft: 18,
+    paddingRight: 7,
     backgroundColor: COLORS.surface,
   },
 
   searchInput: {
     flex: 1,
     marginLeft: 11,
-    marginRight: 8,
+    marginRight: 4,
     color: COLORS.text,
     fontSize: 16,
+    minWidth: 0,
   },
 
-  filterButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+  searchActionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  searchDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 30,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 4,
+  },
+
+  searchFilterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  searchFilterButtonActive: {
+    backgroundColor: COLORS.primary,
   },
 
   dateRow: {
