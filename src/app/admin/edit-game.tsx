@@ -40,6 +40,10 @@ export default function EditGameScreen() {
 
   const [area, setArea] = useState("");
 
+  const [city, setCity] = useState("Addis Ababa");
+
+  const [mapsUrl, setMapsUrl] = useState("");
+
   const [distance, setDistance] = useState("");
 
   const [gameDate, setGameDate] = useState("");
@@ -106,41 +110,83 @@ export default function EditGameScreen() {
       .select(
         `
 
+
+
           id,
+
+
 
           title,
 
+
+
           organizer,
+
+
 
           area,
 
+          city,
+
+          maps_url,
+
+
+
           distance,
+
+
 
           time,
 
+
+
           format,
+
+
 
           skill,
 
+
+
      price,
+
+
 
 payment_method,
 
+
+
 payment_provider,
+
+
 
 payment_phone,
 
+
+
 payment_account_name,
+
+
 
 spots_left,
 
+
+
 status,
+
+
 
 image_url,
 
+
+
 starts_at,
 
+
+
 ends_at
+
+
 
         `,
       )
@@ -168,6 +214,10 @@ ends_at
     setOrganizer(data.organizer || "");
 
     setArea(data.area || "");
+
+    setCity(data.city || "Addis Ababa");
+
+    setMapsUrl(data.maps_url || "");
 
     setDistance(data.distance || "");
 
@@ -201,13 +251,23 @@ ends_at
 
     /*
 
+
+
       New games have real timestamps.
+
+
 
       Convert the stored UTC timestamp
 
+
+
       back into Addis Ababa date/time
 
+
+
       for editing.
+
+
 
     */
 
@@ -220,15 +280,27 @@ ends_at
     } else {
       /*
 
+
+
         Legacy games created before
+
+
 
         starts_at / ends_at existed.
 
+
+
         Leave schedule fields empty.
+
+
 
         Admin can add a real schedule
 
+
+
         when editing them.
+
+
 
       */
 
@@ -250,6 +322,7 @@ ends_at
     if (status === "cancelled") {
       showMessage(
         t("editGame.gameCancelled"),
+
         t("editGame.cancelledCannotEdit"),
       );
 
@@ -259,6 +332,7 @@ ends_at
     if (!title.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.gameTitleRequired"),
       );
 
@@ -268,6 +342,7 @@ ends_at
     if (!organizer.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.organizerRequired"),
       );
 
@@ -280,9 +355,15 @@ ends_at
       return;
     }
 
+    if (!city.trim()) {
+      showMessage(t("editGame.missingInformation"), "City is required");
+      return;
+    }
+
     if (!gameDate.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.gameDateRequired"),
       );
 
@@ -292,6 +373,7 @@ ends_at
     if (!startTime.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.startTimeRequired"),
       );
 
@@ -301,6 +383,7 @@ ends_at
     if (!endTime.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.endTimeRequired"),
       );
 
@@ -310,6 +393,7 @@ ends_at
     if (!format.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.formatRequired"),
       );
 
@@ -319,6 +403,7 @@ ends_at
     if (!skill.trim()) {
       showMessage(
         t("editGame.missingInformation"),
+
         t("editGame.skillLevelRequired"),
       );
 
@@ -331,6 +416,7 @@ ends_at
       if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
         showMessage(
           t("editGame.invalidPrice"),
+
           t("editGame.priceGreaterThanZero"),
         );
 
@@ -342,6 +428,7 @@ ends_at
       if (!paymentProvider.trim()) {
         showMessage(
           t("editGame.missingPaymentInformation"),
+
           t("editGame.paymentProviderRequired"),
         );
 
@@ -351,6 +438,7 @@ ends_at
       if (!paymentPhone.trim()) {
         showMessage(
           t("editGame.missingPaymentInformation"),
+
           t("editGame.paymentPhoneRequired"),
         );
 
@@ -360,6 +448,7 @@ ends_at
       if (!paymentAccountName.trim()) {
         showMessage(
           t("editGame.missingPaymentInformation"),
+
           t("editGame.paymentAccountNameRequired"),
         );
 
@@ -382,6 +471,7 @@ ends_at
     if (!startsAt) {
       showMessage(
         t("editGame.invalidSchedule"),
+
         t("editGame.invalidStartSchedule"),
       );
 
@@ -391,6 +481,7 @@ ends_at
     if (!endsAt) {
       showMessage(
         t("editGame.invalidSchedule"),
+
         t("editGame.invalidEndSchedule"),
       );
 
@@ -415,6 +506,10 @@ ends_at
       p_organizer: organizer.trim(),
 
       p_area: area.trim(),
+
+      p_city: city.trim(),
+
+      p_maps_url: mapsUrl.trim() || null,
 
       p_distance: distance.trim(),
 
@@ -504,15 +599,27 @@ ends_at
 
     /*
 
+
+
       * Organizer-direct payments are NOT processed through
+
+
 
       * the old Chapa refund system.
 
+
+
       *
+
+
 
       * The organizer received the money directly, so any refund
 
+
+
       * must be handled directly by the organizer.
+
+
 
      */
 
@@ -538,7 +645,11 @@ ends_at
 
     /*
 
+
+
       * Free and pay-at-venue games do not need payment refunds.
+
+
 
      */
 
@@ -549,6 +660,7 @@ ends_at
 
       showMessage(
         t("editGame.gameCancelled"),
+
         t("editGame.cancelledSuccessfully"),
       );
 
@@ -559,9 +671,15 @@ ends_at
 
     /*
 
+
+
       * Legacy/integrated paid games:
 
+
+
       * preserve the existing automatic refund system.
+
+
 
      */
 
@@ -576,6 +694,7 @@ ends_at
 
       showMessage(
         t("editGame.gameCancelled"),
+
         t("editGame.cancelledSuccessfully"),
       );
 
@@ -606,6 +725,7 @@ ends_at
 
       showMessage(
         t("editGame.gameCancelled"),
+
         t("editGame.refundProcessingCouldNotStart"),
       );
 
@@ -646,6 +766,7 @@ ends_at
     } else {
       showMessage(
         t("editGame.gameCancelled"),
+
         t("editGame.cancelledSuccessfully"),
       );
     }
@@ -738,6 +859,7 @@ ends_at
           </Pressable>
 
           <Text style={styles.title}>{t("editGame.title")}</Text>
+
           <Text style={styles.subtitle}>{t("editGame.subtitle")}</Text>
 
           {isCancelled && (
@@ -863,6 +985,29 @@ ends_at
 
             placeholderTextColor={COLORS.textMuted}
 
+            editable={!isCancelled}
+          />
+
+          <FieldLabel text="City" />
+
+          <TextInput
+            style={[styles.input, isCancelled && styles.disabledInput]}
+            value={city}
+            onChangeText={setCity}
+            placeholder="Addis Ababa"
+            placeholderTextColor={COLORS.textMuted}
+            editable={!isCancelled}
+          />
+
+          <FieldLabel text="Google Maps link (optional)" />
+
+          <TextInput
+            style={[styles.input, isCancelled && styles.disabledInput]}
+            value={mapsUrl}
+            onChangeText={setMapsUrl}
+            placeholder="https://maps.google.com/..."
+            placeholderTextColor={COLORS.textMuted}
+            autoCapitalize="none"
             editable={!isCancelled}
           />
 
@@ -1149,7 +1294,7 @@ ends_at
 
             onChangeText={setImageUrl}
 
-            placeholder="https://..."
+            placeholder="https\://..."
 
             placeholderTextColor={COLORS.textMuted}
 
@@ -1275,9 +1420,15 @@ ends_at
 
 /*
 
+
+
   Convert a Supabase timestamp into
 
+
+
   YYYY-MM-DD using Addis Ababa time.
+
+
 
 */
 
@@ -1297,9 +1448,15 @@ function formatAddisDate(timestamp: string) {
 
 /*
 
+
+
   Convert timestamp into something
 
+
+
   like 7:00 PM in Addis Ababa.
+
+
 
 */
 
@@ -1317,11 +1474,19 @@ function formatAddisTime(timestamp: string) {
 
 /*
 
+
+
   Parse admin input explicitly as
+
+
 
   Addis Ababa time.
 
+
+
   Ethiopia is UTC+03:00.
+
+
 
 */
 
@@ -1348,7 +1513,7 @@ function parseAddisDateTime(dateText: string, timeText: string) {
 
     .toUpperCase()
 
-    .match(/^(\d{1,2}):(\d{2})\s\*(AM|PM)$/);
+    .match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
 
   if (!timeMatch) {
     return null;

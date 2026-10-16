@@ -282,8 +282,8 @@ export default function BookingsScreen() {
             booking.price_paid,
             booking.price_paid != null ? `${booking.price_paid} ETB` : null,
             booking.price_paid != null ? `${booking.price_paid} birr` : null,
-           game.payment_method !== "free" ? "ETB" : null,
-           game.payment_method !== "free" ? "birr" : null,
+            game.payment_method !== "free" ? "ETB" : null,
+            game.payment_method !== "free" ? "birr" : null,
 
             // Payment
             game.payment_method,
@@ -1693,8 +1693,16 @@ function EthiopianCalendar({
 
   const weekdays =
     language === "om"
-      ? ["Dil", "Wix", "Kib", "Rob", "Kam", "Jim", "San"]
-      : ["እሑ", "ሰኞ", "ማክ", "ረቡ", "ሐሙ", "ዓር", "ቅዳ"];
+      ? [
+          "Dilbata",
+          "Wiixata",
+          "Kibxata",
+          "Roobii",
+          "Kamiisa",
+          "Jimaata",
+          "Sanbata",
+        ]
+      : ["እሁድ", "ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ", "እሁድ"];
 
   const daysInMonth =
     viewMonth <= 12 ? 30 : isEthiopianLeapYear(viewYear) ? 6 : 5;

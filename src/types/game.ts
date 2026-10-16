@@ -5,7 +5,7 @@ export type Game = {
   title: string;
   organizer: string;
   area: string;
-  distance?: string;
+  distance?: string | null;
   time: string;
   format: string;
   skill: string;

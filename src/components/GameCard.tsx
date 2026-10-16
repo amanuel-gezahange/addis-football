@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Clipboard,
   Image,
+  Linking,
   Modal,
   Pressable,
   StyleSheet,
@@ -90,6 +91,31 @@ export default function GameCard({ game }: Props) {
   const isPaymentSubmitted = paymentStatus === "submitted";
 
   const isOrganizerPayment = paymentDetails.payment_method === "organizer";
+
+  const locationGame = game as Game & {
+    city?: string | null;
+    maps_url?: string | null;
+  };
+
+  async function openGameLocation() {
+    const area = String(game.area ?? "").trim();
+    const city = String(locationGame.city ?? "").trim();
+    const savedMapsUrl = String(locationGame.maps_url ?? "").trim();
+
+    const targetUrl = savedMapsUrl
+      ? savedMapsUrl
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          [area, city].filter(Boolean).join(", "),
+        )}`;
+
+    if (!targetUrl) return;
+
+    try {
+      await Linking.openURL(targetUrl);
+    } catch (error) {
+      console.log("Could not open game location:", error);
+    }
+  }
 
   function getSkillLabel(skill: string) {
     const normalized = skill.trim().toLowerCase();
@@ -625,13 +651,26 @@ export default function GameCard({ game }: Props) {
         </Text>
 
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={17} color={c.textSecondary} />
+          <Pressable style={styles.locationLink} onPress={openGameLocation}>
+            <Ionicons
+              name="location-outline"
+              size={17}
+              color={c.textSecondary}
+            />
+            <Text style={styles.locationText}>
+              {game.area}
+              {locationGame.city &&
+              !String(game.area)
+                .toLowerCase()
+                .includes(locationGame.city.toLowerCase())
+                ? `, ${locationGame.city}`
+                : ""}
+            </Text>
+          </Pressable>
 
-          <Text style={styles.locationText}>
-            {game.area}
-
-            {game.distance ? ` • ${game.distance}` : ""}
-          </Text>
+          {game.distance ? (
+            <Text style={styles.distanceText}> • {game.distance}</Text>
+          ) : null}
         </View>
 
         <View style={styles.detailsRow}>
@@ -1020,6 +1059,17 @@ const styles = StyleSheet.create({
     gap: 5,
 
     marginTop: 9,
+  },
+
+  locationLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  distanceText: {
+    color: c.textSecondary,
+    fontSize: 15,
   },
 
   locationText: {

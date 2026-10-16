@@ -161,8 +161,6 @@ const am = {
 
     paymentMethodUnavailable: "ይህ የክፍያ ዘዴ አይገኝም።",
 
-    paymentMethodNotAvailable: "ይህ የክፍያ ዘዴ አይገኝም።",
-
     bookingNotFound: "ምዝገባው አልተገኘም።",
 
     couldNotReserve: "ቦታዎን መያዝ አልተቻለም።",

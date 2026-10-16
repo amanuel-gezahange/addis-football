@@ -22,7 +22,7 @@ import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Game = {
-  id: number;
+  id: string;
   title: string;
   organizer: string;
   area: string;
@@ -32,7 +32,7 @@ type Game = {
   skill: string;
   price: number;
   spots_left: number;
-  status: string;
+  status: "available" | "full";
   image_url: string | null;
   starts_at: string | null;
   ends_at: string | null;
@@ -40,11 +40,13 @@ type Game = {
   payment_provider: string | null;
   payment_phone: string | null;
   payment_account_name: string | null;
+  city: string | null;
+  maps_url: string | null;
 };
 
 type DiscoverGame = Game & {
   spotsLeft: number;
-  image: string | null;
+  image: string;
 };
 
 type DateOption = {
@@ -53,6 +55,23 @@ type DateOption = {
   date: string;
   fullDate: string;
 };
+
+const CITY_OPTIONS = [
+  "All Ethiopia",
+  "Addis Ababa",
+  "Adama",
+  "Bahir Dar",
+  "Bishoftu",
+  "Dire Dawa",
+  "Gondar",
+  "Hawassa",
+  "Jimma",
+  "Mekelle",
+  "Dessie",
+  "Arba Minch",
+  "Shashamane",
+  "Harar",
+] as const;
 
 export default function HomeScreen() {
   const { language, t } = useLanguage();
@@ -71,6 +90,8 @@ export default function HomeScreen() {
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [selectedCity, setSelectedCity] = useState("Addis Ababa");
+  const [cityModalVisible, setCityModalVisible] = useState(false);
 
   /*
     Generate the next 7 days.
@@ -165,6 +186,8 @@ export default function HomeScreen() {
           title,
           organizer,
           area,
+          city,
+          maps_url,
           distance,
           time,
           format,
@@ -196,13 +219,15 @@ export default function HomeScreen() {
       return;
     }
 
-    const mappedGames = (data || []).map((game) => ({
-      ...game,
+const mappedGames = (data || []).map((game) => ({
+  ...game,
 
-      spotsLeft: game.spots_left,
+  id: String(game.id),
 
-      image: game.image_url,
-    })) as DiscoverGame[];
+  spotsLeft: game.spots_left,
+
+  image: game.image_url ?? "",
+})) as DiscoverGame[];
 
     setGames(mappedGames);
     setLoading(false);
@@ -241,6 +266,14 @@ export default function HomeScreen() {
 
         const gameDate = getAddisDateKey(game.starts_at);
 
+        if (
+          selectedCity !== "All Ethiopia" &&
+          (game.city || "Addis Ababa").toLowerCase() !==
+            selectedCity.toLowerCase()
+        ) {
+          return false;
+        }
+
         if (!cleanSearch && selectedDate && gameDate !== selectedDate) {
           return false;
         }
@@ -250,6 +283,7 @@ export default function HomeScreen() {
           game.title,
           game.organizer,
           game.area,
+          game.city,
           game.distance,
           game.time,
           game.format,
@@ -301,7 +335,7 @@ export default function HomeScreen() {
 
         return aTime - bTime;
       });
-  }, [games, search, selectedDate]);
+  }, [games, search, selectedDate, selectedCity]);
 
   const selectedDateLabel = useMemo(() => {
     const quickDate = dates.find((item) => item.key === selectedDate);
@@ -351,14 +385,17 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.title}>{t("discover.title")}</Text>
 
-              <Pressable style={styles.location}>
+              <Pressable
+                style={styles.location}
+                onPress={() => setCityModalVisible(true)}
+              >
                 <Ionicons
                   name="location-outline"
                   size={18}
                   color={COLORS.textSecondary}
                 />
 
-                <Text style={styles.locationText}>Addis Ababa</Text>
+                <Text style={styles.locationText}>{selectedCity}</Text>
 
                 <Ionicons
                   name="chevron-down"
@@ -535,6 +572,69 @@ export default function HomeScreen() {
             }}
           />
         </ScrollView>
+        <Modal
+          visible={cityModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCityModalVisible(false)}
+        >
+          <Pressable
+            style={styles.calendarOverlay}
+            onPress={() => setCityModalVisible(false)}
+          >
+            <Pressable
+              style={styles.calendarModal}
+              onPress={(event) => event.stopPropagation()}
+            >
+              <View style={styles.calendarHeader}>
+                <Text style={styles.calendarTitle}>Choose a city</Text>
+                <Pressable
+                  style={styles.calendarCloseButton}
+                  onPress={() => setCityModalVisible(false)}
+                >
+                  <Ionicons name="close" size={24} color={COLORS.text} />
+                </Pressable>
+              </View>
+
+              <ScrollView
+                style={styles.cityList}
+                showsVerticalScrollIndicator={false}
+              >
+                {CITY_OPTIONS.map((city) => {
+                  const selected = city === selectedCity;
+
+                  return (
+                    <Pressable
+                      key={city}
+                      style={[
+                        styles.cityOption,
+                        selected && styles.cityOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedCity(city);
+                        setCityModalVisible(false);
+                      }}
+                    >
+                      <Ionicons
+                        name={selected ? "radio-button-on" : "radio-button-off"}
+                        size={21}
+                        color={selected ? COLORS.primary : COLORS.textSecondary}
+                      />
+                      <Text
+                        style={[
+                          styles.cityOptionText,
+                          selected && styles.cityOptionTextSelected,
+                        ]}
+                      >
+                        {city}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
         <Modal
           visible={calendarVisible}
           transparent
@@ -1223,6 +1323,34 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontWeight: "800",
   },
+  cityList: {
+    maxHeight: 460,
+  },
+
+  cityOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+
+  cityOptionSelected: {
+    backgroundColor: COLORS.background,
+  },
+
+  cityOptionText: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  cityOptionTextSelected: {
+    color: COLORS.primary,
+    fontWeight: "800",
+  },
+
   calendarOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.65)",
