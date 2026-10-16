@@ -1260,7 +1260,7 @@ const styles = StyleSheet.create({
   },
 
   filterSheet: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
