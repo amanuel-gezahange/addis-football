@@ -233,59 +233,60 @@ export default function BookingsScreen() {
     const now = Date.now();
     const cleanSearch = search.trim().toLowerCase();
 
-    return bookings
-      .filter((booking) => {
-        const game = booking.games;
+    const filtered = bookings.filter((booking) => {
+      const game = booking.games;
 
-        if (!game || !game.starts_at) {
+      if (!game || !game.starts_at) {
+        return false;
+      }
+
+      // Hide cancelled bookings from the main Bookings screen.
+      if (
+        booking.status === "cancelled_by_player" ||
+        booking.status === "cancelled_by_organizer"
+      ) {
+        return false;
+      }
+
+      // Keep the booking visible until the game actually ends.
+      const gameEndTime = game.ends_at
+        ? new Date(game.ends_at).getTime()
+        : new Date(game.starts_at).getTime();
+
+      if (gameEndTime < now) {
+        return false;
+      }
+
+      // Date filter.
+      if (selectedDate) {
+        const gameDate = getAddisDateKey(game.starts_at);
+
+        if (gameDate !== selectedDate) {
           return false;
         }
+      }
 
-        // Do not show cancelled bookings in the main Bookings list.
+      // Search filter.
+      if (cleanSearch) {
+        const title = (game.title ?? "").toLowerCase();
+        const area = (game.area ?? "").toLowerCase();
+        const organizer = (game.organizer ?? "").toLowerCase();
+
         if (
-          booking.status === "cancelled_by_player" ||
-          booking.status === "cancelled_by_organizer"
+          !title.includes(cleanSearch) &&
+          !area.includes(cleanSearch) &&
+          !organizer.includes(cleanSearch)
         ) {
           return false;
         }
+      }
 
-        // Keep a game visible until it actually ends.
-        // If ends_at is missing, fall back to starts_at.
-        const gameEndTime = game.ends_at
-          ? new Date(game.ends_at).getTime()
-          : new Date(game.starts_at).getTime();
+      return true;
+    });
 
-        if (gameEndTime < now) {
-          return false;
-        }
-
-        // Optional date filter.
-        if (selectedDate) {
-          const gameDate = getAddisDateKey(game.starts_at);
-
-          if (gameDate !== selectedDate) {
-            return false;
-          }
-        }
-
-        // Optional search filter.
-        if (cleanSearch) {
-          const title = (game.title ?? "").toLowerCase();
-          const area = (game.area ?? "").toLowerCase();
-          const organizer = (game.organizer ?? "").toLowerCase();
-
-          if (
-            !title.includes(cleanSearch) &&
-            !area.includes(cleanSearch) &&
-            !organizer.includes(cleanSearch)
-          ) {
-            return false;
-          }
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
+    // No search: upcoming bookings nearest first.
+    if (!cleanSearch) {
+      return [...filtered].sort((a, b) => {
         const aTime = a.games?.starts_at
           ? new Date(a.games.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -296,6 +297,53 @@ export default function BookingsScreen() {
 
         return aTime - bTime;
       });
+    }
+
+    // Search: use the same relevance behavior as Discover.
+    const getSearchScore = (booking: Booking) => {
+      const game = booking.games;
+
+      if (!game) {
+        return 0;
+      }
+
+      const title = (game.title ?? "").toLowerCase();
+      const area = (game.area ?? "").toLowerCase();
+      const organizer = (game.organizer ?? "").toLowerCase();
+
+      if (title === cleanSearch) return 100;
+      if (title.startsWith(cleanSearch)) return 90;
+      if (title.includes(cleanSearch)) return 80;
+
+      if (organizer === cleanSearch) return 70;
+      if (organizer.startsWith(cleanSearch)) return 65;
+      if (organizer.includes(cleanSearch)) return 60;
+
+      if (area === cleanSearch) return 50;
+      if (area.startsWith(cleanSearch)) return 45;
+      if (area.includes(cleanSearch)) return 40;
+
+      return 0;
+    };
+
+    return [...filtered].sort((a, b) => {
+      const scoreDifference = getSearchScore(b) - getSearchScore(a);
+
+      if (scoreDifference !== 0) {
+        return scoreDifference;
+      }
+
+      // Same search score: nearest game first.
+      const aTime = a.games?.starts_at
+        ? new Date(a.games.starts_at).getTime()
+        : Number.MAX_SAFE_INTEGER;
+
+      const bTime = b.games?.starts_at
+        ? new Date(b.games.starts_at).getTime()
+        : Number.MAX_SAFE_INTEGER;
+
+      return aTime - bTime;
+    });
   }, [bookings, search, selectedDate]);
 
   async function submitOrganizerPayment(booking: Booking) {
@@ -1431,11 +1479,11 @@ function formatEthiopianDate(timestamp: string, language: "en" | "am" | "om") {
   const r = (jdn - 1724221) % 1461;
   const n = (r % 365) + 365 * Math.floor(r / 1460);
 
-const ethYear =
-  4 * Math.floor((jdn - 1724221) / 1461) +
-  Math.floor(r / 365) -
-  Math.floor(r / 1460) +
-  1;
+  const ethYear =
+    4 * Math.floor((jdn - 1724221) / 1461) +
+    Math.floor(r / 365) -
+    Math.floor(r / 1460) +
+    1;
 
   const ethMonth = Math.floor(n / 30) + 1;
   const ethDay = (n % 30) + 1;
