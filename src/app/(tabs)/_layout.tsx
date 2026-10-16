@@ -30,7 +30,7 @@ export default function TabLayout() {
             <Ionicons
               name="football"
               size={25}
-              color={COLORS.background}
+              color="#FFFFFF"
             />
           </View>
 
@@ -50,9 +50,11 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
 
+          // Keep Addis Football cyan as the brand accent.
           tabBarActiveTintColor: COLORS.primary,
-          tabBarInactiveTintColor:
-            COLORS.textMuted,
+
+          // Neutral Airbnb-style inactive color.
+          tabBarInactiveTintColor: "#717171",
 
           tabBarPosition: isDesktopWeb
             ? "left"
@@ -60,10 +62,9 @@ export default function TabLayout() {
 
           tabBarStyle: isDesktopWeb
             ? {
-                backgroundColor:
-                  COLORS.surface,
-                borderRightColor:
-                  COLORS.border,
+                backgroundColor: "#FFFFFF",
+
+                borderRightColor: "#E5E5E5",
                 borderRightWidth: 1,
                 borderTopWidth: 0,
 
@@ -73,16 +74,19 @@ export default function TabLayout() {
                 paddingHorizontal: 14,
               }
             : {
-                backgroundColor:
-                  COLORS.background,
-                borderTopColor:
-                  COLORS.border,
+                backgroundColor: "#FFFFFF",
+
+                borderTopColor: "#E5E5E5",
                 borderTopWidth: 1,
 
                 height: 60 + bottomInset,
+
                 paddingTop: 4,
                 paddingBottom:
                   bottomInset + 8,
+
+                elevation: 0,
+                shadowOpacity: 0,
               },
 
           tabBarItemStyle: isDesktopWeb
@@ -111,13 +115,12 @@ export default function TabLayout() {
               }
             : {
                 fontSize: 11,
-                fontWeight: "700",
+                fontWeight: "600",
                 marginTop: -2,
               },
 
           sceneStyle: {
-            backgroundColor:
-              COLORS.background,
+            backgroundColor: "#FFFFFF",
           },
         }}
       >
@@ -194,7 +197,7 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   brand: {
@@ -220,7 +223,7 @@ const styles = StyleSheet.create({
   },
 
   brandTitle: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 15,
     fontWeight: "900",
     lineHeight: 16,

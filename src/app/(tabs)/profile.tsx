@@ -274,7 +274,7 @@ export default function ProfileScreen() {
             <Ionicons
               name="person"
 
-              size={44}
+              size={38}
 
               color={COLORS.primary}
             />
@@ -351,7 +351,7 @@ export default function ProfileScreen() {
                   <Ionicons
                     name="checkmark-circle"
 
-                    size={22}
+                    size={20}
 
                     color={COLORS.background}
                   />
@@ -611,7 +611,7 @@ export default function ProfileScreen() {
 
             size={21}
 
-            color="#FF6B72"
+            color="#C13515"
           />
 
           <Text style={styles.signOutText}>{t("profile.signOut")}</Text>
@@ -626,14 +626,12 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   content: {
@@ -656,8 +654,7 @@ const styles = StyleSheet.create({
 
   loadingContainer: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
 
     alignItems: "center",
 
@@ -665,146 +662,100 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-    marginTop: 14,
+    color: "#717171",
+    fontSize: 14,
+    marginTop: 12,
   },
 
   title: {
-    color: COLORS.text,
-
-    fontSize: 36,
-
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
-
-    fontSize: 16,
-
-    marginTop: 4,
+    color: "#717171",
+    fontSize: 15,
+    marginTop: 3,
   },
 
   avatarSection: {
     alignItems: "center",
-
-    marginTop: 30,
-
-    marginBottom: 20,
+    marginTop: 24,
+    marginBottom: 16,
   },
 
   avatar: {
-    width: 88,
-
-    height: 88,
-
-    borderRadius: 44,
-
-    backgroundColor: COLORS.surfaceAlt,
-
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "#F7F7F7",
     alignItems: "center",
-
     justifyContent: "center",
-
     borderWidth: 1,
-
-    borderColor: COLORS.border,
+    borderColor: "#E5E5E5",
   },
 
   playerName: {
-    color: COLORS.text,
-
-    fontSize: 21,
-
-    fontWeight: "800",
-
-    marginTop: 13,
+    color: "#222222",
+    fontSize: 19,
+    fontWeight: "700",
+    marginTop: 11,
   },
 
   phoneText: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 14,
-
-    marginTop: 4,
+    marginTop: 3,
   },
 
   roleBadge: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 5,
-
-    backgroundColor: COLORS.surfaceAlt,
-
+    backgroundColor: "#F2FBFE",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
+    borderColor: "#CDEFF8",
     paddingHorizontal: 10,
-
-    paddingVertical: 6,
-
-    borderRadius: 20,
-
-    marginTop: 10,
+    paddingVertical: 5,
+    borderRadius: 18,
+    marginTop: 9,
   },
 
   roleBadgeText: {
-    color: COLORS.primary,
-
-    fontSize: 13,
-
-    fontWeight: "800",
+    color: "#087EA4",
+    fontSize: 12,
+    fontWeight: "700",
   },
 
   label: {
-    color: COLORS.text,
-
-    fontSize: 15,
-
-    fontWeight: "700",
-
-    marginBottom: 9,
-
-    marginTop: 18,
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    marginTop: 17,
   },
 
   languageContainer: {
-    gap: 8,
-
-    marginBottom: 4,
+    gap: 7,
+    marginBottom: 2,
   },
 
   languageButton: {
-    minHeight: 56,
-
-    borderRadius: 15,
-
+    minHeight: 50,
+    borderRadius: 14,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
-    paddingHorizontal: 16,
-
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 15,
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
   },
 
   languageButtonSelected: {
     backgroundColor: COLORS.primary,
-
     borderColor: COLORS.primary,
   },
 
@@ -817,81 +768,58 @@ const styles = StyleSheet.create({
   },
 
   languageButtonText: {
-    color: COLORS.text,
-
-    fontSize: 16,
-
-    fontWeight: "700",
+    color: "#222222",
+    fontSize: 15,
+    fontWeight: "600",
   },
 
   languageButtonTextSelected: {
-    color: COLORS.background,
+    color: "#07111F",
   },
 
   languageCode: {
-    color: COLORS.textMuted,
-
+    color: "#9A9A9A",
     fontSize: 11,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   languageCodeSelected: {
-    color: COLORS.background,
+    color: "#07111F",
   },
 
   input: {
-    height: 58,
-
+    height: 52,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 15,
-
-    backgroundColor: COLORS.surface,
-
-    paddingHorizontal: 16,
-
-    color: COLORS.text,
-
-    fontSize: 16,
+    borderColor: "#DDDDDD",
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 15,
+    color: "#222222",
+    fontSize: 15,
   },
 
   phoneBox: {
-    height: 58,
-
+    height: 52,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 15,
-
-    backgroundColor: COLORS.surface,
-
-    paddingHorizontal: 16,
-
+    borderColor: "#DDDDDD",
+    borderRadius: 14,
+    backgroundColor: "#F7F7F7",
+    paddingHorizontal: 15,
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 10,
+    gap: 9,
   },
 
   phoneBoxText: {
     flex: 1,
-
-    color: COLORS.textSecondary,
-
-    fontSize: 16,
+    color: "#717171",
+    fontSize: 15,
   },
 
   phoneHelp: {
-    color: COLORS.textMuted,
-
+    color: "#8A8A8A",
     fontSize: 12,
-
-    marginTop: 7,
+    marginTop: 6,
   },
 
   skillContainer: {
@@ -902,16 +830,11 @@ const styles = StyleSheet.create({
 
   skillButton: {
     flex: 1,
-
-    minHeight: 48,
-
-    borderRadius: 14,
-
+    minHeight: 44,
+    borderRadius: 13,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
 
     alignItems: "center",
 
@@ -925,35 +848,27 @@ const styles = StyleSheet.create({
   },
 
   skillButtonSelected: {
-    backgroundColor: COLORS.primary,
-
-    borderColor: COLORS.primary,
+    backgroundColor: "#222222",
+    borderColor: "#222222",
   },
 
   skillButtonText: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 13,
-
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   skillButtonTextSelected: {
-    color: COLORS.background,
+    color: "#FFFFFF",
   },
 
   saveButton: {
-    height: 58,
-
-    borderRadius: 15,
-
+    height: 50,
+    borderRadius: 14,
     backgroundColor: COLORS.primary,
-
     alignItems: "center",
-
     justifyContent: "center",
-
-    marginTop: 30,
+    marginTop: 24,
   },
 
   disabledButton: {
@@ -961,27 +876,19 @@ const styles = StyleSheet.create({
   },
 
   saveButtonText: {
-    color: COLORS.background,
-
-    fontSize: 17,
-
-    fontWeight: "800",
+    color: "#07111F",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   adminSection: {
-    marginTop: 32,
-
-    backgroundColor: COLORS.surface,
-
+    marginTop: 28,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 18,
-
+    borderColor: "#E5E5E5",
+    borderRadius: 16,
     padding: 16,
-
-    gap: 10,
+    gap: 8,
   },
 
   adminHeader: {
@@ -995,13 +902,10 @@ const styles = StyleSheet.create({
   },
 
   adminIcon: {
-    width: 42,
-
-    height: 42,
-
-    borderRadius: 21,
-
-    backgroundColor: COLORS.surfaceAlt,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F2FBFE",
 
     alignItems: "center",
 
@@ -1009,45 +913,32 @@ const styles = StyleSheet.create({
   },
 
   adminTitle: {
-    color: COLORS.text,
-
-    fontSize: 18,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 17,
+    fontWeight: "700",
   },
 
   adminSubtitle: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 13,
-
     marginTop: 2,
   },
 
   adminButton: {
-    minHeight: 70,
-
-    borderRadius: 14,
-
-    backgroundColor: COLORS.surfaceAlt,
-
+    minHeight: 62,
+    borderRadius: 13,
+    backgroundColor: "#F7F7F7",
     flexDirection: "row",
-
     alignItems: "center",
-
     paddingHorizontal: 13,
-
     gap: 11,
   },
 
   adminButtonIcon: {
-    width: 40,
-
-    height: 40,
-
-    borderRadius: 12,
-
-    backgroundColor: COLORS.surfaceAlt,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
 
     alignItems: "center",
 
@@ -1055,46 +946,31 @@ const styles = StyleSheet.create({
   },
 
   adminButtonTitle: {
-    color: COLORS.text,
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   adminButtonSubtitle: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 12,
-
     marginTop: 2,
   },
 
   signOutButton: {
-    height: 56,
-
-    borderRadius: 15,
-
-    borderWidth: 1,
-
-    borderColor: "#493238",
-
+    alignSelf: "center",
+    minHeight: 42,
+    paddingHorizontal: 12,
     alignItems: "center",
-
     justifyContent: "center",
-
     flexDirection: "row",
-
-    gap: 8,
-
-    marginTop: 18,
+    gap: 7,
+    marginTop: 20,
   },
 
   signOutText: {
-    color: "#FF6B72",
-
-    fontSize: 16,
-
-    fontWeight: "700",
+    color: "#C13515",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

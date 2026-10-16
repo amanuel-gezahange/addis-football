@@ -354,29 +354,22 @@ export default function PaymentRequestsScreen() {
             <View style={styles.header}>
                 <Pressable
                     style={styles.backButton}
-
                     onPress={() => router.replace("/(tabs)/profile")}
-
                     hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go back"
                 >
-                    <Ionicons
-                        name="chevron-back"
-
-                        size={25}
-
-                        color={COLORS.text}
-                    />
+                    <Ionicons name="arrow-back" size={20} color="#087EA4" />
+                    <Text style={styles.backText}>Back</Text>
                 </Pressable>
 
-                <View style={styles.headerText}>
-                    <Text style={styles.title}>
-                        {t("paymentRequests.title")}
-                    </Text>
+                <Text style={styles.title}>
+                    {t("paymentRequests.title")}
+                </Text>
 
-                    <Text style={styles.subtitle}>
-                        {t("paymentRequests.subtitle")}
-                    </Text>
-                </View>
+                <Text style={styles.subtitle}>
+                    Review and confirm player payments
+                </Text>
             </View>
 
             <ScrollView
@@ -517,7 +510,7 @@ export default function PaymentRequestsScreen() {
 
                                         size={20}
 
-                                        color="#F5C451"
+                                        color="#9A6700"
                                     />
 
                                     <Text style={styles.warningText}>
@@ -545,17 +538,15 @@ export default function PaymentRequestsScreen() {
                                     disabled={isConfirming}
                                 >
                                     {isConfirming ? (
-                                        <ActivityIndicator
-                                            color={COLORS.background}
-                                        />
+                                        <ActivityIndicator color="#07111F" />
                                     ) : (
                                         <>
                                             <Ionicons
                                                 name="checkmark-circle"
 
-                                                size={22}
+                                                size={20}
 
-                                                color={COLORS.background}
+                                                color="#07111F"
                                             />
 
                                             <Text
@@ -581,64 +572,42 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
 
-        backgroundColor: COLORS.background,
+        backgroundColor: "#FFFFFF",
     },
 
     header: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        paddingHorizontal: 18,
-
-        paddingTop: 12,
-
-        paddingBottom: 16,
-
+        paddingHorizontal: 20,
+        paddingTop: 18,
+        paddingBottom: 20,
         borderBottomWidth: 1,
-
-        borderBottomColor: COLORS.border,
+        borderBottomColor: "#EEEEEE",
     },
 
     backButton: {
-        width: 42,
-
-        height: 42,
-
-        borderRadius: 21,
-
-        borderWidth: 1,
-
-        borderColor: COLORS.border,
-
-        backgroundColor: COLORS.surface,
-
+        alignSelf: "flex-start",
+        flexDirection: "row",
         alignItems: "center",
-
-        justifyContent: "center",
-
-        marginRight: 12,
+        gap: 5,
+        paddingVertical: 6,
+        marginBottom: 10,
     },
 
-    headerText: {
-        flex: 1,
+    backText: {
+        color: "#087EA4",
+        fontSize: 14,
+        fontWeight: "600",
     },
 
     title: {
-        color: COLORS.text,
-
-        fontSize: 24,
-
+        color: "#222222",
+        fontSize: 32,
         fontWeight: "800",
-
-        letterSpacing: -0.5,
+        letterSpacing: -0.8,
     },
 
     subtitle: {
-        color: COLORS.textSecondary,
-
-        fontSize: 13,
-
+        color: "#717171",
+        fontSize: 15,
         marginTop: 3,
     },
 
@@ -647,7 +616,7 @@ const styles = StyleSheet.create({
     },
 
     content: {
-        padding: 18,
+        padding: 20,
     },
 
     loadingContainer: {
@@ -659,7 +628,7 @@ const styles = StyleSheet.create({
     },
 
     loadingText: {
-        color: COLORS.textSecondary,
+        color: "#717171",
 
         fontSize: 14,
 
@@ -681,11 +650,11 @@ const styles = StyleSheet.create({
 
         borderRadius: 34,
 
-        backgroundColor: COLORS.surfaceAlt,
+        backgroundColor: "#F2FBFE",
 
         borderWidth: 1,
 
-        borderColor: COLORS.border,
+        borderColor: "#CDEFF8",
 
         alignItems: "center",
 
@@ -693,17 +662,17 @@ const styles = StyleSheet.create({
     },
 
     emptyTitle: {
-        color: COLORS.text,
+        color: "#222222",
 
-        fontSize: 20,
+        fontSize: 19,
 
-        fontWeight: "800",
+        fontWeight: "700",
 
         marginTop: 16,
     },
 
     emptyText: {
-        color: COLORS.textSecondary,
+        color: "#717171",
 
         fontSize: 14,
 
@@ -715,13 +684,13 @@ const styles = StyleSheet.create({
     },
 
     card: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: "#FFFFFF",
 
         borderWidth: 1,
 
-        borderColor: COLORS.border,
+        borderColor: "#E5E5E5",
 
-        borderRadius: 18,
+        borderRadius: 16,
 
         padding: 16,
 
@@ -735,13 +704,13 @@ const styles = StyleSheet.create({
     },
 
     gameIcon: {
-        width: 44,
+        width: 40,
 
-        height: 44,
+        height: 40,
 
-        borderRadius: 13,
+        borderRadius: 12,
 
-        backgroundColor: COLORS.surfaceAlt,
+        backgroundColor: "#F2FBFE",
 
         alignItems: "center",
 
@@ -755,15 +724,15 @@ const styles = StyleSheet.create({
     },
 
     gameTitle: {
-        color: COLORS.text,
+        color: "#222222",
 
         fontSize: 17,
 
-        fontWeight: "800",
+        fontWeight: "700",
     },
 
     submittedText: {
-        color: COLORS.textMuted,
+        color: "#8A8A8A",
 
         fontSize: 11,
 
@@ -777,15 +746,15 @@ const styles = StyleSheet.create({
 
         borderRadius: 20,
 
-        backgroundColor: "#332A13",
+        backgroundColor: "#FFF8E7",
 
         borderWidth: 1,
 
-        borderColor: "#6A5421",
+        borderColor: "#E9D28A",
     },
 
     statusText: {
-        color: "#F5C451",
+        color: "#9A6700",
 
         fontSize: 11,
 
@@ -795,7 +764,7 @@ const styles = StyleSheet.create({
     divider: {
         height: 1,
 
-        backgroundColor: COLORS.border,
+        backgroundColor: "#EEEEEE",
 
         marginVertical: 15,
     },
@@ -813,7 +782,7 @@ const styles = StyleSheet.create({
     },
 
     detailLabel: {
-        color: COLORS.textMuted,
+        color: "#8A8A8A",
 
         fontSize: 13,
     },
@@ -821,21 +790,21 @@ const styles = StyleSheet.create({
     detailValue: {
         flex: 1,
 
-        color: COLORS.text,
+        color: "#222222",
 
         fontSize: 14,
 
-        fontWeight: "700",
+        fontWeight: "600",
 
         textAlign: "right",
     },
 
     amountRow: {
-        minHeight: 78,
+        minHeight: 70,
 
-        borderRadius: 14,
+        borderRadius: 13,
 
-        backgroundColor: COLORS.surfaceAlt,
+        backgroundColor: "#F7F7F7",
 
         paddingHorizontal: 14,
 
@@ -851,17 +820,17 @@ const styles = StyleSheet.create({
     },
 
     amountLabel: {
-        color: COLORS.textMuted,
+        color: "#717171",
 
         fontSize: 12,
     },
 
     amount: {
-        color: COLORS.text,
+        color: "#222222",
 
-        fontSize: 25,
+        fontSize: 23,
 
-        fontWeight: "900",
+        fontWeight: "800",
 
         marginTop: 3,
     },
@@ -873,11 +842,11 @@ const styles = StyleSheet.create({
 
         gap: 9,
 
-        backgroundColor: "#2A2516",
+        backgroundColor: "#FFF8E7",
 
         borderWidth: 1,
 
-        borderColor: "#5C4B20",
+        borderColor: "#E9D28A",
 
         borderRadius: 13,
 
@@ -889,7 +858,7 @@ const styles = StyleSheet.create({
     warningText: {
         flex: 1,
 
-        color: "#E7C96F",
+        color: "#8A6500",
 
         fontSize: 12,
 
@@ -897,7 +866,7 @@ const styles = StyleSheet.create({
     },
 
     confirmButton: {
-        height: 56,
+        height: 50,
 
         borderRadius: 14,
 
@@ -915,11 +884,11 @@ const styles = StyleSheet.create({
     },
 
     confirmButtonText: {
-        color: COLORS.background,
+        color: "#07111F",
 
-        fontSize: 16,
+        fontSize: 15,
 
-        fontWeight: "900",
+        fontWeight: "700",
     },
 
     disabledButton: {

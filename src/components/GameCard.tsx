@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import {
   Clipboard,
-  Image,
+  
   Linking,
   Modal,
   Pressable,
@@ -607,101 +607,105 @@ export default function GameCard({ game }: Props) {
 
   return (
     <View style={styles.card}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={
-            typeof game.image === "string" ? { uri: game.image } : game.image
-          }
+      <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <View style={styles.titleTextWrap}>
+            <Text style={styles.title}>{game.title}</Text>
 
-          style={styles.image}
+            <Text style={styles.organizer}>
+              {t("gameCard.by")} {game.organizer}
+            </Text>
+          </View>
 
-          resizeMode="cover"
-        />
-
-        <View
-          style={[
-            styles.statusBadge,
-
-            isFull ? styles.fullBadge : styles.confirmedBadge,
-          ]}
-        >
-          <Ionicons
-            name={isFull ? "alert-circle" : "checkmark-circle"}
-
-            size={17}
-
-            color={isFull ? "#FFFFFF" : "#71E49A"}
-          />
-
-          <Text style={[styles.statusText, isFull && styles.fullStatusText]}>
-            {isFull ? t("gameCard.gameFull") : t("gameCard.available")}
-          </Text>
+          <Pressable style={styles.favorite} hitSlop={8}>
+            <Ionicons name="heart-outline" size={23} color="#222222" />
+          </Pressable>
         </View>
 
-        <Pressable style={styles.favorite}>
-          <Ionicons name="heart-outline" size={30} color="#FFFFFF" />
+        <Pressable style={styles.locationRow} onPress={openGameLocation}>
+          <Ionicons name="location-outline" size={16} color="#717171" />
+
+          <Text style={styles.locationText}>
+            {game.area}
+            {locationGame.city &&
+            !String(game.area)
+              .toLowerCase()
+              .includes(locationGame.city.toLowerCase())
+              ? `, ${locationGame.city}`
+              : ""}
+            {game.distance ? ` · ${game.distance}` : ""}
+          </Text>
         </Pressable>
-      </View>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>{game.title}</Text>
-
-        <Text style={styles.organizer}>
-          {t("gameCard.by")} {game.organizer}
-        </Text>
-
-        <View style={styles.locationRow}>
-          <Pressable style={styles.locationLink} onPress={openGameLocation}>
-            <Ionicons
-              name="location-outline"
-              size={17}
-              color={c.textSecondary}
-            />
-            <Text style={styles.locationText}>
-              {game.area}
-              {locationGame.city &&
-              !String(game.area)
-                .toLowerCase()
-                .includes(locationGame.city.toLowerCase())
-                ? `, ${locationGame.city}`
-                : ""}
-            </Text>
-          </Pressable>
-
-          {game.distance ? (
-            <Text style={styles.distanceText}> • {game.distance}</Text>
-          ) : null}
+        <View style={styles.timeRow}>
+          <Ionicons name="time-outline" size={16} color="#717171" />
+          <Text style={styles.timeText}>{game.time}</Text>
         </View>
 
         <View style={styles.detailsRow}>
-          <View style={styles.skillBadge}>
-            <Text style={styles.skillText}>{getSkillLabel(game.skill)}</Text>
-          </View>
-
-          <Text style={isFull ? styles.fullText : styles.spotsText}>
+          <Text style={styles.detailText}>{game.format}</Text>
+          <Text style={styles.detailDot}>·</Text>
+          <Text style={styles.detailText}>{getSkillLabel(game.skill)}</Text>
+          <Text style={styles.detailDot}>·</Text>
+          <Text style={isFull ? styles.fullText : styles.detailText}>
             {isFull
               ? t("gameCard.gameFull")
               : `${spotsLeft} ${t("gameCard.spotsLeft")}`}
           </Text>
         </View>
 
-        <View style={styles.bottomRow}>
-          <View style={styles.timeRow}>
-            <Ionicons name="calendar-outline" size={19} color="#D7E1DC" />
-
-            <Text style={styles.time}>
-              {game.time} • {game.format}
-            </Text>
-          </View>
-
+        <View style={styles.priceActionRow}>
           <Text style={styles.price}>
             {price === 0 ? t("gameCard.free") : `${price} ETB`}
           </Text>
+
+          {!isPaymentSubmitted && !offerExpiredLocally && !isConfirmed && !isWaitlisted && (
+            <Pressable
+              style={[
+                styles.compactAction,
+                isFull && !bookingStatus && styles.compactActionOutline,
+                isPendingPayment && styles.compactActionPending,
+                joining && styles.disabledButton,
+              ]}
+              onPress={handleJoinGame}
+              disabled={actionDisabled}
+            >
+              <Text
+                style={[
+                  styles.compactActionText,
+                  isFull && !bookingStatus && styles.compactActionOutlineText,
+                  isPendingPayment && styles.compactActionPendingText,
+                ]}
+              >
+                {joining
+                  ? getButtonText()
+                  : isFull
+                    ? t("gameCard.joinWaitlist")
+                    : isPendingPayment
+                      ? getButtonText()
+                      : isPaidGame
+                        ? t("gameCard.reserveSpot")
+                        : t("gameCard.joinGame")}
+              </Text>
+
+              {!joining && (
+                <Ionicons
+                  name={isFull ? "arrow-forward" : "arrow-forward"}
+                  size={17}
+                  color={
+                    isPendingPayment
+                      ? "#7A5200"
+                      : "#087EA4"
+                  }
+                />
+              )}
+            </Pressable>
+          )}
         </View>
 
         {isWaitlisted && isPaidGame && (
           <View style={styles.notice}>
-            <Ionicons name="time-outline" size={19} color="#F6C85F" />
+            <Ionicons name="time-outline" size={19} color="#9A6700" />
 
             <Text style={styles.noticeText}>
               {t("gameCard.paidWaitlistMessage")}
@@ -715,7 +719,7 @@ export default function GameCard({ game }: Props) {
           !offerExpiredLocally &&
           offerSecondsLeft !== null && (
             <View style={styles.offerCountdown}>
-              <Ionicons name="timer-outline" size={19} color="#F6C85F" />
+              <Ionicons name="timer-outline" size={19} color="#9A6700" />
 
               <View style={styles.offerCountdownTextWrap}>
                 <Text style={styles.offerCountdownTitle}>
@@ -737,16 +741,13 @@ export default function GameCard({ game }: Props) {
                   ? "checkmark-circle-outline"
                   : "information-circle-outline"
               }
-
               size={18}
-
-              color={isConfirmed ? "#71E49A" : "#F6C85F"}
+              color={isConfirmed ? "#008A3B" : "#9A6700"}
             />
 
             <Text
               style={[
                 styles.messageText,
-
                 isConfirmed && styles.successMessageText,
               ]}
             >
@@ -755,69 +756,7 @@ export default function GameCard({ game }: Props) {
           </View>
         )}
 
-        {!isPaymentSubmitted && !offerExpiredLocally && (
-          <Pressable
-            style={[
-              styles.actionButton,
 
-              isFull && !bookingStatus && styles.waitlistButton,
-
-              isConfirmed && styles.joinedButton,
-
-              isWaitlisted && styles.waitlistedButton,
-
-              isPendingPayment && styles.pendingButton,
-
-              isPendingPayment && !isPaymentSubmitted && styles.paidButton,
-
-              joining && styles.disabledButton,
-            ]}
-
-            onPress={handleJoinGame}
-
-            disabled={actionDisabled}
-          >
-            <View style={styles.buttonContent}>
-              <Ionicons
-                name={
-                  isConfirmed
-                    ? "checkmark-circle"
-                    : isWaitlisted
-                      ? "time-outline"
-                      : isPendingPayment
-                        ? "checkmark-outline"
-                        : isFull
-                          ? "list-outline"
-                          : "football-outline"
-                }
-
-                size={20}
-
-                color={
-                  isConfirmed
-                    ? "#71E49A"
-                    : isWaitlisted
-                      ? "#F6C85F"
-                      : c.primaryText
-                }
-              />
-
-              <Text
-                style={[
-                  styles.actionText,
-
-                  isConfirmed && styles.joinedText,
-
-                  isWaitlisted && styles.pendingText,
-
-                  isFull && !bookingStatus && styles.waitlistText,
-                ]}
-              >
-                {getButtonText()}
-              </Text>
-            </View>
-          </Pressable>
-        )}
       </View>
 
       <Modal
@@ -950,481 +889,247 @@ export default function GameCard({ game }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: c.surface,
-
-    borderRadius: 24,
-
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     borderWidth: 1,
-
-    borderColor: c.border,
-
+    borderColor: "#E5E5E5",
+    marginBottom: 12,
     overflow: "hidden",
-
-    marginBottom: 20,
-  },
-
-  imageContainer: {
-    height: 70,
-
-    position: "relative",
-  },
-
-  image: {
-    width: "100%",
-
-    height: "100%",
-  },
-
-  statusBadge: {
-    position: "absolute",
-
-    top: 16,
-
-    left: 16,
-
-    borderRadius: 18,
-
-    paddingVertical: 7,
-
-    paddingHorizontal: 11,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 5,
-  },
-
-  confirmedBadge: {
-    backgroundColor: c.successDark,
-  },
-
-  fullBadge: {
-    backgroundColor: c.dangerDark,
-  },
-
-  statusText: {
-    color: "#71E49A",
-
-    fontSize: 15,
-
-    fontWeight: "700",
-  },
-
-  fullStatusText: {
-    color: "#FFFFFF",
-  },
-
-  favorite: {
-    position: "absolute",
-
-    right: 15,
-
-    top: 13,
-
-    width: 44,
-
-    height: 44,
-
-    alignItems: "center",
-
-    justifyContent: "center",
   },
 
   content: {
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+  },
+
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  titleTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
 
   title: {
-    color: c.text,
-
-    fontSize: 22,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 19,
+    fontWeight: "700",
+    letterSpacing: -0.25,
+    lineHeight: 25,
   },
 
   organizer: {
-    color: c.textSecondary,
+    color: "#717171",
+    fontSize: 14,
+    fontWeight: "400",
+    marginTop: 2,
+  },
 
-    fontSize: 16,
-
-    marginTop: 3,
+  favorite: {
+    width: 38,
+    height: 38,
+    marginTop: -7,
+    marginRight: -6,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   locationRow: {
     flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 5,
-
-    marginTop: 9,
-  },
-
-  locationLink: {
-    flexDirection: "row",
     alignItems: "center",
     gap: 5,
-  },
-
-  distanceText: {
-    color: c.textSecondary,
-    fontSize: 15,
+    marginTop: 11,
+    alignSelf: "flex-start",
+    maxWidth: "100%",
   },
 
   locationText: {
-    color: c.textSecondary,
-
-    fontSize: 15,
-  },
-
-  detailsRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "space-between",
-
-    marginTop: 21,
-  },
-
-  skillBadge: {
-    backgroundColor: c.skill,
-
-    borderRadius: 16,
-
-    paddingHorizontal: 13,
-
-    paddingVertical: 7,
-  },
-
-  skillText: {
-    color: c.skillText,
-
-    fontWeight: "700",
-
+    color: "#717171",
     fontSize: 14,
-  },
-
-  spotsText: {
-    color: c.success,
-
-    fontSize: 16,
-
-    fontWeight: "700",
-  },
-
-  fullText: {
-    color: c.danger,
-
-    fontSize: 16,
-
-    fontWeight: "700",
-  },
-
-  bottomRow: {
-    flexDirection: "row",
-
-    justifyContent: "space-between",
-
-    alignItems: "center",
-
-    marginTop: 16,
-
-    marginBottom: 18,
+    fontWeight: "400",
+    flexShrink: 1,
   },
 
   timeRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 7,
-
-    flexShrink: 1,
+    gap: 5,
+    marginTop: 14,
   },
 
-  time: {
-    color: "#D7E1DC",
+  timeText: {
+    color: "#3F3F3F",
+    fontSize: 14,
+    fontWeight: "600",
+  },
 
-    fontSize: 15,
+  detailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginTop: 6,
+  },
+
+  detailText: {
+    color: "#4A4A4A",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  detailDot: {
+    color: "#B0B0B0",
+    fontSize: 14,
+    marginHorizontal: 6,
+  },
+
+  fullText: {
+    color: "#C13515",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  priceActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    marginTop: 17,
   },
 
   price: {
-    color: c.text,
+    color: "#222222",
+    fontSize: 17,
+    fontWeight: "700",
+  },
 
-    fontSize: 20,
+  compactAction: {
+    minHeight: 36,
+    paddingHorizontal: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
 
-    fontWeight: "800",
+  compactActionText: {
+    color: "#087EA4",
+    fontSize: 15,
+    fontWeight: "700",
+  },
 
-    marginLeft: 8,
+  compactActionOutline: {
+    backgroundColor: "transparent",
+  },
+
+  compactActionOutlineText: {
+    color: "#087EA4",
+  },
+
+  compactActionPending: {
+    backgroundColor: "transparent",
+  },
+
+  compactActionPendingText: {
+    color: "#9A6700",
   },
 
   notice: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 8,
-
-    backgroundColor: "#2A2415",
-
+    backgroundColor: "#FFF8E7",
     borderWidth: 1,
-
-    borderColor: "#5E522C",
-
+    borderColor: "#F2D38B",
     borderRadius: 12,
-
     paddingHorizontal: 12,
-
     paddingVertical: 10,
-
     marginBottom: 12,
   },
 
   noticeText: {
-    color: "#F6C85F",
-
+    color: "#7A5200",
     fontSize: 14,
-
     fontWeight: "600",
-
     lineHeight: 19,
-
     flex: 1,
   },
 
-  paymentCard: {
-    backgroundColor: "#102B22",
 
-    borderWidth: 1,
 
-    borderColor: "#18C8FF",
 
-    borderRadius: 15,
 
-    padding: 14,
 
-    marginBottom: 12,
-  },
 
-  paymentTitleRow: {
-    flexDirection: "row",
 
-    alignItems: "center",
-
-    gap: 8,
-
-    marginBottom: 10,
-  },
-
-  paymentTitle: {
-    color: "#FFFFFF",
-
-    fontSize: 17,
-
-    fontWeight: "800",
-  },
-
-  amountText: {
-    color: "#71E49A",
-
-    fontSize: 26,
-
-    fontWeight: "900",
-
-    marginBottom: 12,
-  },
-
-  paymentDetailRow: {
-    flexDirection: "row",
-
-    justifyContent: "space-between",
-
-    gap: 12,
-
-    paddingVertical: 5,
-  },
-
-  detailLabel: {
-    color: "#9FAAA5",
-
-    fontSize: 14,
-  },
-
-  detailValue: {
-    color: "#FFFFFF",
-
-    fontSize: 15,
-
-    fontWeight: "700",
-
-    textAlign: "right",
-
-    flexShrink: 1,
-  },
-
-  paymentDescription: {
-    color: "#D7E1DC",
-
-    fontSize: 14,
-
-    lineHeight: 20,
-
-    marginTop: 11,
-  },
 
   offerCountdown: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 9,
-
-    backgroundColor: "#2A2415",
-
+    backgroundColor: "#FFF8E7",
     borderWidth: 1,
-
-    borderColor: "#5E522C",
-
+    borderColor: "#F2D38B",
     borderRadius: 12,
-
     paddingHorizontal: 12,
-
     paddingVertical: 11,
-
     marginBottom: 12,
   },
 
-  offerCountdownTextWrap: { flex: 1 },
+  offerCountdownTextWrap: {
+    flex: 1,
+  },
 
-  offerCountdownTitle: { color: "#F6C85F", fontSize: 15, fontWeight: "800" },
+  offerCountdownTitle: {
+    color: "#7A5200",
+    fontSize: 15,
+    fontWeight: "800",
+  },
 
   offerCountdownText: {
-    color: "#D8C98E",
-
+    color: "#7A6540",
     fontSize: 13,
-
     lineHeight: 18,
-
     marginTop: 2,
   },
 
   message: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 8,
-
-    backgroundColor: "#2A2415",
-
+    backgroundColor: "#FFF8E7",
     borderWidth: 1,
-
-    borderColor: "#5E522C",
-
+    borderColor: "#F2D38B",
     borderRadius: 12,
-
     paddingHorizontal: 12,
-
     paddingVertical: 10,
-
     marginBottom: 12,
   },
 
   messageText: {
-    color: "#F6C85F",
-
+    color: "#7A5200",
     fontSize: 14,
-
     fontWeight: "600",
-
     flex: 1,
   },
 
   successMessageText: {
-    color: "#71E49A",
+    color: "#008A3B",
   },
 
-  actionButton: {
-    height: 56,
 
-    backgroundColor: c.primary,
 
-    borderRadius: 15,
 
-    alignItems: "center",
 
-    justifyContent: "center",
-  },
 
-  actionText: {
-    color: c.primaryText,
 
-    fontSize: 17,
 
-    fontWeight: "800",
-  },
 
-  buttonContent: {
-    flexDirection: "row",
 
-    alignItems: "center",
 
-    justifyContent: "center",
-
-    gap: 7,
-  },
-
-  waitlistButton: {
-    backgroundColor: "transparent",
-
-    borderWidth: 1,
-
-    borderColor: c.primary,
-  },
-
-  waitlistText: {
-    color: c.primary,
-  },
-
-  joinedButton: {
-    backgroundColor: "#0B1726",
-
-    borderWidth: 1,
-
-    borderColor: "#18C8FF",
-  },
-
-  joinedText: {
-    color: "#71E49A",
-  },
-
-  waitlistedButton: {
-    backgroundColor: "#2A2415",
-
-    borderWidth: 1,
-
-    borderColor: "#F6C85F",
-  },
-
-  pendingButton: {
-    backgroundColor: "#2A2415",
-
-    borderWidth: 1,
-
-    borderColor: "#F6C85F",
-  },
-
-  paidButton: {
-    backgroundColor: c.primary,
-
-    borderWidth: 0,
-  },
-
-  pendingText: {
-    color: "#F6C85F",
-  },
 
   disabledButton: {
     opacity: 0.65,
@@ -1432,227 +1137,154 @@ const styles = StyleSheet.create({
 
   modalBackdrop: {
     flex: 1,
-
-    backgroundColor: "rgba(0,0,0,0.66)",
-
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
 
   modalSheet: {
-    backgroundColor: "#101D2B",
-
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
-
     borderTopRightRadius: 24,
-
     borderWidth: 1,
-
-    borderColor: "#263B4E",
-
+    borderColor: "#DDDDDD",
     paddingHorizontal: 20,
-
     paddingTop: 10,
-
     paddingBottom: 14,
   },
 
   modalHandle: {
     width: 38,
-
     height: 4,
-
     borderRadius: 2,
-
-    backgroundColor: "#526474",
-
+    backgroundColor: "#B0B0B0",
     alignSelf: "center",
-
     marginBottom: 17,
   },
 
   modalTitle: {
-    color: "#FFFFFF",
-
+    color: "#222222",
     fontSize: 22,
-
     fontWeight: "800",
-
     textAlign: "center",
   },
 
   modalSubtitle: {
-    color: "#9FAEB9",
-
+    color: "#717171",
     fontSize: 14,
-
     fontWeight: "600",
-
     textAlign: "center",
-
     marginTop: 5,
-
     marginBottom: 18,
   },
 
   accountCard: {
-    backgroundColor: "#0B1726",
-
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-
-    borderColor: "#294154",
-
+    borderColor: "#DDDDDD",
     borderRadius: 16,
-
     padding: 16,
   },
 
   providerRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 9,
-
     marginBottom: 14,
   },
 
   providerIcon: {
     width: 34,
-
     height: 34,
-
     borderRadius: 10,
-
-    backgroundColor: "#102A3A",
-
+    backgroundColor: "#EAF9FF",
     alignItems: "center",
-
     justifyContent: "center",
   },
 
   providerName: {
-    color: "#FFFFFF",
-
+    color: "#222222",
     fontSize: 16,
-
     fontWeight: "800",
   },
 
   numberRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
-
     gap: 12,
   },
 
   phoneNumber: {
-    color: "#FFFFFF",
-
+    color: "#222222",
     fontSize: 22,
-
     fontWeight: "900",
-
     letterSpacing: 0.3,
-
     flexShrink: 1,
   },
 
   copyButton: {
     minHeight: 38,
-
     paddingHorizontal: 12,
-
     borderRadius: 10,
-
-    backgroundColor: "#102A3A",
-
+    backgroundColor: "#EAF9FF",
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     gap: 6,
   },
 
   copyText: {
-    color: "#18C8FF",
-
+    color: "#087EA4",
     fontSize: 14,
-
     fontWeight: "800",
   },
 
   accountName: {
-    color: "#AEBBC5",
-
+    color: "#717171",
     fontSize: 14,
-
     fontWeight: "600",
-
     marginTop: 7,
   },
 
   infoRow: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 8,
-
     marginTop: 15,
-
     marginBottom: 17,
   },
 
   modalInstructions: {
-    color: "#B8C4CD",
-
+    color: "#717171",
     fontSize: 14,
-
     lineHeight: 20,
-
     flex: 1,
   },
 
   modalPaidButton: {
     height: 54,
-
     borderRadius: 14,
-
     backgroundColor: c.primary,
-
     alignItems: "center",
-
     justifyContent: "center",
   },
 
   modalPaidButtonText: {
-    color: c.primaryText,
-
+    color: "#07111F",
     fontSize: 17,
-
     fontWeight: "900",
   },
 
   payLaterButton: {
     height: 44,
-
     alignItems: "center",
-
     justifyContent: "center",
-
     marginTop: 2,
   },
 
   payLaterText: {
-    color: "#AEBBC5",
-
+    color: "#717171",
     fontSize: 15,
-
     fontWeight: "700",
   },
 });

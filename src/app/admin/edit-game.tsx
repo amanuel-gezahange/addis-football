@@ -808,7 +808,7 @@ ends_at
     return (
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#FF747A" />
+          <Ionicons name="alert-circle-outline" size={48} color="#C13515" />
 
           <Text style={styles.errorTitle}>{t("editGame.gameNotFound")}</Text>
 
@@ -864,7 +864,7 @@ ends_at
 
           {isCancelled && (
             <View style={styles.cancelledNotice}>
-              <Ionicons name="close-circle" size={25} color="#FF747A" />
+              <Ionicons name="close-circle" size={25} color="#C13515" />
 
               <View
                 style={{
@@ -951,7 +951,7 @@ ends_at
 
             placeholder={t("editGame.gameTitle")}
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -967,7 +967,7 @@ ends_at
 
             placeholder={t("editGame.organizer")}
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -983,7 +983,7 @@ ends_at
 
             placeholder="Bole, Addis Ababa"
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -995,7 +995,7 @@ ends_at
             value={city}
             onChangeText={setCity}
             placeholder="Addis Ababa"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
             editable={!isCancelled}
           />
 
@@ -1006,7 +1006,7 @@ ends_at
             value={mapsUrl}
             onChangeText={setMapsUrl}
             placeholder="https://maps.google.com/..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
             autoCapitalize="none"
             editable={!isCancelled}
           />
@@ -1022,7 +1022,7 @@ ends_at
 
             placeholder="2.1 km"
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -1058,7 +1058,7 @@ ends_at
 
             placeholder="YYYY-MM-DD"
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             autoCapitalize="none"
 
@@ -1078,7 +1078,7 @@ ends_at
 
                 placeholder="7:00 PM"
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 editable={!isCancelled}
               />
@@ -1096,7 +1096,7 @@ ends_at
 
                 placeholder="9:00 PM"
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 editable={!isCancelled}
               />
@@ -1116,7 +1116,7 @@ ends_at
 
             placeholder="6v6"
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -1132,7 +1132,7 @@ ends_at
 
             placeholder="Intermediate"
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             editable={!isCancelled}
           />
@@ -1214,7 +1214,7 @@ ends_at
 
                 placeholder="300"
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 keyboardType="numeric"
 
@@ -1244,7 +1244,7 @@ ends_at
 
                 placeholder="Telebirr"
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 editable={!isCancelled}
               />
@@ -1260,7 +1260,7 @@ ends_at
 
                 placeholder="09XXXXXXXX"
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 keyboardType="phone-pad"
 
@@ -1278,7 +1278,7 @@ ends_at
 
                 placeholder={t("editGame.accountHolderName")}
 
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="#9A9A9A"
 
                 editable={!isCancelled}
               />
@@ -1296,7 +1296,7 @@ ends_at
 
             placeholder="https\://..."
 
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#9A9A9A"
 
             autoCapitalize="none"
 
@@ -1321,15 +1321,15 @@ ends_at
                 disabled={saving || cancelling}
               >
                 {saving ? (
-                  <ActivityIndicator color={COLORS.background} />
+                  <ActivityIndicator color="#07111F" />
                 ) : (
                   <>
                     <Ionicons
                       name="checkmark-circle-outline"
 
-                      size={22}
+                      size={20}
 
-                      color={COLORS.background}
+                      color="#07111F"
                     />
 
                     <Text style={styles.saveButtonText}>
@@ -1351,7 +1351,7 @@ ends_at
                 disabled={cancelling || saving}
               >
                 {cancelling ? (
-                  <ActivityIndicator color="#FF747A" />
+                  <ActivityIndicator color="#C13515" />
                 ) : (
                   <>
                     <Ionicons
@@ -1359,7 +1359,7 @@ ends_at
 
                       size={22}
 
-                      color="#FF747A"
+                      color="#C13515"
                     />
 
                     <Text style={styles.cancelButtonText}>
@@ -1375,7 +1375,7 @@ ends_at
 
           {isCancelled && (
             <View style={styles.cancelledBox}>
-              <Ionicons name="close-circle" size={21} color="#FF747A" />
+              <Ionicons name="close-circle" size={21} color="#C13515" />
 
               <Text style={styles.cancelledText}>
                 {t("editGame.thisGameCancelled")}
@@ -1645,38 +1645,30 @@ function FieldLabel({ text }: { text: string }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   content: {
     paddingHorizontal: 20,
-
-    paddingTop: 16,
+    paddingTop: 14,
   },
 
   loadingContainer: {
     flex: 1,
-
     alignItems: "center",
-
     justifyContent: "center",
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   loadingText: {
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-    marginTop: 14,
+    color: "#717171",
+    fontSize: 14,
+    marginTop: 12,
   },
 
   errorContainer: {
@@ -1690,12 +1682,9 @@ const styles = StyleSheet.create({
   },
 
   errorTitle: {
-    color: COLORS.text,
-
-    fontSize: 22,
-
-    fontWeight: "800",
-
+    color: "#222222",
+    fontSize: 21,
+    fontWeight: "700",
     marginTop: 14,
   },
 
@@ -1712,147 +1701,101 @@ const styles = StyleSheet.create({
   },
 
   backErrorText: {
-    color: COLORS.background,
-
-    fontWeight: "800",
+    color: "#07111F",
+    fontWeight: "700",
   },
 
   backButton: {
     flexDirection: "row",
-
     alignItems: "center",
-
     alignSelf: "flex-start",
-
-    gap: 6,
-
-    paddingVertical: 7,
-
-    marginBottom: 14,
+    gap: 5,
+    paddingVertical: 6,
+    marginBottom: 10,
   },
 
   backText: {
-    color: COLORS.primary,
-
-    fontSize: 16,
-
-    fontWeight: "700",
+    color: "#087EA4",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   title: {
-    color: COLORS.text,
-
-    fontSize: 34,
-
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 15,
-
-    marginTop: 4,
-
-    marginBottom: 22,
+    marginTop: 3,
+    marginBottom: 20,
   },
 
   cancelledNotice: {
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 12,
-
-    backgroundColor: "#211718",
-
+    gap: 11,
+    backgroundColor: "#FDEEEE",
     borderWidth: 1,
-
-    borderColor: "#6A3538",
-
-    borderRadius: 16,
-
-    padding: 15,
-
+    borderColor: "#F0C7C2",
+    borderRadius: 14,
+    padding: 14,
     marginBottom: 14,
   },
 
   cancelledNoticeTitle: {
-    color: "#FF747A",
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#C13515",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   cancelledNoticeText: {
-    color: "#C69B9D",
-
+    color: "#8A4B45",
     fontSize: 12,
-
     marginTop: 2,
   },
 
   capacityCard: {
-    backgroundColor: COLORS.surface,
-
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 17,
-
-    padding: 15,
-
+    borderColor: "#E5E5E5",
+    borderRadius: 16,
+    padding: 14,
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 12,
+    gap: 11,
   },
 
   capacityIcon: {
-    width: 45,
-
-    height: 45,
-
-    borderRadius: 14,
-
-    backgroundColor: "#0B1726",
-
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
-
     justifyContent: "center",
   },
 
   capacityTitle: {
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 14,
-
     fontWeight: "700",
   },
 
   capacityText: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 13,
-
-    marginTop: 3,
+    marginTop: 2,
   },
 
   capacityHelp: {
-    color: COLORS.textMuted,
-
+    color: "#8A8A8A",
     fontSize: 12,
-
     lineHeight: 17,
-
-    marginTop: 8,
-
-    marginBottom: 22,
+    marginTop: 7,
+    marginBottom: 20,
   },
 
   statusBadge: {
@@ -1864,15 +1807,15 @@ const styles = StyleSheet.create({
   },
 
   availableBadge: {
-    backgroundColor: "#0B5C35",
+    backgroundColor: "#EAF8EF",
   },
 
   fullBadge: {
-    backgroundColor: "#332A17",
+    backgroundColor: "#FFF8E7",
   },
 
   cancelledBadge: {
-    backgroundColor: "#3A2022",
+    backgroundColor: "#FDEEEE",
   },
 
   statusText: {
@@ -1882,54 +1825,43 @@ const styles = StyleSheet.create({
   },
 
   availableText: {
-    color: "#71E49A",
+    color: "#008A3B",
   },
 
   fullText: {
-    color: "#F6C85F",
+    color: "#9A6700",
   },
 
   cancelledStatusText: {
-    color: "#FF9A9E",
+    color: "#C13515",
   },
 
   label: {
-    color: COLORS.textSecondary,
-
-    fontSize: 13,
-
-    fontWeight: "700",
-
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "600",
     marginBottom: 7,
-
     marginTop: 14,
   },
 
   input: {
-    minHeight: 52,
-
+    minHeight: 50,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 14,
-
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 13,
     paddingHorizontal: 14,
-
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 15,
   },
 
   disabledInput: {
-    opacity: 0.45,
+    opacity: 0.55,
+    backgroundColor: "#F7F7F7",
   },
 
   scheduleHeader: {
-    marginTop: 28,
-
+    marginTop: 26,
     marginBottom: 5,
 
     flexDirection: "row",
@@ -1942,42 +1874,30 @@ const styles = StyleSheet.create({
   },
 
   scheduleTitle: {
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 18,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   scheduleSubtitle: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 12,
-
     marginTop: 3,
   },
 
   timezoneBadge: {
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 5,
-
-    backgroundColor: "#0B1726",
-
+    backgroundColor: "#EAF8FC",
     borderRadius: 14,
-
     paddingHorizontal: 9,
-
     paddingVertical: 6,
   },
 
   timezoneText: {
-    color: COLORS.primary,
-
+    color: "#087EA4",
     fontSize: 11,
-
     fontWeight: "700",
   },
 
@@ -1998,18 +1918,14 @@ const styles = StyleSheet.create({
   },
 
   paymentTitle: {
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 18,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   paymentSubtitle: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 12,
-
     marginTop: 3,
   },
 
@@ -2018,109 +1934,78 @@ const styles = StyleSheet.create({
   },
 
   paymentOption: {
-    minHeight: 72,
-
+    minHeight: 68,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 15,
-
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 13,
     paddingHorizontal: 13,
-
-    paddingVertical: 12,
-
+    paddingVertical: 11,
     flexDirection: "row",
-
     alignItems: "center",
-
     gap: 11,
   },
 
   paymentOptionSelected: {
     borderColor: COLORS.primary,
-
-    backgroundColor: "#0B1726",
+    backgroundColor: "#F2FBFE",
   },
 
   paymentOptionIcon: {
-    width: 42,
-
-    height: 42,
-
-    borderRadius: 13,
-
-    backgroundColor: COLORS.background,
-
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#F7F7F7",
     alignItems: "center",
-
     justifyContent: "center",
   },
 
   paymentOptionIconSelected: {
-    backgroundColor: "#10263D",
+    backgroundColor: "#EAF8FC",
   },
 
   paymentOptionTitle: {
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 14,
-
-    fontWeight: "800",
+    fontWeight: "600",
   },
 
   paymentOptionTitleSelected: {
-    color: COLORS.primary,
+    color: "#087EA4",
   },
 
   paymentOptionSubtitle: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 11,
-
     lineHeight: 16,
-
     marginTop: 2,
   },
 
   organizerPaymentBox: {
     marginTop: 16,
-
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
+    borderColor: "#E5E5E5",
+    backgroundColor: "#F7F7F7",
     borderRadius: 16,
-
-    padding: 14,
+    padding: 15,
   },
 
   organizerPaymentTitle: {
-    color: COLORS.text,
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 16,
+    fontWeight: "700",
   },
 
   organizerPaymentHelp: {
-    color: COLORS.textMuted,
-
-    fontSize: 11,
-
-    lineHeight: 16,
-
+    color: "#717171",
+    fontSize: 12,
+    lineHeight: 17,
     marginTop: 3,
-
     marginBottom: 2,
   },
 
   saveButton: {
-    height: 54,
+    height: 50,
 
     borderRadius: 14,
 
@@ -2139,44 +2024,31 @@ const styles = StyleSheet.create({
 
   saveButtonText: {
     color: "#07111F",
-
-    fontSize: 16,
-
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   cancelButton: {
-    height: 52,
-
+    height: 48,
     borderRadius: 14,
-
     borderWidth: 1,
-
-    borderColor: "#7A3437",
-
-    backgroundColor: "#160B0C",
-
+    borderColor: "#E0A6A6",
+    backgroundColor: "#FFFFFF",
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     gap: 7,
-
     marginTop: 12,
   },
 
   cancelButtonText: {
-    color: "#FF747A",
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#C13515",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   cancelHelp: {
-    color: COLORS.textMuted,
+    color: "#8A8A8A",
 
     fontSize: 11,
 
@@ -2195,16 +2067,11 @@ const styles = StyleSheet.create({
 
   cancelledBox: {
     marginTop: 25,
-
-    minHeight: 52,
-
+    minHeight: 50,
     borderRadius: 14,
-
     borderWidth: 1,
-
-    borderColor: "#6A3538",
-
-    backgroundColor: "#211718",
+    borderColor: "#F0C7C2",
+    backgroundColor: "#FDEEEE",
 
     flexDirection: "row",
 
@@ -2216,10 +2083,8 @@ const styles = StyleSheet.create({
   },
 
   cancelledText: {
-    color: "#FF9A9E",
-
+    color: "#C13515",
     fontSize: 14,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 });

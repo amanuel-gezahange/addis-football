@@ -309,8 +309,7 @@ export default function HomeScreen() {
             return 4;
           };
 
-          const rankDifference =
-            rank(aTitle, aArea) - rank(bTitle, bArea);
+          const rankDifference = rank(aTitle, aArea) - rank(bTitle, bArea);
 
           if (rankDifference !== 0) {
             return rankDifference;
@@ -467,7 +466,7 @@ export default function HomeScreen() {
             </View>
 
             <Pressable style={styles.notificationButton}>
-              <Ionicons name="notifications" size={24} color={COLORS.text} />
+              <Ionicons name="notifications" size={22} color={COLORS.text} />
 
               <View style={styles.notificationDot} />
             </Pressable>
@@ -477,7 +476,7 @@ export default function HomeScreen() {
 
           <View style={styles.searchRow}>
             <View style={styles.searchBox}>
-              <Ionicons name="search" size={24} color={COLORS.text} />
+              <Ionicons name="search" size={21} color={COLORS.text} />
 
               <TextInput
                 value={search}
@@ -520,7 +519,7 @@ export default function HomeScreen() {
               >
                 <Ionicons
                   name="options-outline"
-                  size={24}
+                  size={21}
                   color={
                     skillFilter ||
                     formatFilter ||
@@ -536,59 +535,57 @@ export default function HomeScreen() {
 
           {/* DATE SELECTOR */}
 
-          <View style={styles.dateSelectorRow}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.dateRow}
-              style={styles.dateScroll}
-            >
-              {dates.map((item) => {
-                const active = selectedDate === item.key;
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dateRow}
+            style={styles.dateScroll}
+          >
+            {dates.map((item) => {
+              const active = selectedDate === item.key;
 
-                return (
-                  <Pressable
-                    key={item.key}
-                    onPress={() => setSelectedDate(item.key)}
-                    style={({ pressed }) => [
-                      styles.dateButton,
-                      active && styles.dateButtonActive,
-                      pressed && styles.dateButtonPressed,
-                    ]}
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => setSelectedDate(item.key)}
+                  style={({ pressed }) => [
+                    styles.dateButton,
+                    active && styles.dateButtonActive,
+                    pressed && styles.dateButtonPressed,
+                  ]}
+                >
+                  <Text
+                    style={[styles.dateDay, active && styles.dateTextActive]}
                   >
-                    <Text
-                      style={[styles.dateDay, active && styles.dateTextActive]}
-                    >
-                      {item.day}
-                    </Text>
+                    {item.day}
+                  </Text>
 
-                    <Text
-                      style={[
-                        styles.dateNumber,
-                        active && styles.dateTextActive,
-                      ]}
-                    >
-                      {item.date}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+                  <Text
+                    style={[styles.dateNumber, active && styles.dateTextActive]}
+                  >
+                    {item.date}
+                  </Text>
+                </Pressable>
+              );
+            })}
 
             <Pressable
-              style={styles.dateCalendarButton}
+              style={({ pressed }) => [
+                styles.dateButton,
+                styles.calendarDateButton,
+                pressed && styles.dateButtonPressed,
+              ]}
               onPress={() => setCalendarVisible(true)}
-              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Open calendar"
             >
               <Ionicons
                 name="calendar-outline"
-                size={24}
+                size={22}
                 color={COLORS.primary}
               />
             </Pressable>
-          </View>
-
-          {/* SELECTED DATE */}
+          </ScrollView>
 
           {selectedDateLabel && (
             <View style={styles.sectionHeader}>
@@ -652,17 +649,32 @@ export default function HomeScreen() {
           {/* GAME CARDS */}
 
           {!loading &&
-            visibleGames.map((game) => (
-              <View key={game.id} style={styles.gameWrapper}>
-                {game.starts_at && (
-                  <Text style={styles.gameDateLabel}>
-                    {formatGameDate(game.starts_at)}
-                  </Text>
-                )}
+            visibleGames.map((game, index) => {
+              const gameDate = game.starts_at
+                ? getAddisDateKey(game.starts_at)
+                : null;
 
-                <GameCard game={game} />
-              </View>
-            ))}
+              const previousGame = index > 0 ? visibleGames[index - 1] : null;
+
+              const previousGameDate = previousGame?.starts_at
+                ? getAddisDateKey(previousGame.starts_at)
+                : null;
+
+              const showDateLabel =
+                Boolean(gameDate) && gameDate !== previousGameDate;
+
+              return (
+                <View key={game.id} style={styles.gameWrapper}>
+                  {showDateLabel && game.starts_at && (
+                    <Text style={styles.gameDateLabel}>
+                      {formatGameDate(game.starts_at)}
+                    </Text>
+                  )}
+
+                  <GameCard game={game} />
+                </View>
+              );
+            })}
 
           <View style={{ height: 30 }} />
         </ScrollView>
@@ -1340,8 +1352,8 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
   },
 
   filterChipActive: {
@@ -1350,18 +1362,20 @@ const styles = StyleSheet.create({
   },
 
   filterChipText: {
-    color: COLORS.textSecondary,
+    color: "#6A6A6A",
     fontSize: 14,
     fontWeight: "600",
   },
 
   filterChipTextActive: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "700",
   },
+
   filterButtonActive: {
     backgroundColor: COLORS.primary,
   },
+
   filterOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -1369,7 +1383,7 @@ const styles = StyleSheet.create({
   },
 
   filterSheet: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -1388,13 +1402,13 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: COLORS.text,
+    color: "#222222",
   },
 
   filterSectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: COLORS.text,
+    color: "#222222",
     marginTop: 18,
     marginBottom: 6,
   },
@@ -1405,12 +1419,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#E5E5E5",
   },
 
   filterOptionText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: "#222222",
   },
 
   filterActions: {
@@ -1424,15 +1438,16 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: "#222222",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 
   resetFilterText: {
     fontSize: 16,
     fontWeight: "700",
-    color: COLORS.primary,
+    color: "#222222",
   },
 
   showGamesButton: {
@@ -1447,11 +1462,12 @@ const styles = StyleSheet.create({
   showGamesText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#fff",
+    color: "#FFFFFF",
   },
+
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: 14,
   },
 
   scrollContentDesktop: {
@@ -1461,51 +1477,62 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 24,
   },
+
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 22,
+    marginBottom: 18,
   },
 
   title: {
-    color: COLORS.text,
-    fontSize: 36,
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   location: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    marginTop: 5,
+    gap: 4,
+    marginTop: 3,
   },
 
   locationText: {
-    color: COLORS.textSecondary,
-    fontSize: 17,
+    color: "#6A6A6A",
+    fontSize: 16,
     fontWeight: "500",
   },
 
   notificationButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#DDDDDD",
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
 
   notificationDot: {
@@ -1517,33 +1544,42 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: COLORS.danger,
     borderWidth: 2,
-    borderColor: COLORS.background,
+    borderColor: "#FFFFFF",
   },
 
   searchRow: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   searchBox: {
     flex: 1,
-    height: 58,
+    height: 52,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 30,
+    borderColor: "#DDDDDD",
+    borderRadius: 26,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 18,
-    paddingRight: 7,
-    backgroundColor: COLORS.surface,
+    paddingLeft: 16,
+    paddingRight: 6,
+    backgroundColor: "#FFFFFF",
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
 
   searchInput: {
     flex: 1,
-    marginLeft: 11,
+    marginLeft: 9,
     marginRight: 4,
-    color: COLORS.text,
-    fontSize: 16,
+    color: "#222222",
+    fontSize: 15,
     minWidth: 0,
   },
 
@@ -1557,15 +1593,15 @@ const styles = StyleSheet.create({
 
   searchDivider: {
     width: StyleSheet.hairlineWidth,
-    height: 30,
-    backgroundColor: COLORS.border,
+    height: 26,
+    backgroundColor: "#DDDDDD",
     marginHorizontal: 4,
   },
 
   searchFilterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1574,49 +1610,35 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
 
-  dateSelectorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 6,
-  },
-
   dateScroll: {
-    flex: 1,
+    width: "100%",
   },
 
-  dateCalendarButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+  calendarDateButton: {
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
   },
 
   dateRow: {
-    gap: 9,
-    paddingBottom: 22,
+    gap: 8,
+    paddingBottom: 17,
   },
 
   dateButton: {
-    minWidth: 76,
-    minHeight: 68,
-    paddingHorizontal: 15,
-    borderRadius: 22,
-    backgroundColor: COLORS.surface,
+    minWidth: 70,
+    minHeight: 62,
+    paddingHorizontal: 13,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#DDDDDD",
     justifyContent: "center",
     alignItems: "center",
   },
 
   dateButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: "#222222",
+    borderColor: "#222222",
   },
 
   dateButtonPressed: {
@@ -1624,20 +1646,20 @@ const styles = StyleSheet.create({
   },
 
   dateDay: {
-    color: COLORS.textSecondary,
-    fontWeight: "700",
-    fontSize: 12,
+    color: "#717171",
+    fontWeight: "600",
+    fontSize: 11,
   },
 
   dateNumber: {
-    color: COLORS.text,
-    fontWeight: "800",
-    fontSize: 19,
-    marginTop: 2,
+    color: "#222222",
+    fontWeight: "700",
+    fontSize: 18,
+    marginTop: 1,
   },
 
   dateTextActive: {
-    color: COLORS.background,
+    color: "#FFFFFF",
   },
 
   sectionHeader: {
@@ -1648,13 +1670,13 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 23,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   sectionDate: {
-    color: COLORS.textMuted,
+    color: "#717171",
     fontSize: 13,
     marginTop: 2,
   },
@@ -1663,15 +1685,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#E5E5E5",
   },
 
   gameCount: {
-    color: COLORS.primary,
+    color: "#222222",
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   loadingContainer: {
@@ -1680,7 +1702,7 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    color: COLORS.textSecondary,
+    color: "#717171",
     fontSize: 14,
     marginTop: 13,
   },
@@ -1695,22 +1717,22 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#E5E5E5",
     alignItems: "center",
     justifyContent: "center",
   },
 
   emptyTitle: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: "700",
     marginTop: 17,
   },
 
   emptyText: {
-    color: COLORS.textMuted,
+    color: "#717171",
     fontSize: 14,
     lineHeight: 21,
     textAlign: "center",
@@ -1718,17 +1740,18 @@ const styles = StyleSheet.create({
   },
 
   gameWrapper: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
 
   gameDateLabel: {
-    color: COLORS.textMuted,
+    color: "#717171",
     fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 7,
+    fontWeight: "600",
+    marginBottom: 6,
     marginLeft: 3,
     textTransform: "uppercase",
   },
+
   ethMonthHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1744,9 +1767,9 @@ const styles = StyleSheet.create({
   },
 
   ethMonthTitle: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   ethWeekRow: {
@@ -1757,9 +1780,9 @@ const styles = StyleSheet.create({
   ethWeekday: {
     width: "14.2857%",
     textAlign: "center",
-    color: COLORS.textSecondary,
+    color: "#717171",
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   ethGrid: {
@@ -1783,9 +1806,9 @@ const styles = StyleSheet.create({
   },
 
   ethDayText: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "500",
   },
 
   ethToday: {
@@ -1793,18 +1816,19 @@ const styles = StyleSheet.create({
   },
 
   ethDisabled: {
-    color: COLORS.textMuted,
-    opacity: 0.5,
+    color: "#B0B0B0",
+    opacity: 0.6,
   },
 
   ethSelected: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#222222",
   },
 
   ethSelectedText: {
-    color: COLORS.background,
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
+
   cityList: {
     maxHeight: 460,
   },
@@ -1819,23 +1843,23 @@ const styles = StyleSheet.create({
   },
 
   cityOptionSelected: {
-    backgroundColor: COLORS.background,
+    backgroundColor: "#F7F7F7",
   },
 
   cityOptionText: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 16,
     fontWeight: "600",
   },
 
   cityOptionTextSelected: {
-    color: COLORS.primary,
-    fontWeight: "800",
+    color: "#222222",
+    fontWeight: "700",
   },
 
   calendarOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     paddingHorizontal: 20,
   },
@@ -1844,11 +1868,20 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 440,
     alignSelf: "center",
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#DDDDDD",
     padding: 18,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
   },
 
   calendarHeader: {
@@ -1859,13 +1892,13 @@ const styles = StyleSheet.create({
   },
 
   calendarTitle: {
-    color: COLORS.text,
+    color: "#222222",
     fontSize: 21,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   calendarSubtitle: {
-    color: COLORS.textSecondary,
+    color: "#717171",
     fontSize: 13,
     marginTop: 3,
   },
@@ -1876,8 +1909,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.background,
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#E5E5E5",
   },
 });

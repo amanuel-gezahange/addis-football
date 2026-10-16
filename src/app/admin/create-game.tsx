@@ -744,7 +744,7 @@ function Field({
 
         placeholder={placeholder}
 
-        placeholderTextColor={COLORS.textMuted}
+        placeholderTextColor="#9A9A9A"
 
         keyboardType={keyboardType}
 
@@ -807,63 +807,46 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   content: {
     paddingHorizontal: 20,
-
-    paddingTop: 18,
+    paddingTop: 14,
   },
 
   backButton: {
     alignSelf: "flex-start",
-
-    paddingVertical: 8,
-
-    marginBottom: 12,
+    paddingVertical: 6,
+    marginBottom: 10,
   },
 
   backText: {
-    color: COLORS.primary,
-
-    fontSize: 16,
-
-    fontWeight: "700",
+    color: "#087EA4",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   title: {
-    color: COLORS.text,
-
-    fontSize: 34,
-
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
-
-    fontSize: 16,
-
-    marginTop: 5,
-
-    marginBottom: 28,
+    color: "#717171",
+    fontSize: 15,
+    marginTop: 3,
+    marginBottom: 22,
   },
 
   scheduleSection: {
-    backgroundColor: COLORS.surface,
-
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 18,
-
+    borderColor: "#E5E5E5",
+    borderRadius: 16,
     padding: 16,
-
     marginBottom: 18,
   },
 
@@ -878,39 +861,27 @@ const styles = StyleSheet.create({
   },
 
   scheduleTitle: {
-    color: COLORS.text,
-
-    fontSize: 18,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 17,
+    fontWeight: "700",
   },
 
   timezoneBadge: {
-    color: COLORS.primary,
-
-    backgroundColor: COLORS.surfaceAlt,
-
-    paddingHorizontal: 10,
-
-    paddingVertical: 6,
-
-    borderRadius: 20,
-
+    color: "#087EA4",
+    backgroundColor: "#EAF8FC",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 16,
     fontSize: 11,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   scheduleHint: {
-    color: COLORS.textMuted,
-
-    fontSize: 13,
-
-    lineHeight: 19,
-
-    marginTop: 7,
-
-    marginBottom: 18,
+    color: "#717171",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 6,
+    marginBottom: 16,
   },
 
   timeRow: {
@@ -924,101 +895,71 @@ const styles = StyleSheet.create({
   },
 
   field: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
 
   label: {
-    color: COLORS.textSecondary,
-
+    color: "#222222",
     fontSize: 14,
-
-    fontWeight: "700",
-
-    marginBottom: 8,
+    fontWeight: "600",
+    marginBottom: 7,
   },
 
   input: {
-    height: 52,
-
+    height: 50,
     borderRadius: 13,
-
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
-    color: COLORS.text,
-
-    fontSize: 16,
-
-    paddingHorizontal: 15,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    color: "#222222",
+    fontSize: 15,
+    paddingHorizontal: 14,
   },
 
   paymentSection: {
-    marginBottom: 20,
+    marginTop: 2,
+    marginBottom: 18,
   },
 
   paymentTitle: {
-    color: COLORS.text,
-
-    fontSize: 20,
-
-    fontWeight: "800",
-
-    marginBottom: 5,
+    color: "#222222",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
   },
 
   paymentHint: {
-    color: COLORS.textMuted,
-
-    fontSize: 13,
-
-    lineHeight: 19,
-
-    marginBottom: 14,
+    color: "#717171",
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 12,
   },
 
   paymentOption: {
     flexDirection: "row",
-
     alignItems: "center",
-
-    padding: 15,
-
+    padding: 13,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 14,
-
-    marginBottom: 10,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 13,
+    marginBottom: 8,
   },
 
   paymentOptionSelected: {
     borderColor: COLORS.primary,
-
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: "#F2FBFE",
   },
 
   radioOuter: {
-    width: 22,
-
-    height: 22,
-
-    borderRadius: 11,
-
-    borderWidth: 2,
-
-    borderColor: COLORS.textMuted,
-
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#9A9A9A",
     alignItems: "center",
-
     justifyContent: "center",
-
-    marginRight: 13,
+    marginRight: 11,
   },
 
   radioOuterSelected: {
@@ -1026,12 +967,9 @@ const styles = StyleSheet.create({
   },
 
   radioInner: {
-    width: 10,
-
-    height: 10,
-
+    width: 9,
+    height: 9,
     borderRadius: 5,
-
     backgroundColor: COLORS.primary,
   },
 
@@ -1040,73 +978,52 @@ const styles = StyleSheet.create({
   },
 
   paymentOptionTitle: {
-    color: COLORS.text,
-
-    fontSize: 15,
-
-    fontWeight: "700",
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   paymentOptionTitleSelected: {
-    color: COLORS.primary,
+    color: "#087EA4",
   },
 
   paymentOptionDescription: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 12,
-
     lineHeight: 17,
-
-    marginTop: 3,
+    marginTop: 2,
   },
 
   paymentDetails: {
-    backgroundColor: COLORS.surface,
-
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 18,
-
+    borderColor: "#E5E5E5",
+    borderRadius: 16,
     padding: 16,
-
-    marginBottom: 20,
-  },
-
-  paymentDetailsTitle: {
-    color: COLORS.text,
-
-    fontSize: 17,
-
-    fontWeight: "800",
-  },
-
-  paymentDetailsHint: {
-    color: COLORS.textMuted,
-
-    fontSize: 13,
-
-    lineHeight: 19,
-
-    marginTop: 5,
-
     marginBottom: 18,
   },
 
+  paymentDetailsTitle: {
+    color: "#222222",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
+  paymentDetailsHint: {
+    color: "#717171",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+
   createButton: {
-    height: 54,
-
+    height: 50,
     borderRadius: 14,
-
     backgroundColor: COLORS.primary,
-
     alignItems: "center",
-
     justifyContent: "center",
-
-    marginTop: 12,
+    marginTop: 10,
   },
 
   createButtonDisabled: {
@@ -1114,14 +1031,12 @@ const styles = StyleSheet.create({
   },
 
   createButtonText: {
-    color: COLORS.background,
-
-    fontSize: 17,
-
-    fontWeight: "800",
+    color: "#07111F",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   bottomSpace: {
-    height: 40,
+    height: 28,
   },
 });

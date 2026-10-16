@@ -569,7 +569,7 @@ export default function BookingsScreen() {
 
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={24} color={COLORS.text} />
+            <Ionicons name="search" size={21} color="#B0B0B0" />
 
             <TextInput
               value={search}
@@ -616,7 +616,7 @@ export default function BookingsScreen() {
             >
               <Ionicons
                 name="options-outline"
-                size={24}
+                size={21}
                 color={
                   bookingStatusFilter !== "all" ||
                   bookingSortBy !== "upcoming"
@@ -636,7 +636,7 @@ export default function BookingsScreen() {
           >
             <Ionicons
               name="calendar-outline"
-              size={24}
+              size={21}
               color={selectedDate ? "#fff" : COLORS.primary}
             />
           </Pressable>
@@ -757,58 +757,6 @@ export default function BookingsScreen() {
 
                   style={[styles.card, isCancelled && styles.cancelledCard]}
                 >
-                  <View style={styles.imageWrapper}>
-                    {game.image_url ? (
-                      <Image
-                        source={{
-                          uri: game.image_url,
-                        }}
-
-                        style={[
-                          styles.image,
-
-                          isCancelled && styles.cancelledImage,
-                        ]}
-
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.imagePlaceholder,
-
-                          isCancelled && styles.cancelledImage,
-                        ]}
-                      >
-                        <Ionicons
-                          name="football"
-
-                          size={42}
-
-                          color={
-                            isCancelled ? COLORS.textMuted : COLORS.primary
-                          }
-                        />
-                      </View>
-                    )}
-
-                    {isCancelled && (
-                      <View style={styles.cancelledOverlay}>
-                        <Ionicons
-                          name="close-circle"
-
-                          size={26}
-
-                          color="#FF747A"
-                        />
-
-                        <Text style={styles.cancelledOverlayText}>
-                          {t("bookings.cancelled")}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
                   <View style={styles.cardContent}>
                     {!isCancelled && (
                       <View style={styles.statusRow}>
@@ -1053,22 +1001,14 @@ export default function BookingsScreen() {
                     {paymentSubmitted && (
                       <View style={styles.waitingPaymentNotice}>
                         <Ionicons
-                          name="time-outline"
-
-                          size={22}
-
-                          color="#F6C85F"
+                          name="checkmark-circle-outline"
+                          size={18}
+                          color="#9A6700"
                         />
 
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.waitingPaymentTitle}>
-                            {t("bookings.paymentSubmitted")}
-                          </Text>
-
-                          <Text style={styles.waitingPaymentText}>
-                            {t("bookings.waitingForOrganizerConfirmation")}
-                          </Text>
-                        </View>
+                        <Text style={styles.waitingPaymentTitle}>
+                          {t("bookings.paymentSubmitted")}
+                        </Text>
                       </View>
                     )}
 
@@ -1248,27 +1188,13 @@ export default function BookingsScreen() {
                         disabled={isCancelling}
                       >
                         {isCancelling ? (
-                          <ActivityIndicator size="small" color="#FF747A" />
+                          <ActivityIndicator size="small" color="#C13515" />
                         ) : (
-                          <>
-                            <Ionicons
-                              name={
-                                isWaitlisted
-                                  ? "exit-outline"
-                                  : "close-circle-outline"
-                              }
-
-                              size={20}
-
-                              color="#FF747A"
-                            />
-
-                            <Text style={styles.cancelText}>
-                              {isWaitlisted
-                                ? t("bookings.leaveWaitlist")
-                                : t("bookings.cancelBooking")}
-                            </Text>
-                          </>
+                          <Text style={styles.cancelText}>
+                            {isWaitlisted
+                              ? t("bookings.leaveWaitlist")
+                              : t("bookings.cancelBooking")}
+                          </Text>
                         )}
                       </Pressable>
                     )}
@@ -1567,9 +1493,9 @@ function getStatusInfo(
       return {
         label: t("bookings.waitingForOrganizer"),
 
-        color: "#F6C85F",
+        color: "#9A6700",
 
-        backgroundColor: "#2A2415",
+        backgroundColor: "#FFF8E7",
 
         icon: "time-outline",
       };
@@ -1578,9 +1504,9 @@ function getStatusInfo(
     return {
       label: t("bookings.organizerPaymentRequired"),
 
-      color: "#F6C85F",
+      color: "#9A6700",
 
-      backgroundColor: "#2A2415",
+      backgroundColor: "#FFF8E7",
 
       icon: "time-outline",
     };
@@ -1602,9 +1528,9 @@ function getStatusInfo(
     return {
       label: t("bookings.waitlisted"),
 
-      color: "#F6C85F",
+      color: "#9A6700",
 
-      backgroundColor: "#2A2415",
+      backgroundColor: "#FFF8E7",
 
       icon: "time-outline",
     };
@@ -1614,9 +1540,9 @@ function getStatusInfo(
     return {
       label: t("bookings.gameCancelled"),
 
-      color: "#FF9A9E",
+      color: "#C13515",
 
-      backgroundColor: "#3A2022",
+      backgroundColor: "#FFF1F1",
 
       icon: "close-circle",
     };
@@ -1627,7 +1553,7 @@ function getStatusInfo(
 
     color: COLORS.textSecondary,
 
-    backgroundColor: "#26312D",
+    backgroundColor: "#F3F3F3",
 
     icon: "close-circle",
   };
@@ -2025,7 +1951,7 @@ const styles = StyleSheet.create({
   },
 
   bookingFilterSheet: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -2080,8 +2006,8 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
   },
 
   bookingFilterChipActive: {
@@ -2090,13 +2016,13 @@ const styles = StyleSheet.create({
   },
 
   bookingFilterChipText: {
-    color: COLORS.textSecondary,
+    color: "#717171",
     fontSize: 14,
     fontWeight: "600",
   },
 
   bookingFilterChipTextActive: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "700",
   },
   bookingFilterActions: {
@@ -2142,29 +2068,34 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     marginBottom: 18,
   },
 
   searchBox: {
     flex: 1,
-    height: 58,
+    height: 52,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 30,
+    borderColor: "#DDDDDD",
+    borderRadius: 26,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 18,
-    paddingRight: 7,
-    backgroundColor: COLORS.surface,
+    paddingLeft: 16,
+    paddingRight: 6,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
 
   searchInput: {
     flex: 1,
-    marginLeft: 11,
+    marginLeft: 9,
     marginRight: 4,
-    color: COLORS.text,
-    fontSize: 16,
+    color: "#222222",
+    fontSize: 15,
     minWidth: 0,
   },
 
@@ -2178,15 +2109,15 @@ const styles = StyleSheet.create({
 
   searchDivider: {
     width: StyleSheet.hairlineWidth,
-    height: 30,
-    backgroundColor: COLORS.border,
+    height: 26,
+    backgroundColor: "#DDDDDD",
     marginHorizontal: 4,
   },
 
   searchFilterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2196,12 +2127,12 @@ const styles = StyleSheet.create({
   },
 
   calendarButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2358,19 +2289,16 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
-
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   content: {
-    paddingHorizontal: 18,
-
+    paddingHorizontal: 20,
     paddingTop: 14,
   },
 
@@ -2387,23 +2315,17 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: COLORS.text,
-
-    fontSize: 36,
-
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
-
-    fontSize: 16,
-
-    marginTop: 4,
-
-    marginBottom: 24,
+    color: "#717171",
+    fontSize: 15,
+    marginTop: 3,
+    marginBottom: 18,
   },
 
   loadingContainer: {
@@ -2463,18 +2385,14 @@ const styles = StyleSheet.create({
   },
 
   bookingList: {
-    gap: 18,
+    gap: 12,
   },
 
   card: {
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 22,
-
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
+    borderColor: "#E5E5E5",
     overflow: "hidden",
   },
 
@@ -2521,11 +2439,11 @@ const styles = StyleSheet.create({
 
     gap: 6,
 
-    backgroundColor: "#211718",
+    backgroundColor: "#FFF1F1",
 
     borderWidth: 1,
 
-    borderColor: "#6A3538",
+    borderColor: "#F1B8B8",
 
     borderRadius: 18,
 
@@ -2535,7 +2453,7 @@ const styles = StyleSheet.create({
   },
 
   cancelledOverlayText: {
-    color: "#FF9A9E",
+    color: "#C13515",
 
     fontSize: 12,
 
@@ -2543,13 +2461,12 @@ const styles = StyleSheet.create({
   },
 
   cardContent: {
-    padding: 17,
+    padding: 18,
   },
 
   statusRow: {
     flexDirection: "row",
-
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
   statusBadge: {
@@ -2573,11 +2490,10 @@ const styles = StyleSheet.create({
   },
 
   gameTitle: {
-    color: COLORS.text,
-
-    fontSize: 21,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 19,
+    fontWeight: "700",
+    letterSpacing: -0.2,
   },
 
   cancelledGameTitle: {
@@ -2585,67 +2501,48 @@ const styles = StyleSheet.create({
   },
 
   organizer: {
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-    marginTop: 3,
-
-    marginBottom: 14,
+    color: "#717171",
+    fontSize: 14,
+    marginTop: 2,
+    marginBottom: 11,
   },
 
   infoRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 7,
-
-    marginTop: 8,
+    gap: 6,
+    marginTop: 7,
   },
 
   infoText: {
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
+    color: "#717171",
+    fontSize: 14,
     flexShrink: 1,
   },
 
   bottomRow: {
     flexDirection: "row",
-
     justifyContent: "space-between",
-
     alignItems: "center",
-
-    marginTop: 18,
+    marginTop: 15,
   },
 
   formatBadge: {
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 14,
-
-    paddingHorizontal: 12,
-
-    paddingVertical: 7,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
 
   formatText: {
-    color: COLORS.textSecondary,
-
+    color: "#4A4A4A",
     fontSize: 14,
-
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   price: {
-    color: COLORS.text,
-
-    fontSize: 19,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 17,
+    fontWeight: "700",
   },
 
   cancelledPrice: {
@@ -2655,11 +2552,11 @@ const styles = StyleSheet.create({
   paymentSection: {
     marginTop: 18,
 
-    backgroundColor: "#171D1B",
+    backgroundColor: "#FFF9E8",
 
     borderWidth: 1,
 
-    borderColor: "#5E522C",
+    borderColor: "#E9D28A",
 
     borderRadius: 16,
 
@@ -2780,39 +2677,21 @@ const styles = StyleSheet.create({
 
   waitingPaymentNotice: {
     flexDirection: "row",
-
-    alignItems: "flex-start",
-
-    gap: 10,
-
-    backgroundColor: "#2A2415",
-
-    borderWidth: 1,
-
-    borderColor: "#5E522C",
-
-    borderRadius: 13,
-
-    padding: 13,
-
-    marginTop: 17,
+    alignItems: "center",
+    gap: 7,
+    marginTop: 14,
   },
 
   waitingPaymentTitle: {
-    color: "#F6C85F",
-
+    color: "#9A6700",
     fontSize: 14,
-
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   waitingPaymentText: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 12,
-
     lineHeight: 17,
-
     marginTop: 3,
   },
 
@@ -2823,11 +2702,11 @@ const styles = StyleSheet.create({
 
     gap: 10,
 
-    backgroundColor: "#0A211C",
+    backgroundColor: "#F2FBF7",
 
     borderWidth: 1,
 
-    borderColor: "#1E5A46",
+    borderColor: "#B9E5CF",
 
     borderRadius: 13,
 
@@ -2859,7 +2738,7 @@ const styles = StyleSheet.create({
 
     gap: 10,
 
-    backgroundColor: "#0A211C",
+    backgroundColor: "#F2FBF7",
 
     borderRadius: 13,
 
@@ -2885,11 +2764,11 @@ const styles = StyleSheet.create({
   },
 
   refundNotice: {
-    backgroundColor: "#2A2415",
+    backgroundColor: "#FFF8E7",
 
     borderWidth: 1,
 
-    borderColor: "#5E522C",
+    borderColor: "#E9D28A",
 
     borderRadius: 13,
 
@@ -2907,7 +2786,7 @@ const styles = StyleSheet.create({
   },
 
   refundTitle: {
-    color: "#F6C85F",
+    color: "#9A6700",
 
     fontSize: 14,
 
@@ -3011,7 +2890,7 @@ const styles = StyleSheet.create({
 
     gap: 8,
 
-    backgroundColor: "#0A211C",
+    backgroundColor: "#F2FBF7",
 
     borderRadius: 12,
 
@@ -3031,31 +2910,15 @@ const styles = StyleSheet.create({
   },
 
   cancelButton: {
-    height: 48,
-
-    borderRadius: 13,
-
-    borderWidth: 1,
-
-    borderColor: "#7A3437",
-
-    marginTop: 18,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    gap: 7,
+    alignSelf: "flex-start",
+    marginTop: 14,
+    paddingVertical: 4,
   },
 
   cancelText: {
-    color: "#FF747A",
-
-    fontSize: 15,
-
-    fontWeight: "700",
+    color: "#C13515",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   disabledButton: {

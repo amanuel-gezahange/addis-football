@@ -333,9 +333,9 @@ export default function ManageGamesScreen() {
               <Ionicons
                 name="add"
 
-                size={27}
+                size={25}
 
-                color={COLORS.background}
+                color="#07111F"
               />
             </Pressable>
           )}
@@ -631,13 +631,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
 
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   container: {
     flex: 1,
 
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   content: {
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
 
     justifyContent: "center",
 
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
 
   loadingText: {
@@ -679,11 +679,9 @@ const styles = StyleSheet.create({
   },
 
   backText: {
-    color: COLORS.primary,
-
-    fontSize: 16,
-
-    fontWeight: "700",
+    color: "#087EA4",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   headerRow: {
@@ -701,29 +699,22 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: COLORS.text,
-
-    fontSize: 34,
-
+    color: "#222222",
+    fontSize: 32,
     fontWeight: "800",
-
-    letterSpacing: -1,
+    letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-    marginTop: 4,
+    color: "#717171",
+    fontSize: 14,
+    marginTop: 3,
   },
 
   addButton: {
-    width: 48,
-
-    height: 48,
-
-    borderRadius: 15,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
 
     backgroundColor: COLORS.primary,
 
@@ -737,15 +728,11 @@ const styles = StyleSheet.create({
   },
 
   roleBanner: {
-    minHeight: 46,
-
+    minHeight: 42,
     borderRadius: 13,
-
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    backgroundColor: COLORS.surface,
+    borderColor: "#CDEFF8",
+    backgroundColor: "#F2FBFE",
 
     flexDirection: "row",
 
@@ -759,11 +746,9 @@ const styles = StyleSheet.create({
   },
 
   roleBannerText: {
-    color: COLORS.textSecondary,
-
-    fontSize: 13,
-
-    fontWeight: "700",
+    color: "#087EA4",
+    fontSize: 12,
+    fontWeight: "600",
   },
 
   emptyContainer: {
@@ -827,33 +812,26 @@ const styles = StyleSheet.create({
   },
 
   createButtonText: {
-    color: COLORS.background,
-
-    fontSize: 16,
-
-    fontWeight: "800",
+    color: "#07111F",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   gameList: {
-    gap: 16,
+    gap: 14,
   },
 
   card: {
-    backgroundColor: COLORS.surface,
-
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    borderRadius: 20,
-
-    padding: 17,
+    borderColor: "#E5E5E5",
+    borderRadius: 16,
+    padding: 16,
   },
 
   cancelledCard: {
-    borderColor: "#513033",
-
-    opacity: 0.82,
+    borderColor: "#F0C7C2",
+    backgroundColor: "#FFFBFA",
   },
 
   cardTop: {
@@ -881,15 +859,15 @@ const styles = StyleSheet.create({
   },
 
   availableBadge: {
-    backgroundColor: "#0A3828",
+    backgroundColor: "#EAF8EF",
   },
 
   fullBadge: {
-    backgroundColor: "#38221F",
+    backgroundColor: "#FFF3E8",
   },
 
   cancelledBadge: {
-    backgroundColor: "#382021",
+    backgroundColor: "#FDEEEE",
   },
 
   statusDot: {
@@ -901,15 +879,15 @@ const styles = StyleSheet.create({
   },
 
   availableDot: {
-    backgroundColor: COLORS.success,
+    backgroundColor: "#008A3B",
   },
 
   fullDot: {
-    backgroundColor: "#FF747A",
+    backgroundColor: "#C13515",
   },
 
   cancelledDot: {
-    backgroundColor: "#FF747A",
+    backgroundColor: "#C13515",
   },
 
   statusText: {
@@ -919,31 +897,27 @@ const styles = StyleSheet.create({
   },
 
   availableText: {
-    color: "#71E49A",
+    color: "#008A3B",
   },
 
   fullText: {
-    color: "#FF8B90",
+    color: "#C13515",
   },
 
   cancelledText: {
-    color: "#FF747A",
+    color: "#C13515",
   },
 
   gameId: {
-    color: COLORS.textMuted,
-
-    fontSize: 12,
-
-    fontWeight: "700",
+    color: "#9A9A9A",
+    fontSize: 11,
+    fontWeight: "600",
   },
 
   gameTitle: {
-    color: COLORS.text,
-
-    fontSize: 20,
-
-    fontWeight: "800",
+    color: "#222222",
+    fontSize: 19,
+    fontWeight: "700",
   },
 
   cancelledGameTitle: {
@@ -951,13 +925,10 @@ const styles = StyleSheet.create({
   },
 
   organizer: {
-    color: COLORS.textMuted,
-
+    color: "#717171",
     fontSize: 14,
-
-    marginTop: 3,
-
-    marginBottom: 13,
+    marginTop: 2,
+    marginBottom: 11,
   },
 
   infoRow: {
@@ -971,69 +942,48 @@ const styles = StyleSheet.create({
   },
 
   infoText: {
-    color: COLORS.textSecondary,
-
+    color: "#717171",
     fontSize: 14,
-
     flexShrink: 1,
   },
 
   detailsRow: {
     flexDirection: "row",
-
     flexWrap: "wrap",
-
-    marginTop: 18,
-
+    marginTop: 14,
     borderTopWidth: 1,
-
-    borderTopColor: COLORS.border,
-
-    paddingTop: 15,
-
-    gap: 8,
+    borderTopColor: "#EEEEEE",
+    paddingTop: 12,
+    gap: 7,
   },
 
   detail: {
-    backgroundColor: COLORS.surfaceAlt,
-
-    borderRadius: 11,
-
-    paddingHorizontal: 10,
-
-    paddingVertical: 8,
+    backgroundColor: "#F7F7F7",
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
   },
 
   detailLabel: {
-    color: COLORS.textMuted,
-
+    color: "#8A8A8A",
     fontSize: 10,
-
-    fontWeight: "700",
-
+    fontWeight: "600",
     textTransform: "uppercase",
   },
 
   detailValue: {
-    color: COLORS.text,
-
+    color: "#222222",
     fontSize: 13,
-
-    fontWeight: "800",
-
+    fontWeight: "700",
     marginTop: 2,
   },
 
   editButton: {
-    height: 50,
-
-    borderRadius: 13,
-
+    height: 44,
+    borderRadius: 12,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    marginTop: 17,
+    borderColor: "#DDDDDD",
+    marginTop: 14,
 
     flexDirection: "row",
 
@@ -1046,24 +996,17 @@ const styles = StyleSheet.create({
 
   editButtonText: {
     flex: 1,
-
-    color: COLORS.primary,
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#087EA4",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   viewButton: {
-    height: 50,
-
-    borderRadius: 13,
-
+    height: 44,
+    borderRadius: 12,
     borderWidth: 1,
-
-    borderColor: COLORS.border,
-
-    marginTop: 17,
+    borderColor: "#DDDDDD",
+    marginTop: 14,
 
     flexDirection: "row",
 
@@ -1076,12 +1019,9 @@ const styles = StyleSheet.create({
 
   viewButtonText: {
     flex: 1,
-
-    color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-    fontWeight: "800",
+    color: "#717171",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   pressed: {
@@ -1089,6 +1029,6 @@ const styles = StyleSheet.create({
   },
 
   bottomSpace: {
-    height: 40,
+    height: 28,
   },
 });
