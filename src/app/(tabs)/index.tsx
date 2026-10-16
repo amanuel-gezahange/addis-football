@@ -169,10 +169,6 @@ export default function HomeScreen() {
   }, [language, t]);
 
   /*
-    Select Today automatically.
-  */
-
-  /*
     Reload whenever Discover
     receives focus.
   */
@@ -487,6 +483,7 @@ export default function HomeScreen() {
                 </Pressable>
               )}
             </View>
+
             <Pressable
               style={[
                 styles.filterButton,
@@ -540,9 +537,7 @@ export default function HomeScreen() {
                   onPress={() => setSelectedDate(item.key)}
                   style={({ pressed }) => [
                     styles.dateButton,
-
                     active && styles.dateButtonActive,
-
                     pressed && styles.dateButtonPressed,
                   ]}
                 >
@@ -638,12 +633,11 @@ export default function HomeScreen() {
               </View>
             ))}
 
-          <View
-            style={{
-              height: 30,
-            }}
-          />
+          <View style={{ height: 30 }} />
         </ScrollView>
+
+        {/* CITY MODAL */}
+
         <Modal
           visible={cityModalVisible}
           transparent
@@ -660,6 +654,7 @@ export default function HomeScreen() {
             >
               <View style={styles.calendarHeader}>
                 <Text style={styles.calendarTitle}>Choose a city</Text>
+
                 <Pressable
                   style={styles.calendarCloseButton}
                   onPress={() => setCityModalVisible(false)}
@@ -692,6 +687,7 @@ export default function HomeScreen() {
                         size={21}
                         color={selected ? COLORS.primary : COLORS.textSecondary}
                       />
+
                       <Text
                         style={[
                           styles.cityOptionText,
@@ -707,6 +703,9 @@ export default function HomeScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+
+        {/* CALENDAR MODAL */}
+
         <Modal
           visible={calendarVisible}
           transparent
@@ -794,6 +793,9 @@ export default function HomeScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+
+        {/* FILTER MODAL */}
+
         <Modal
           visible={filterModalVisible}
           transparent
@@ -802,9 +804,13 @@ export default function HomeScreen() {
         >
           <View style={styles.filterOverlay}>
             <View style={styles.filterSheet}>
+              {/* SCROLLABLE FILTER OPTIONS */}
+
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 10 }}
+                contentContainerStyle={{
+                  paddingBottom: 10,
+                }}
               >
                 <View style={styles.filterHeader}>
                   <Text style={styles.filterTitle}>
@@ -815,121 +821,161 @@ export default function HomeScreen() {
                     <Ionicons name="close" size={26} color={COLORS.text} />
                   </Pressable>
                 </View>
-             
-              <Text style={styles.filterSectionTitle}>
-                {t("discover.sortBy")}
-              </Text>
 
-              {[
-                ["soonest", t("discover.soonest")],
-                ["price_low", t("discover.lowestPrice")],
-                ["spots", t("discover.mostSpotsAvailable")],
-              ].map(([value, label]) => (
-                <Pressable
-                  key={value}
-                  style={styles.filterOption}
-                  onPress={() =>
-                    setSortBy(value as "soonest" | "price_low" | "spots")
-                  }
-                >
-                  <Text style={styles.filterOptionText}>{label}</Text>
+                {/* SORT */}
 
-                  <Ionicons
-                    name={
-                      sortBy === value ? "radio-button-on" : "radio-button-off"
-                    }
-                    size={22}
-                    color={COLORS.primary}
-                  />
-                </Pressable>
-              ))}
+                <Text style={styles.filterSectionTitle}>
+                  {t("discover.sortBy")}
+                </Text>
 
-              <Text style={styles.filterSectionTitle}>
-                {t("discover.price")}
-              </Text>
+                <View style={styles.filterChipRow}>
+                  {[
+                    ["soonest", t("discover.soonest")],
+                    ["price_low", t("discover.lowestPrice")],
+                    ["spots", t("discover.mostSpotsAvailable")],
+                  ].map(([value, label]) => {
+                    const active = sortBy === value;
 
-              {[
-                [null, t("discover.anyPrice")],
-                ["free", t("discover.free")],
-                ["paid", t("discover.paid")],
-              ].map(([value, label]) => (
-                <Pressable
-                  key={label}
-                  style={styles.filterOption}
-                  onPress={() =>
-                    setPriceFilter(value as "free" | "paid" | null)
-                  }
-                >
-                  <Text style={styles.filterOptionText}>{label}</Text>
+                    return (
+                      <Pressable
+                        key={value}
+                        style={[
+                          styles.filterChip,
+                          active && styles.filterChipActive,
+                        ]}
+                        onPress={() =>
+                          setSortBy(value as "soonest" | "price_low" | "spots")
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.filterChipText,
+                            active && styles.filterChipTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
 
-                  <Ionicons
-                    name={
-                      priceFilter === value
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    size={22}
-                    color={COLORS.primary}
-                  />
-                </Pressable>
-              ))}
-              <Text style={styles.filterSectionTitle}>
-                {t("discover.skillLevel")}
-              </Text>
+                {/* PRICE */}
 
-              {[
-                [null, t("discover.anySkill")],
-                ["Beginner", t("discover.beginner")],
-                ["Intermediate", t("discover.intermediate")],
-                ["Advanced", t("discover.advanced")],
-              ].map(([value, label]) => (
-                <Pressable
-                  key={label}
-                  style={styles.filterOption}
-                  onPress={() => setSkillFilter(value)}
-                >
-                  <Text style={styles.filterOptionText}>{label}</Text>
+                <Text style={styles.filterSectionTitle}>
+                  {t("discover.price")}
+                </Text>
 
-                  <Ionicons
-                    name={
-                      skillFilter === value
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    size={22}
-                    color={COLORS.primary}
-                  />
-                </Pressable>
-              ))}
-              <Text style={styles.filterSectionTitle}>
-                {t("discover.gameFormat")}
-              </Text>
+                <View style={styles.filterChipRow}>
+                  {[
+                    [null, t("discover.anyPrice")],
+                    ["free", t("discover.free")],
+                    ["paid", t("discover.paid")],
+                  ].map(([value, label]) => {
+                    const active = priceFilter === value;
 
-              {[
-                [null, t("discover.anyFormat")],
-                ["5v5", "5v5"],
-                ["6v6", "6v6"],
-                ["7v7", "7v7"],
-                ["11v11", "11v11"],
-              ].map(([value, label]) => (
-                <Pressable
-                  key={label}
-                  style={styles.filterOption}
-                  onPress={() => setFormatFilter(value)}
-                >
-                  <Text style={styles.filterOptionText}>{label}</Text>
+                    return (
+                      <Pressable
+                        key={label}
+                        style={[
+                          styles.filterChip,
+                          active && styles.filterChipActive,
+                        ]}
+                        onPress={() =>
+                          setPriceFilter(value as "free" | "paid" | null)
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.filterChipText,
+                            active && styles.filterChipTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
 
-                  <Ionicons
-                    name={
-                      formatFilter === value
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    size={22}
-                    color={COLORS.primary}
-                  />
-                </Pressable>
-              ))}
+                {/* SKILL */}
+
+                <Text style={styles.filterSectionTitle}>
+                  {t("discover.skillLevel")}
+                </Text>
+
+                <View style={styles.filterChipRow}>
+                  {[
+                    [null, t("discover.anySkill")],
+                    ["Beginner", t("discover.beginner")],
+                    ["Intermediate", t("discover.intermediate")],
+                    ["Advanced", t("discover.advanced")],
+                  ].map(([value, label]) => {
+                    const active = skillFilter === value;
+
+                    return (
+                      <Pressable
+                        key={label}
+                        style={[
+                          styles.filterChip,
+                          active && styles.filterChipActive,
+                        ]}
+                        onPress={() => setSkillFilter(value)}
+                      >
+                        <Text
+                          style={[
+                            styles.filterChipText,
+                            active && styles.filterChipTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* FORMAT */}
+
+                <Text style={styles.filterSectionTitle}>
+                  {t("discover.gameFormat")}
+                </Text>
+
+                <View style={styles.filterChipRow}>
+                  {[
+                    [null, t("discover.anyFormat")],
+                    ["5v5", "5v5"],
+                    ["6v6", "6v6"],
+                    ["7v7", "7v7"],
+                    ["11v11", "11v11"],
+                  ].map(([value, label]) => {
+                    const active = formatFilter === value;
+
+                    return (
+                      <Pressable
+                        key={label}
+                        style={[
+                          styles.filterChip,
+                          active && styles.filterChipActive,
+                        ]}
+                        onPress={() => setFormatFilter(value)}
+                      >
+                        <Text
+                          style={[
+                            styles.filterChipText,
+                            active && styles.filterChipTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+
+              {/* FIXED BOTTOM BUTTONS */}
+
               <View style={styles.filterActions}>
                 <Pressable
                   style={styles.resetFilterButton}
@@ -940,7 +986,9 @@ export default function HomeScreen() {
                     setPriceFilter(null);
                   }}
                 >
-                  <Text style={styles.resetFilterText}>{t("discover.reset")}</Text>
+                  <Text style={styles.resetFilterText}>
+                    {t("discover.reset")}
+                  </Text>
                 </Pressable>
 
                 <Pressable
@@ -952,7 +1000,6 @@ export default function HomeScreen() {
                   </Text>
                 </Pressable>
               </View>
-              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -1250,6 +1297,37 @@ function EthiopianCalendar({
 }
 
 const styles = StyleSheet.create({
+  filterChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 6,
+  },
+
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+
+  filterChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+
+  filterChipText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  filterChipTextActive: {
+    color: "#fff",
+    fontWeight: "700",
+  },
   filterButtonActive: {
     backgroundColor: COLORS.primary,
   },

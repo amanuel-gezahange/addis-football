@@ -1363,66 +1363,89 @@ export default function BookingsScreen() {
               </Pressable>
             </View>
 
+            {/* SORT BY */}
+
             <Text style={styles.bookingFilterSectionTitle}>
               {t("bookings.sortBy")}
             </Text>
 
-            {[
-              ["upcoming", t("bookings.upcomingFirst")],
-              ["latest", t("bookings.latestFirst")],
-            ].map(([value, label]) => (
-              <Pressable
-                key={value}
-                style={styles.bookingFilterOption}
-                onPress={() => setBookingSortBy(value as "upcoming" | "latest")}
-              >
-                <Text style={styles.bookingFilterOptionText}>{label}</Text>
+            <View style={styles.bookingFilterChipRow}>
+              {[
+                ["upcoming", t("bookings.upcomingFirst")],
+                ["latest", t("bookings.latestFirst")],
+              ].map(([value, label]) => {
+                const active = bookingSortBy === value;
 
-                <Ionicons
-                  name={
-                    bookingSortBy === value
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={22}
-                  color={COLORS.primary}
-                />
-              </Pressable>
-            ))}
+                return (
+                  <Pressable
+                    key={value}
+                    style={[
+                      styles.bookingFilterChip,
+                      active && styles.bookingFilterChipActive,
+                    ]}
+                    onPress={() =>
+                      setBookingSortBy(value as "upcoming" | "latest")
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.bookingFilterChipText,
+                        active && styles.bookingFilterChipTextActive,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* STATUS */}
 
             <Text style={styles.bookingFilterSectionTitle}>
               {t("bookings.status")}
             </Text>
 
-            {[
-              ["all", t("bookings.allBookings")],
-              ["confirmed", t("bookings.confirmed")],
-              ["payment_required", t("bookings.paymentRequired")],
-              ["waitlisted", t("bookings.waitlisted")],
-            ].map(([value, label]) => (
-              <Pressable
-                key={value}
-                style={styles.bookingFilterOption}
-                onPress={() =>
-                  setBookingStatusFilter(
-                    value as
-                      "all" | "confirmed" | "payment_required" | "waitlisted",
-                  )
-                }
-              >
-                <Text style={styles.bookingFilterOptionText}>{label}</Text>
+            <View style={styles.bookingFilterChipRow}>
+              {[
+                ["all", t("bookings.allBookings")],
+                ["confirmed", t("bookings.confirmed")],
+                ["payment_required", t("bookings.paymentRequired")],
+                ["waitlisted", t("bookings.waitlisted")],
+              ].map(([value, label]) => {
+                const active = bookingStatusFilter === value;
 
-                <Ionicons
-                  name={
-                    bookingStatusFilter === value
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={22}
-                  color={COLORS.primary}
-                />
-              </Pressable>
-            ))}
+                return (
+                  <Pressable
+                    key={value}
+                    style={[
+                      styles.bookingFilterChip,
+                      active && styles.bookingFilterChipActive,
+                    ]}
+                    onPress={() =>
+                      setBookingStatusFilter(
+                        value as
+                          | "all"
+                          | "confirmed"
+                          | "payment_required"
+                          | "waitlisted",
+                      )
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.bookingFilterChipText,
+                        active && styles.bookingFilterChipTextActive,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* ACTIONS */}
 
             <View style={styles.bookingFilterActions}>
               <Pressable
@@ -2022,6 +2045,37 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
 
+  bookingFilterChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 6,
+  },
+
+  bookingFilterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+
+  bookingFilterChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+
+  bookingFilterChipText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  bookingFilterChipTextActive: {
+    color: "#fff",
+    fontWeight: "700",
+  },
   bookingFilterActions: {
     flexDirection: "row",
     gap: 12,
