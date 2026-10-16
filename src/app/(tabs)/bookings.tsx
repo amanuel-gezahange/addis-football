@@ -233,78 +233,100 @@ export default function BookingsScreen() {
     const now = Date.now();
     const cleanSearch = search.trim().toLowerCase();
 
-    const filtered = bookings.filter((booking) => {
-      const game = booking.games;
+    return bookings
+      .filter((booking) => {
+        const game = booking.games;
 
-      if (!game || !game.starts_at) {
-        return false;
-      }
-
-      // Hide cancelled bookings from the main Bookings screen.
-      if (
-        booking.status === "cancelled_by_player" ||
-        booking.status === "cancelled_by_organizer"
-      ) {
-        return false;
-      }
-
-      // Keep the booking visible until the game actually ends.
-      const gameEndTime = game.ends_at
-        ? new Date(game.ends_at).getTime()
-        : new Date(game.starts_at).getTime();
-
-      if (gameEndTime < now) {
-        return false;
-      }
-
-      // Date filter.
-      if (selectedDate) {
-        const gameDate = getAddisDateKey(game.starts_at);
-
-        if (gameDate !== selectedDate) {
+        if (!game?.starts_at) {
           return false;
         }
-      }
 
-      // Search across all useful booking/game information.
-      if (cleanSearch) {
-        const searchableValues = [
-          game.title,
-          game.area,
-          game.organizer,
-          game.distance,
-          game.time,
-          game.format,
-          game.skill,
-          game.payment_method,
-          game.payment_provider,
-          game.payment_account_name,
-          game.price?.toString(),
-          booking.price_paid?.toString(),
-
-          game.payment_method === "free" ? "free" : null,
-
-          game.price != null ? `${game.price} etb` : null,
-          booking.price_paid != null ? `${booking.price_paid} etb` : null,
-        ];
-
-        const matchesSearch = searchableValues.some((value) =>
-          String(value ?? "")
-            .toLowerCase()
-            .includes(cleanSearch),
-        );
-
-        if (!matchesSearch) {
+        // Hide cancelled bookings.
+        if (
+          booking.status === "cancelled_by_player" ||
+          booking.status === "cancelled_by_organizer"
+        ) {
           return false;
         }
-      }
 
-      return true;
-    });
+        // Hide past bookings after the game ends.
+        const gameEndTime = game.ends_at
+          ? new Date(game.ends_at).getTime()
+          : new Date(game.starts_at).getTime();
 
-    // No search: upcoming bookings nearest first.
-    if (!cleanSearch) {
-      return [...filtered].sort((a, b) => {
+        if (gameEndTime < now) {
+          return false;
+        }
+
+        // Calendar filter.
+        if (selectedDate && getAddisDateKey(game.starts_at) !== selectedDate) {
+          return false;
+        }
+
+        // Search EVERYTHING useful about the booking.
+        if (cleanSearch) {
+          const searchableText = [
+            // Game
+            game.title,
+            game.organizer,
+            game.area,
+            game.distance,
+            game.time,
+            game.format,
+            game.skill,
+
+            // Price / currency
+            game.price,
+            `${game.price} ETB`,
+            `${game.price} birr`,
+            booking.price_paid,
+            booking.price_paid != null ? `${booking.price_paid} ETB` : null,
+            booking.price_paid != null ? `${booking.price_paid} birr` : null,
+           game.payment_method !== "free" ? "ETB" : null,
+           game.payment_method !== "free" ? "birr" : null,
+
+            // Payment
+            game.payment_method,
+            game.payment_provider,
+            game.payment_phone,
+            game.payment_account_name,
+
+            game.payment_method === "free" ? "free" : null,
+
+            game.payment_method === "venue" ? "venue pay at venue" : null,
+
+            game.payment_method === "organizer"
+              ? "organizer pay organizer"
+              : null,
+
+            // Booking
+            booking.status,
+            booking.payment_status,
+
+            booking.status === "confirmed" ? "confirmed" : null,
+
+            booking.status === "waitlisted" ? "waitlisted waitlist" : null,
+
+            booking.status === "pending_payment" ? "pending payment" : null,
+
+            booking.payment_status === "submitted"
+              ? "submitted waiting organizer"
+              : null,
+
+            booking.payment_status === "paid" ? "paid payment confirmed" : null,
+          ]
+            .filter((value) => value !== null && value !== undefined)
+            .map((value) => String(value).toLowerCase())
+            .join(" ");
+
+          if (!searchableText.includes(cleanSearch)) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
         const aTime = a.games?.starts_at
           ? new Date(a.games.starts_at).getTime()
           : Number.MAX_SAFE_INTEGER;
@@ -315,53 +337,6 @@ export default function BookingsScreen() {
 
         return aTime - bTime;
       });
-    }
-
-    // Search: use the same relevance behavior as Discover.
-    // Search: rank stronger matches first, like Discover.
-    const getSearchScore = (booking: Booking) => {
-      const game = booking.games;
-
-      if (!game) {
-        return 0;
-      }
-
-      const title = (game.title ?? "").toLowerCase();
-      const area = (game.area ?? "").toLowerCase();
-      const organizer = (game.organizer ?? "").toLowerCase();
-
-      if (title === cleanSearch) return 100;
-      if (title.startsWith(cleanSearch)) return 90;
-      if (title.includes(cleanSearch)) return 80;
-
-      if (organizer === cleanSearch) return 70;
-      if (organizer.startsWith(cleanSearch)) return 65;
-      if (organizer.includes(cleanSearch)) return 60;
-
-      if (area === cleanSearch) return 50;
-      if (area.startsWith(cleanSearch)) return 45;
-      if (area.includes(cleanSearch)) return 40;
-
-      return 0;
-    };
-
-    return [...filtered].sort((a, b) => {
-      const scoreDifference = getSearchScore(b) - getSearchScore(a);
-
-      if (scoreDifference !== 0) {
-        return scoreDifference;
-      }
-
-      const aTime = a.games?.starts_at
-        ? new Date(a.games.starts_at).getTime()
-        : Number.MAX_SAFE_INTEGER;
-
-      const bTime = b.games?.starts_at
-        ? new Date(b.games.starts_at).getTime()
-        : Number.MAX_SAFE_INTEGER;
-
-      return aTime - bTime;
-    });
   }, [bookings, search, selectedDate]);
 
   async function submitOrganizerPayment(booking: Booking) {
