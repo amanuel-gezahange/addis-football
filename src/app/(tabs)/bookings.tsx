@@ -1711,9 +1711,10 @@ function EthiopianCalendar({
 
   const [firstYear, firstMonth, firstDay] = firstDate.split("-").map(Number);
 
-  const firstWeekday = new Date(
+const firstWeekday =
+  (new Date(
     Date.UTC(firstYear, firstMonth - 1, firstDay, 12),
-  ).getUTCDay();
+  ).getUTCDay() + 6) % 7;
 
   const cells: Array<number | null> = [
     ...Array(firstWeekday).fill(null),
