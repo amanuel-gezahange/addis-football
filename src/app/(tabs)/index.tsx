@@ -36,6 +36,10 @@ type Game = {
   image_url: string | null;
   starts_at: string | null;
   ends_at: string | null;
+  payment_method: "free" | "venue" | "organizer";
+  payment_provider: string | null;
+  payment_phone: string | null;
+  payment_account_name: string | null;
 };
 
 type DiscoverGame = Game & {
@@ -177,7 +181,11 @@ export default function HomeScreen() {
           status,
           image_url,
           starts_at,
-          ends_at
+          ends_at,
+          payment_method,
+          payment_provider,
+          payment_phone,
+          payment_account_name
         `,
       )
       .neq("status", "cancelled")
@@ -232,59 +240,79 @@ export default function HomeScreen() {
   const visibleGames = useMemo(() => {
     const cleanSearch = search.trim().toLowerCase();
 
-    const filtered = games.filter((game) => {
-      if (!game.starts_at) {
-        return false;
-      }
+    return games
+      .filter((game) => {
+        if (!game.starts_at) {
+          return false;
+        }
 
-      const gameDate = getAddisDateKey(game.starts_at);
+        const gameDate = getAddisDateKey(game.starts_at);
 
-      if (selectedDate && gameDate !== selectedDate) {
-        return false;
-      }
+        // Keep the existing calendar/date filter.
+        if (selectedDate && gameDate !== selectedDate) {
+          return false;
+        }
 
-      if (!cleanSearch) {
-        return true;
-      }
+        if (!cleanSearch) {
+          return true;
+        }
 
-      const title = (game.title ?? "").toLowerCase();
-      const area = (game.area ?? "").toLowerCase();
-      const organizer = (game.organizer ?? "").toLowerCase();
+        const searchableText = [
+          // Basic game information
+          game.title,
+          game.organizer,
+          game.area,
+          game.distance,
+          game.time,
+          game.format,
+          game.skill,
 
-      return (
-        title.includes(cleanSearch) ||
-        area.includes(cleanSearch) ||
-        organizer.includes(cleanSearch)
-      );
-    });
+          // Price
+          game.price,
+          game.payment_method !== "free" ? `${game.price} ETB` : null,
+          game.payment_method !== "free" ? `${game.price} birr` : null,
 
-    // No search = keep the normal chronological order.
-    if (!cleanSearch) {
-      return filtered;
-    }
+          // Currency
+          game.payment_method !== "free" ? "ETB" : null,
+          game.payment_method !== "free" ? "birr" : null,
 
-    // Search = rank stronger matches above weaker matches.
-    const getSearchScore = (game: DiscoverGame) => {
-      const title = (game.title ?? "").toLowerCase();
-      const area = (game.area ?? "").toLowerCase();
-      const organizer = (game.organizer ?? "").toLowerCase();
+          // Availability
+          game.spots_left,
+          `${game.spots_left} spots`,
+          `${game.spots_left} spots left`,
 
-      if (title === cleanSearch) return 100;
-      if (title.startsWith(cleanSearch)) return 90;
-      if (title.includes(cleanSearch)) return 80;
+          // Payment information
+          game.payment_method,
+          game.payment_provider,
+          game.payment_phone,
+          game.payment_account_name,
 
-      if (organizer === cleanSearch) return 70;
-      if (organizer.startsWith(cleanSearch)) return 65;
-      if (organizer.includes(cleanSearch)) return 60;
+          // Natural search terms
+          game.payment_method === "free" ? "free" : null,
 
-      if (area === cleanSearch) return 50;
-      if (area.startsWith(cleanSearch)) return 45;
-      if (area.includes(cleanSearch)) return 40;
+          game.payment_method === "venue" ? "venue pay at venue" : null,
 
-      return 0;
-    };
+          game.payment_method === "organizer"
+            ? "organizer pay organizer"
+            : null,
+        ]
+          .filter((value) => value !== null && value !== undefined)
+          .map((value) => String(value).toLowerCase())
+          .join(" ");
 
-    return [...filtered].sort((a, b) => getSearchScore(b) - getSearchScore(a));
+        return searchableText.includes(cleanSearch);
+      })
+      .sort((a, b) => {
+        const aTime = a.starts_at
+          ? new Date(a.starts_at).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        const bTime = b.starts_at
+          ? new Date(b.starts_at).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        return aTime - bTime;
+      });
   }, [games, search, selectedDate]);
 
   const selectedDateLabel = useMemo(() => {
