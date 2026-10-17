@@ -23,7 +23,19 @@ const am = {
     profile: "ፕሮፋይል",
   },
 
+  bookingSuccess: {
+    youreIn: "ገብተዋል!",
+    bookingConfirmed: "ቦታዎ ተረጋግጧል",
+    viewMyBookings: "የተመዘገብኳቸውን ጨዋታዎች ይመልከቱ",
+    spotConfirmed: "የጨዋታ ቦታዎ ተረጋግጧል።",
+  },
+
   discover: {
+    findYourNextGame: "ቀጣዩን ጨዋታዎን ያግኙ",
+    heroSubtitle: "በአቅራቢያዎ ያሉ ጨዋታዎችን ይቀላቀሉ።",
+    moreGames: "ተጨማሪ ጨዋታዎች",
+    playingSoon: "በቅርቡ የሚጀምሩ",
+    nearYou: "በአቅራቢያዎ",
     allEthiopia: "መላው ኢትዮጵያ",
     chooseCity: "ከተማ ይምረጡ",
     openCalendar: "የቀን መቁጠሪያ ይክፈቱ",
@@ -742,8 +754,6 @@ const am = {
     organizerSubtitle: "የእርስዎን የእግር ኳስ ጨዋታዎች ያስተዳድሩ",
 
     adminAccess: "ሁሉንም ጨዋታዎች ማየት ይችላሉ",
-
-    organizerAccess: "የእርስዎን ጨዋታዎች ብቻ ማየት ይችላሉ",
 
     noGames: "ጨዋታ የለም",
 

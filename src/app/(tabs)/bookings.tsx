@@ -83,6 +83,19 @@ type Game = {
 
   payment_account_name: string | null;
 };
+const BOOKING_FALLBACK_IMAGES = [
+  require("../../../assets/images/game-fallback-1.png"),
+  require("../../../assets/images/game-fallback-2.png"),
+  require("../../../assets/images/game-fallback-3.png"),
+  require("../../../assets/images/game-fallback-4.png"),
+  require("../../../assets/images/game-fallback-5.png"),
+];
+
+function getBookingFallbackImage(gameId: number) {
+  return BOOKING_FALLBACK_IMAGES[
+    Math.abs(gameId) % BOOKING_FALLBACK_IMAGES.length
+  ];
+}
 
 type Booking = {
   id: number;
@@ -744,41 +757,75 @@ export default function BookingsScreen() {
                   key={booking.id}
                   style={[styles.card, isCancelled && styles.cancelledCard]}
                 >
-                  <View style={styles.cardContent}>
-                    {!isCancelled && (
-                      <View style={styles.statusRow}>
-                        <View
-                          style={[
-                            styles.statusBadge,
+                  {/* FOOTBALL IMAGE */}
+                  <Pressable
+                    style={styles.imageWrapper}
+                    onPress={() => router.push(`/game/${game.id}`)}
+                    disabled={isCancelled}
+                  >
+                    <Image
+                      source={
+                        game.image_url
+                          ? { uri: game.image_url }
+                          : getBookingFallbackImage(game.id)
+                      }
+                      style={[
+                        styles.image,
+                        isCancelled && styles.cancelledImage,
+                      ]}
+                      resizeMode="cover"
+                    />
 
+                    <View style={styles.imageShade} />
+
+                    {/* STATUS ON IMAGE */}
+                    {!isCancelled && (
+                      <View
+                        style={[
+                          styles.imageStatusBadge,
+                          {
+                            backgroundColor: statusInfo.backgroundColor,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={statusInfo.icon}
+                          size={16}
+                          color={statusInfo.color}
+                        />
+
+                        <Text
+                          style={[
+                            styles.imageStatusText,
                             {
-                              backgroundColor: statusInfo.backgroundColor,
+                              color: statusInfo.color,
                             },
                           ]}
                         >
-                          <Ionicons
-                            name={statusInfo.icon}
-
-                            size={16}
-
-                            color={statusInfo.color}
-                          />
-
-                          <Text
-                            style={[
-                              styles.statusText,
-
-                              {
-                                color: statusInfo.color,
-                              },
-                            ]}
-                          >
-                            {statusInfo.label}
-                          </Text>
-                        </View>
+                          {statusInfo.label}
+                        </Text>
                       </View>
                     )}
 
+                    {/* CANCELLED STATUS */}
+                    {isCancelled && (
+                      <View style={styles.cancelledOverlay}>
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color="#C13515"
+                        />
+
+                        <Text style={styles.cancelledOverlayText}>
+                          {statusInfo.label}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+
+                  {/* CARD CONTENT */}
+                  <View style={styles.cardContent}>
+                    {/* GAME INFO */}
                     <Pressable
                       onPress={() => router.push(`/game/${game.id}`)}
                       disabled={isCancelled}
@@ -786,7 +833,6 @@ export default function BookingsScreen() {
                       <Text
                         style={[
                           styles.gameTitle,
-
                           isCancelled && styles.cancelledGameTitle,
                         ]}
                       >
@@ -797,13 +843,12 @@ export default function BookingsScreen() {
                         {t("bookings.by")} {game.organizer}
                       </Text>
 
+                      {/* DATE */}
                       {game.starts_at ? (
                         <View style={styles.infoRow}>
                           <Ionicons
                             name="calendar-outline"
-
                             size={18}
-
                             color={COLORS.textSecondary}
                           />
 
@@ -815,34 +860,32 @@ export default function BookingsScreen() {
                         </View>
                       ) : null}
 
+                      {/* LOCATION */}
                       <View style={styles.infoRow}>
                         <Ionicons
                           name="location-outline"
-
                           size={18}
-
                           color={COLORS.textSecondary}
                         />
 
                         <Text style={styles.infoText}>
                           {game.area}
-
                           {game.distance ? ` • ${game.distance}` : ""}
                         </Text>
                       </View>
 
+                      {/* TIME */}
                       <View style={styles.infoRow}>
                         <Ionicons
                           name="time-outline"
-
                           size={18}
-
                           color={COLORS.textSecondary}
                         />
 
                         <Text style={styles.infoText}>{game.time}</Text>
                       </View>
 
+                      {/* FORMAT + PRICE */}
                       <View style={styles.bottomRow}>
                         <View style={styles.formatBadge}>
                           <Text style={styles.formatText}>{game.format}</Text>
@@ -851,7 +894,6 @@ export default function BookingsScreen() {
                         <Text
                           style={[
                             styles.price,
-
                             isCancelled && styles.cancelledPrice,
                           ]}
                         >
@@ -863,15 +905,12 @@ export default function BookingsScreen() {
                     </Pressable>
 
                     {/* ORGANIZER PAYMENT: PAYMENT REQUIRED */}
-
                     {paymentPending && (
                       <View style={styles.paymentSection}>
                         <View style={styles.paymentHeader}>
                           <Ionicons
                             name="wallet-outline"
-
                             size={22}
-
                             color="#F6C85F"
                           />
 
@@ -919,10 +958,8 @@ export default function BookingsScreen() {
                             <Text
                               style={[
                                 styles.paymentValue,
-
                                 {
                                   flex: 1,
-
                                   textAlign: "right",
                                 },
                               ]}
@@ -947,7 +984,6 @@ export default function BookingsScreen() {
                         <Text style={styles.paymentInstruction}>
                           {t("bookings.sendPaymentInstruction").replace(
                             "{amount}",
-
                             String(game.price),
                           )}
                         </Text>
@@ -955,27 +991,21 @@ export default function BookingsScreen() {
                         <Pressable
                           style={[
                             styles.paidButton,
-
                             isSubmitting && styles.disabledButton,
                           ]}
-
                           onPress={() => submitOrganizerPayment(booking)}
-
                           disabled={isSubmitting}
                         >
                           {isSubmitting ? (
                             <ActivityIndicator
                               size="small"
-
                               color={COLORS.background}
                             />
                           ) : (
                             <>
                               <Ionicons
                                 name="checkmark-circle-outline"
-
                                 size={21}
-
                                 color={COLORS.background}
                               />
 
@@ -989,7 +1019,6 @@ export default function BookingsScreen() {
                     )}
 
                     {/* ORGANIZER PAYMENT: SUBMITTED */}
-
                     {paymentSubmitted && (
                       <View style={styles.waitingPaymentNotice}>
                         <Ionicons
@@ -1005,14 +1034,11 @@ export default function BookingsScreen() {
                     )}
 
                     {/* ORGANIZER PAYMENT: CONFIRMED */}
-
                     {paymentConfirmed && (
                       <View style={styles.confirmedPaymentNotice}>
                         <Ionicons
                           name="checkmark-circle"
-
                           size={22}
-
                           color={COLORS.primary}
                         />
 
@@ -1030,16 +1056,13 @@ export default function BookingsScreen() {
                     )}
 
                     {/* PAY AT VENUE */}
-
                     {game.payment_method === "venue" &&
                       isConfirmed &&
                       !isCancelled && (
                         <View style={styles.venueNotice}>
                           <Ionicons
                             name="location-outline"
-
                             size={21}
-
                             color={COLORS.primary}
                           />
 
@@ -1051,7 +1074,6 @@ export default function BookingsScreen() {
                             <Text style={styles.venueText}>
                               {t("bookings.payAtVenueInstruction").replace(
                                 "{amount}",
-
                                 String(game.price),
                               )}
                             </Text>
@@ -1060,7 +1082,6 @@ export default function BookingsScreen() {
                       )}
 
                     {/* CANCELLED ORGANIZER PAYMENT */}
-
                     {isCancelled &&
                       isOrganizerPayment &&
                       (booking.payment_status === "paid" ||
@@ -1069,9 +1090,7 @@ export default function BookingsScreen() {
                           <View style={styles.refundHeader}>
                             <Ionicons
                               name="information-circle-outline"
-
                               size={22}
-
                               color="#F6C85F"
                             />
 
@@ -1115,16 +1134,13 @@ export default function BookingsScreen() {
 
                                 <Pressable
                                   style={styles.callButton}
-
                                   onPress={() =>
                                     callOrganizer(game.payment_phone)
                                   }
                                 >
                                   <Ionicons
                                     name="call-outline"
-
                                     size={19}
-
                                     color={COLORS.background}
                                   />
 
@@ -1143,7 +1159,6 @@ export default function BookingsScreen() {
                       )}
 
                     {/* NORMAL CANCELLED HISTORY */}
-
                     {isCancelled &&
                       !(
                         isOrganizerPayment &&
@@ -1153,9 +1168,7 @@ export default function BookingsScreen() {
                         <View style={styles.historyNotice}>
                           <Ionicons
                             name="information-circle-outline"
-
                             size={20}
-
                             color={COLORS.textSecondary}
                           />
 
@@ -1167,16 +1180,14 @@ export default function BookingsScreen() {
                         </View>
                       )}
 
+                    {/* CANCEL / LEAVE WAITLIST */}
                     {(isConfirmed || isWaitlisted) && !isCancelled && (
                       <Pressable
                         style={[
                           styles.cancelButton,
-
                           isCancelling && styles.disabledButton,
                         ]}
-
                         onPress={() => openCancellationModal(booking)}
-
                         disabled={isCancelling}
                       >
                         {isCancelling ? (
@@ -2009,6 +2020,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
+
   bookingFilterActions: {
     flexDirection: "row",
     gap: 12,
@@ -2045,10 +2057,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.background,
   },
+
   bookingFilterButtonActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -2271,14 +2285,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#050D14",
   },
 
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#050D14",
   },
 
   content: {
@@ -2288,25 +2303,21 @@ const styles = StyleSheet.create({
 
   contentDesktop: {
     width: "100%",
-
     maxWidth: 1180,
-
     alignSelf: "center",
-
     paddingHorizontal: 28,
-
     paddingTop: 24,
   },
 
   title: {
-    color: "#222222",
+    color: "#FFFFFF",
     fontSize: 32,
     fontWeight: "800",
     letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: "#717171",
+    color: "#9EADB8",
     fontSize: 15,
     marginTop: 3,
     marginBottom: 18,
@@ -2314,140 +2325,148 @@ const styles = StyleSheet.create({
 
   loadingContainer: {
     alignItems: "center",
-
     paddingTop: 80,
   },
 
   loadingText: {
-    color: COLORS.textSecondary,
-
+    color: "#9EADB8",
     fontSize: 15,
-
     marginTop: 14,
   },
 
   emptyContainer: {
     alignItems: "center",
-
     paddingTop: 80,
-
     paddingHorizontal: 30,
   },
 
   emptyIcon: {
     width: 68,
-
     height: 68,
-
     borderRadius: 34,
-
     backgroundColor: COLORS.surface,
-
     alignItems: "center",
-
     justifyContent: "center",
-
     marginBottom: 18,
   },
 
   emptyTitle: {
-    color: COLORS.text,
-
+    color: "#FFFFFF",
     fontSize: 21,
-
     fontWeight: "800",
   },
 
   emptyText: {
-    color: COLORS.textSecondary,
-
+    color: "#9EADB8",
     fontSize: 15,
-
     marginTop: 7,
-
     textAlign: "center",
   },
 
+  /* BOOKING CARDS */
+
   bookingList: {
-    gap: 12,
+    gap: 18,
   },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#E4E8EC",
     overflow: "hidden",
   },
 
   cancelledCard: {
-    borderColor: "#3D3433",
+    borderColor: "#E2D6D4",
   },
 
   imageWrapper: {
     position: "relative",
+    width: "100%",
+    height: 180,
+    backgroundColor: "#0B1823",
   },
 
   image: {
     width: "100%",
-
-    height: 170,
+    height: "100%",
   },
 
   imagePlaceholder: {
     width: "100%",
-
-    height: 170,
-
+    height: 180,
     backgroundColor: COLORS.surface,
-
     alignItems: "center",
-
     justifyContent: "center",
+  },
+
+  imageShade: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(0, 15, 25, 0.08)",
   },
 
   cancelledImage: {
     opacity: 0.45,
   },
 
-  cancelledOverlay: {
+  /* STATUS PILL OVER IMAGE */
+
+  imageStatusBadge: {
     position: "absolute",
-
-    top: 12,
-
-    right: 12,
+    left: 14,
+    bottom: 14,
 
     flexDirection: "row",
-
     alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
 
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+
+    borderRadius: 18,
+  },
+
+  imageStatusText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  cancelledOverlay: {
+    position: "absolute",
+    left: 14,
+    bottom: 14,
+
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
     gap: 6,
 
     backgroundColor: "#FFF1F1",
 
-    borderWidth: 1,
-
-    borderColor: "#F1B8B8",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
 
     borderRadius: 18,
-
-    paddingHorizontal: 10,
-
-    paddingVertical: 7,
   },
 
   cancelledOverlayText: {
     color: "#C13515",
-
-    fontSize: 12,
-
+    fontSize: 13,
     fontWeight: "800",
   },
 
   cardContent: {
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingTop: 17,
+    paddingBottom: 18,
   },
 
+  /*
+   * Kept because existing code elsewhere may still reference
+   * these styles. Normal booking status now appears on the image.
+   */
   statusRow: {
     flexDirection: "row",
     marginBottom: 10,
@@ -2455,21 +2474,16 @@ const styles = StyleSheet.create({
 
   statusBadge: {
     flexDirection: "row",
-
     alignItems: "center",
-
+    alignSelf: "flex-start",
     gap: 5,
-
     borderRadius: 16,
-
     paddingHorizontal: 10,
-
     paddingVertical: 6,
   },
 
   statusText: {
     fontSize: 13,
-
     fontWeight: "700",
   },
 
@@ -2535,127 +2549,90 @@ const styles = StyleSheet.create({
 
   paymentSection: {
     marginTop: 18,
-
     backgroundColor: "#FFF9E8",
-
     borderWidth: 1,
-
     borderColor: "#E9D28A",
-
     borderRadius: 16,
-
     padding: 14,
   },
 
   paymentHeader: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 10,
   },
 
   paymentTitle: {
     color: COLORS.text,
-
     fontSize: 16,
-
     fontWeight: "800",
   },
 
   paymentDescription: {
     color: COLORS.textSecondary,
-
     fontSize: 13,
-
     lineHeight: 18,
-
     marginTop: 3,
   },
 
   paymentAccountCard: {
     marginTop: 14,
-
     backgroundColor: COLORS.surface,
-
     borderRadius: 13,
-
     paddingHorizontal: 13,
   },
 
   paymentAccountRow: {
     minHeight: 45,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
-
     gap: 12,
   },
 
   paymentDivider: {
     height: 1,
-
     backgroundColor: COLORS.border,
   },
 
   paymentLabel: {
     color: COLORS.textSecondary,
-
     fontSize: 13,
   },
 
   paymentValue: {
     color: COLORS.text,
-
     fontSize: 14,
-
     fontWeight: "700",
   },
 
   paymentAmount: {
     color: COLORS.primary,
-
     fontSize: 16,
-
     fontWeight: "800",
   },
 
   paymentInstruction: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     lineHeight: 18,
-
     marginTop: 12,
   },
 
   paidButton: {
     height: 50,
-
     borderRadius: 13,
-
     backgroundColor: COLORS.primary,
-
     marginTop: 13,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     gap: 7,
   },
 
   paidButtonText: {
     color: COLORS.background,
-
     fontSize: 15,
-
     fontWeight: "800",
   },
 
@@ -2681,215 +2658,148 @@ const styles = StyleSheet.create({
 
   confirmedPaymentNotice: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 10,
-
     backgroundColor: "#F2FBF7",
-
     borderWidth: 1,
-
     borderColor: "#B9E5CF",
-
     borderRadius: 13,
-
     padding: 13,
-
     marginTop: 17,
   },
 
   confirmedPaymentTitle: {
     color: COLORS.primary,
-
     fontSize: 14,
-
     fontWeight: "800",
   },
 
   confirmedPaymentText: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     marginTop: 3,
   },
 
   venueNotice: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 10,
-
     backgroundColor: "#F2FBF7",
-
     borderRadius: 13,
-
     padding: 13,
-
     marginTop: 17,
   },
 
   venueTitle: {
     color: COLORS.primary,
-
     fontSize: 14,
-
     fontWeight: "800",
   },
 
   venueText: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     marginTop: 3,
   },
 
   refundNotice: {
     backgroundColor: "#FFF8E7",
-
     borderWidth: 1,
-
     borderColor: "#E9D28A",
-
     borderRadius: 13,
-
     padding: 13,
-
     marginTop: 17,
   },
 
   refundHeader: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 9,
   },
 
   refundTitle: {
     color: "#9A6700",
-
     fontSize: 14,
-
     fontWeight: "800",
   },
 
   refundNoticeText: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     lineHeight: 18,
-
     marginTop: 3,
   },
 
   contactCard: {
     marginTop: 13,
-
     backgroundColor: COLORS.surface,
-
     borderRadius: 12,
-
     padding: 12,
   },
 
   contactLabel: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
   },
 
   contactValue: {
     color: COLORS.text,
-
     fontSize: 15,
-
     fontWeight: "700",
-
     marginTop: 3,
   },
 
   contactDivider: {
     height: 1,
-
     backgroundColor: COLORS.border,
-
     marginVertical: 11,
   },
 
   contactPhone: {
     color: COLORS.text,
-
     fontSize: 17,
-
     fontWeight: "800",
-
     marginTop: 4,
   },
 
   callButton: {
     height: 44,
-
     borderRadius: 11,
-
     backgroundColor: COLORS.primary,
-
     marginTop: 12,
-
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "center",
-
     gap: 7,
   },
 
   callButtonText: {
     color: COLORS.background,
-
     fontSize: 14,
-
     fontWeight: "800",
   },
 
   noContactText: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     lineHeight: 17,
-
     marginTop: 8,
   },
 
   historyNotice: {
     flexDirection: "row",
-
     alignItems: "flex-start",
-
     gap: 8,
-
     backgroundColor: "#F2FBF7",
-
     borderRadius: 12,
-
     padding: 12,
-
     marginTop: 17,
   },
 
   historyNoticeText: {
     color: COLORS.textSecondary,
-
     fontSize: 12,
-
     lineHeight: 17,
-
     flex: 1,
   },
 

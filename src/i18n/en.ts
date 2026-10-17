@@ -23,7 +23,19 @@ const en = {
     profile: "Profile",
   },
 
+  bookingSuccess: {
+    youreIn: "You’re in!",
+    bookingConfirmed: "Booking confirmed",
+    viewMyBookings: "View my bookings",
+    spotConfirmed: "Your spot is confirmed.",
+  },
+
   discover: {
+    findYourNextGame: "Find your next game",
+    heroSubtitle: "Join games near you and get back on the pitch.",
+    moreGames: "More games",
+    playingSoon: "Playing soon",
+    nearYou: "Near you",
     allEthiopia: "All Ethiopia",
     chooseCity: "Choose a city",
     openCalendar: "Open calendar",
@@ -795,8 +807,6 @@ const en = {
     organizerSubtitle: "Manage your football games",
 
     adminAccess: "Admin access — viewing all games",
-
-    organizerAccess: "Organizer access — viewing only your games",
 
     noGames: "No games",
 

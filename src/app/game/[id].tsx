@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -37,6 +38,14 @@ type GameDetails = {
   maps_url: string | null;
 };
 
+const fallbackImages = [
+  require("../../../assets/images/game-fallback-1.png"),
+  require("../../../assets/images/game-fallback-2.png"),
+  require("../../../assets/images/game-fallback-3.png"),
+  require("../../../assets/images/game-fallback-4.png"),
+  require("../../../assets/images/game-fallback-5.png"),
+];
+
 export default function GameDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { language, t } = useLanguage();
@@ -45,8 +54,54 @@ export default function GameDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
   useEffect(() => {
     loadGame();
+  }, [id]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadFavorite() {
+      if (!id) return;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user || !active) {
+        return;
+      }
+
+      const { data, error: favoriteError } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("game_id", Number(id))
+        .maybeSingle();
+
+      if (!active) {
+        return;
+      }
+
+      if (favoriteError) {
+        console.log(
+          "Favorite lookup error:",
+          favoriteError,
+        );
+        return;
+      }
+
+      setIsFavorite(Boolean(data));
+    }
+
+    loadFavorite();
+
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   async function loadGame() {
@@ -86,7 +141,10 @@ export default function GameDetailsScreen() {
       .single();
 
     if (gameError || !data) {
-      console.log("Game details error:", gameError?.message);
+      console.log(
+        "Game details error:",
+        gameError?.message,
+      );
 
       setError(t("gameDetails.couldNotLoadGame"));
       setGame(null);
@@ -96,6 +154,14 @@ export default function GameDetailsScreen() {
 
     setGame(data as GameDetails);
     setLoading(false);
+  }
+
+  function goBack() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
   }
 
   function getLocale() {
@@ -136,7 +202,9 @@ export default function GameDetailsScreen() {
       return `${start} – ${end}`;
     }
 
-    if (start) return start;
+    if (start) {
+      return start;
+    }
 
     return game.time ?? "";
   }
@@ -147,7 +215,11 @@ export default function GameDetailsScreen() {
     const area = String(game.area ?? "").trim();
     const city = String(game.city ?? "").trim();
 
-    if (area && city && !area.toLowerCase().includes(city.toLowerCase())) {
+    if (
+      area &&
+      city &&
+      !area.toLowerCase().includes(city.toLowerCase())
+    ) {
       return `${area}, ${city}`;
     }
 
@@ -179,18 +251,97 @@ export default function GameDetailsScreen() {
   function shouldShowCitySeparately() {
     if (!game?.city) return false;
 
-    const area = String(game.area ?? "").trim().toLowerCase();
-    const city = String(game.city).trim().toLowerCase();
+    const area = String(game.area ?? "")
+      .trim()
+      .toLowerCase();
+
+    const city = String(game.city)
+      .trim()
+      .toLowerCase();
 
     if (!city) return false;
 
     return !area.includes(city);
   }
 
+  function getFallbackImage() {
+    const numericGameId = Number(game?.id ?? id);
+
+    const index = Number.isFinite(numericGameId)
+      ? Math.abs(numericGameId) % fallbackImages.length
+      : 0;
+
+    return fallbackImages[index];
+  }
+
+  async function toggleFavorite() {
+    if (!game || favoriteLoading) {
+      return;
+    }
+
+    setFavoriteLoading(true);
+
+    const previousFavoriteState = isFavorite;
+
+    setIsFavorite(!previousFavoriteState);
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw userError;
+      }
+
+      if (!user) {
+        setIsFavorite(previousFavoriteState);
+        router.push("/login");
+        return;
+      }
+
+      if (previousFavoriteState) {
+        const { error: deleteError } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("game_id", game.id);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from("favorites")
+          .insert({
+            user_id: user.id,
+            game_id: game.id,
+          });
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+    } catch (favoriteError) {
+      console.log(
+        "Favorite toggle error:",
+        favoriteError,
+      );
+
+      setIsFavorite(previousFavoriteState);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
+
   async function openLocation() {
     if (!game) return;
 
-    const savedMapsUrl = String(game.maps_url ?? "").trim();
+    const savedMapsUrl = String(
+      game.maps_url ?? "",
+    ).trim();
+
     const location = getLocation();
 
     const targetUrl =
@@ -202,15 +353,21 @@ export default function GameDetailsScreen() {
     try {
       await Linking.openURL(targetUrl);
     } catch (locationError) {
-      console.log("Could not open game location:", locationError);
+      console.log(
+        "Could not open game location:",
+        locationError,
+      );
     }
   }
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.loadingSafeArea}>
         <View style={styles.centerState}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator
+            size="large"
+            color={COLORS.primary}
+          />
         </View>
       </SafeAreaView>
     );
@@ -218,21 +375,19 @@ export default function GameDetailsScreen() {
 
   if (error || !game) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.loadingSafeArea}>
         <View style={styles.errorScreen}>
           <Pressable
-            style={styles.backButton}
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/(tabs)");
-              }
-            }}
+            style={styles.errorBackButton}
+            onPress={goBack}
           >
-            <Ionicons name="arrow-back" size={21} color="#087EA4" />
+            <Ionicons
+              name="arrow-back"
+              size={21}
+              color="#087EA4"
+            />
 
-            <Text style={styles.backText}>
+            <Text style={styles.errorBackText}>
               {t("gameDetails.discover")}
             </Text>
           </Pressable>
@@ -251,7 +406,10 @@ export default function GameDetailsScreen() {
             </Text>
 
             <Text style={styles.errorText}>
-              {error ?? t("gameDetails.gameCouldNotBeFound")}
+              {error ??
+                t(
+                  "gameDetails.gameCouldNotBeFound",
+                )}
             </Text>
           </View>
         </View>
@@ -260,142 +418,220 @@ export default function GameDetailsScreen() {
   }
 
   const date = formatDate(game.starts_at);
+  const timeRange = getTimeRange();
   const location = getLocation();
 
   const isFull =
-    game.status === "full" || Number(game.spots_left ?? 0) <= 0;
+    game.status === "full" ||
+    Number(game.spots_left ?? 0) <= 0;
 
   const isFree = Number(game.price ?? 0) === 0;
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <View style={styles.screen}>
-        <View style={styles.header}>
-          <Pressable
-            style={styles.backButton}
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/(tabs)");
-              }
-            }}
-            hitSlop={8}
-          >
-            <Ionicons name="arrow-back" size={21} color="#087EA4" />
+  const heroImage = game.image_url
+    ? { uri: game.image_url }
+    : getFallbackImage();
 
-            <Text style={styles.backText}>
-              {t("gameDetails.discover")}
-            </Text>
-          </Pressable>
+  return (
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* CINEMATIC HERO */}
+
+        <View style={styles.hero}>
+          <Image
+            source={heroImage}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+
+          <View style={styles.heroOverlay} />
+
+          <SafeAreaView
+            edges={["top"]}
+            style={styles.heroControls}
+          >
+            <Pressable
+              style={({ pressed }) => [
+                styles.heroButton,
+                pressed && styles.heroButtonPressed,
+              ]}
+              onPress={goBack}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name="arrow-back"
+                size={23}
+                color="#FFFFFF"
+              />
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.heroButton,
+                pressed && styles.heroButtonPressed,
+              ]}
+              onPress={toggleFavorite}
+              disabled={favoriteLoading}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name={
+                  isFavorite
+                    ? "heart"
+                    : "heart-outline"
+                }
+                size={24}
+                color={
+                  isFavorite
+                    ? "#18BFF2"
+                    : "#FFFFFF"
+                }
+              />
+            </Pressable>
+          </SafeAreaView>
         </View>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* HERO */}
+        {/* WHITE DETAILS SHEET */}
 
-          <View style={styles.hero}>
-            <View style={styles.heroTopRow}>
-              <View style={styles.heroText}>
-                <Text style={styles.title}>{game.title}</Text>
+        <View style={styles.sheet}>
+          {/* TITLE */}
 
-                {!!location && (
-                  <Text style={styles.heroLocation}>{location}</Text>
-                )}
-              </View>
+          <View style={styles.titleSection}>
+            <Text style={styles.title}>
+              {game.title}
+            </Text>
 
-              <Pressable style={styles.favorite} hitSlop={8}>
+            {!!location && (
+              <View style={styles.titleLocationRow}>
                 <Ionicons
-                  name="heart-outline"
-                  size={24}
-                  color="#222222"
+                  name="location"
+                  size={16}
+                  color="#64748B"
                 />
-              </Pressable>
-            </View>
 
-            {!!date && (
-              <View style={styles.schedule}>
-                <Text style={styles.scheduleDate}>{date}</Text>
-
-                <Text style={styles.scheduleTime}>
-                  {getTimeRange()}
+                <Text
+                  style={styles.heroLocation}
+                  numberOfLines={2}
+                >
+                  {location}
                 </Text>
               </View>
             )}
           </View>
 
-          <View style={styles.divider} />
+          {/* DATE + TIME */}
 
-          {/* GAME DETAILS */}
+          {(date || timeRange) && (
+            <View style={styles.scheduleCard}>
+              {!!date && (
+                <View style={styles.scheduleRow}>
+                  <View style={styles.scheduleIcon}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={21}
+                      color={COLORS.primary}
+                    />
+                  </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("gameDetails.gameDetails")}
-            </Text>
+                  <View style={styles.scheduleText}>
+                    <Text style={styles.scheduleLabel}>
+                      {date}
+                    </Text>
 
-            <View style={styles.detailList}>
-              <DetailRow
-                icon="football-outline"
-                title={game.format || t("gameDetails.notSpecified")}
-                subtitle={t("gameDetails.format")}
-              />
-
-              <DetailRow
-                icon="speedometer-outline"
-                title={getSkillLabel(game.skill)}
-                subtitle={t("gameDetails.skillLevel")}
-              />
-
-              <DetailRow
-                icon="people-outline"
-                title={
-                  isFull
-                    ? t("gameDetails.gameFull")
-                    : game.spots_left === 1
-                      ? t("gameDetails.spotLeft").replace(
-                          "{count}",
-                          String(game.spots_left),
-                        )
-                      : t("gameDetails.spotsLeft").replace(
-                          "{count}",
-                          String(game.spots_left),
-                        )
-                }
-                subtitle={t("gameDetails.availability")}
-                danger={isFull}
-              />
+                    {!!timeRange && (
+                      <Text style={styles.scheduleValue}>
+                        {timeRange}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
+          )}
+
+          {/* QUICK GAME DETAILS */}
+
+          <View style={styles.quickDetails}>
+            <QuickDetail
+              icon="football-outline"
+              value={
+                game.format ||
+                t("gameDetails.notSpecified")
+              }
+              label={t("gameDetails.format")}
+            />
+
+            <View style={styles.quickDivider} />
+
+            <QuickDetail
+              icon="speedometer-outline"
+              value={getSkillLabel(game.skill)}
+              label={t("gameDetails.skillLevel")}
+            />
+
+            <View style={styles.quickDivider} />
+
+            <QuickDetail
+              icon="people-outline"
+              value={
+                isFull
+                  ? t("gameDetails.gameFull")
+                  : String(game.spots_left)
+              }
+              label={
+                isFull
+                  ? t("gameDetails.availability")
+                  : t("gameDetails.spotsLeft").replace(
+                      "{count}",
+                      "",
+                    ).trim()
+              }
+              danger={isFull}
+            />
           </View>
 
           <View style={styles.divider} />
 
-          {/* ORGANIZER */}
+          {/* HOST */}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t("gameDetails.hostedBy")}
             </Text>
 
-            <View style={styles.organizerRow}>
+            <View style={styles.organizerCard}>
               <View style={styles.organizerAvatar}>
                 <Ionicons
-                  name="person-outline"
-                  size={23}
-                  color="#087EA4"
+                  name="person"
+                  size={22}
+                  color={COLORS.primary}
                 />
               </View>
 
               <View style={styles.organizerText}>
                 <Text style={styles.organizerName}>
-                  {game.organizer || t("gameDetails.organizer")}
+                  {game.organizer ||
+                    t("gameDetails.organizer")}
                 </Text>
 
                 <Text style={styles.organizerLabel}>
-                  {t("gameDetails.gameOrganizer")}
+                  {t(
+                    "gameDetails.gameOrganizer",
+                  )}
                 </Text>
+              </View>
+
+              <View style={styles.verifiedIcon}>
+                <Ionicons
+                  name="football-outline"
+                  size={18}
+                  color={COLORS.primary}
+                />
               </View>
             </View>
           </View>
@@ -411,32 +647,52 @@ export default function GameDetailsScreen() {
                   {t("gameDetails.location")}
                 </Text>
 
-                <Text style={styles.locationName}>{location}</Text>
-
-                {shouldShowCitySeparately() && !!game.city && (
-                  <Text style={styles.locationCity}>
-                    {game.city}
-                  </Text>
-                )}
-
                 <Pressable
-                  style={styles.mapAction}
+                  style={({ pressed }) => [
+                    styles.locationCard,
+                    pressed &&
+                      styles.locationCardPressed,
+                  ]}
                   onPress={openLocation}
                 >
-                  <Ionicons
-                    name="map-outline"
-                    size={18}
-                    color="#087EA4"
-                  />
+                  <View style={styles.locationIcon}>
+                    <Ionicons
+                      name="location"
+                      size={23}
+                      color={COLORS.primary}
+                    />
+                  </View>
 
-                  <Text style={styles.mapActionText}>
-                    {t("gameDetails.viewOnMap")}
-                  </Text>
+                  <View style={styles.locationText}>
+                    <Text
+                      style={styles.locationName}
+                      numberOfLines={2}
+                    >
+                      {location}
+                    </Text>
+
+                    {shouldShowCitySeparately() &&
+                      !!game.city && (
+                        <Text
+                          style={
+                            styles.locationCity
+                          }
+                        >
+                          {game.city}
+                        </Text>
+                      )}
+
+                    <Text style={styles.mapActionText}>
+                      {t(
+                        "gameDetails.viewOnMap",
+                      )}
+                    </Text>
+                  </View>
 
                   <Ionicons
-                    name="arrow-forward"
-                    size={16}
-                    color="#087EA4"
+                    name="chevron-forward"
+                    size={21}
+                    color="#94A3B8"
                   />
                 </Pressable>
               </View>
@@ -452,107 +708,153 @@ export default function GameDetailsScreen() {
               {t("gameDetails.payment")}
             </Text>
 
-            <Text style={styles.paymentPrice}>
-              {isFree ? t("gameDetails.free") : `${game.price} ETB`}
-            </Text>
+            <View style={styles.paymentCard}>
+              <View style={styles.paymentTopRow}>
+                <View style={styles.paymentIcon}>
+                  <Ionicons
+                    name={
+                      isFree
+                        ? "checkmark-circle-outline"
+                        : "wallet-outline"
+                    }
+                    size={23}
+                    color={COLORS.primary}
+                  />
+                </View>
 
-            <Text style={styles.paymentDescription}>
-              {isFree
-                ? t("gameDetails.noPaymentRequired")
-                : game.payment_method === "venue"
-                  ? t("gameDetails.paymentAtVenue")
-                  : game.payment_method === "organizer"
+                <Text style={styles.paymentPrice}>
+                  {isFree
+                    ? t("gameDetails.free")
+                    : `${game.price} ETB`}
+                </Text>
+              </View>
+
+              <Text style={styles.paymentDescription}>
+                {isFree
+                  ? t(
+                      "gameDetails.noPaymentRequired",
+                    )
+                  : game.payment_method === "venue"
                     ? t(
-                        "gameDetails.organizerPaymentInstructions",
+                        "gameDetails.paymentAtVenue",
                       )
-                    : t(
-                        "gameDetails.paymentDetailsAfterReservation",
-                      )}
-            </Text>
+                    : game.payment_method ===
+                        "organizer"
+                      ? t(
+                          "gameDetails.organizerPaymentInstructions",
+                        )
+                      : t(
+                          "gameDetails.paymentDetailsAfterReservation",
+                        )}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.bottomSpace} />
-        </ScrollView>
+        </View>
+      </ScrollView>
 
-        {/* REAL BOOKING / PAYMENT ACTION */}
+      {/* KEEP EXISTING BOOKING / PAYMENT LOGIC */}
 
-        <GameBookingAction
-          gameId={game.id}
-          title={game.title}
-          price={Number(game.price ?? 0)}
-          spotsLeft={Number(game.spots_left ?? 0)}
-          status={game.status}
-          onSpotsChange={(nextSpotsLeft) => {
-            setGame((currentGame) => {
-              if (!currentGame) {
-                return currentGame;
-              }
+      <GameBookingAction
+        gameId={game.id}
+        title={game.title}
+        price={Number(game.price ?? 0)}
+        spotsLeft={Number(game.spots_left ?? 0)}
+        status={game.status}
+        onSpotsChange={(nextSpotsLeft) => {
+          setGame((currentGame) => {
+            if (!currentGame) {
+              return currentGame;
+            }
 
-              return {
-                ...currentGame,
-                spots_left: nextSpotsLeft,
-                status:
-                  nextSpotsLeft <= 0
-                    ? "full"
-                    : currentGame.status === "full"
-                      ? "available"
-                      : currentGame.status,
-              };
-            });
-          }}
-        />
-      </View>
-    </SafeAreaView>
+            return {
+              ...currentGame,
+              spots_left: nextSpotsLeft,
+              status:
+                nextSpotsLeft <= 0
+                  ? "full"
+                  : currentGame.status === "full"
+                    ? "available"
+                    : currentGame.status,
+            };
+          });
+        }}
+      />
+    </View>
   );
 }
 
-type DetailRowProps = {
+type QuickDetailProps = {
   icon:
     | "football-outline"
     | "speedometer-outline"
     | "people-outline";
-  title: string;
-  subtitle: string;
+  value: string;
+  label: string;
   danger?: boolean;
 };
 
-function DetailRow({
+function QuickDetail({
   icon,
-  title,
-  subtitle,
+  value,
+  label,
   danger = false,
-}: DetailRowProps) {
+}: QuickDetailProps) {
   return (
-    <View style={styles.detailRow}>
-      <View style={styles.detailIcon}>
-        <Ionicons name={icon} size={22} color="#087EA4" />
+    <View style={styles.quickDetail}>
+      <View
+        style={[
+          styles.quickIcon,
+          danger && styles.quickIconDanger,
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={21}
+          color={danger ? "#D92D3A" : COLORS.primary}
+        />
       </View>
 
-      <View style={styles.detailText}>
-        <Text
-          style={[
-            styles.detailTitle,
-            danger && styles.detailTitleDanger,
-          ]}
-        >
-          {title}
-        </Text>
+      <Text
+        style={[
+          styles.quickValue,
+          danger && styles.quickValueDanger,
+        ]}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
 
-        <Text style={styles.detailSubtitle}>{subtitle}</Text>
-      </View>
+      <Text
+        style={styles.quickLabel}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  loadingSafeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
 
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#07131D",
+  },
+
+  scroll: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    width: "100%",
+    maxWidth: 680,
+    alignSelf: "center",
   },
 
   centerState: {
@@ -561,9 +863,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
+  /* ERROR */
+
   errorScreen: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+
+  errorBackButton: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    minHeight: 48,
+  },
+
+  errorBackText: {
+    color: "#087EA4",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   errorContent: {
@@ -584,7 +902,7 @@ const styles = StyleSheet.create({
   },
 
   errorTitle: {
-    color: "#222222",
+    color: "#17202A",
     fontSize: 22,
     fontWeight: "800",
   },
@@ -597,223 +915,390 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
-  header: {
-    minHeight: 52,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    minHeight: 40,
-  },
-
-  backText: {
-    color: "#087EA4",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  scroll: {
-    flex: 1,
-  },
-
-  scrollContent: {
-    width: "100%",
-    maxWidth: 680,
-    alignSelf: "center",
-  },
+  /* HERO */
 
   hero: {
-    paddingHorizontal: 20,
-    paddingTop: 26,
-    paddingBottom: 27,
+    position: "relative",
+    width: "100%",
+    height: 330,
+    backgroundColor: "#07131D",
   },
 
-  heroTopRow: {
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  heroOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(3, 12, 19, 0.18)",
+  },
+
+  heroControls: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
+    justifyContent: "space-between",
+
+    paddingHorizontal: 18,
   },
 
-  heroText: {
-    flex: 1,
-    minWidth: 0,
+  heroButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(5, 16, 24, 0.72)",
+
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+
+  heroButtonPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.94 }],
+  },
+
+  /* WHITE CONTENT SHEET */
+
+  sheet: {
+    position: "relative",
+    marginTop: -26,
+
+    backgroundColor: "#FFFFFF",
+
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+
+    overflow: "hidden",
+  },
+
+  titleSection: {
+    paddingHorizontal: 20,
+    paddingTop: 25,
+    paddingBottom: 20,
   },
 
   title: {
-    color: "#222222",
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: "800",
+    color: "#17202A",
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "900",
     letterSpacing: -0.7,
   },
 
-  heroLocation: {
-    color: "#717171",
-    fontSize: 16,
-    lineHeight: 23,
-    marginTop: 7,
+  titleLocationRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginTop: 9,
   },
 
-  favorite: {
+  heroLocation: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "600",
+  },
+
+  /* DATE */
+
+  scheduleCard: {
+    marginHorizontal: 20,
+    marginBottom: 18,
+
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+
+    borderRadius: 16,
+
+    backgroundColor: "#F5F9FB",
+
+    borderWidth: 1,
+    borderColor: "#E5EDF1",
+  },
+
+  scheduleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  scheduleIcon: {
     width: 42,
     height: 42,
+    borderRadius: 13,
+
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -7,
-    marginRight: -8,
+
+    backgroundColor: "#E4F8FE",
   },
 
-  schedule: {
-    marginTop: 25,
+  scheduleText: {
+    flex: 1,
   },
 
-  scheduleDate: {
-    color: "#222222",
-    fontSize: 17,
-    fontWeight: "700",
+  scheduleLabel: {
+    color: "#17202A",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
   },
 
-  scheduleTime: {
-    color: "#717171",
-    fontSize: 16,
-    fontWeight: "500",
-    marginTop: 5,
+  scheduleValue: {
+    color: "#64748B",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 3,
   },
+
+  /* QUICK DETAILS */
+
+  quickDetails: {
+    flexDirection: "row",
+
+    marginHorizontal: 20,
+    marginBottom: 24,
+
+    paddingVertical: 17,
+
+    borderRadius: 18,
+
+    backgroundColor: "#FFFFFF",
+
+    borderWidth: 1,
+    borderColor: "#E4E8EC",
+  },
+
+  quickDetail: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+
+  quickDivider: {
+    width: 1,
+    backgroundColor: "#E8EDF1",
+    marginVertical: 4,
+  },
+
+  quickIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#E4F8FE",
+    marginBottom: 8,
+  },
+
+  quickIconDanger: {
+    backgroundColor: "#FFE7E9",
+  },
+
+  quickValue: {
+    color: "#17202A",
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  quickValueDanger: {
+    color: "#D92D3A",
+  },
+
+  quickLabel: {
+    color: "#7B8794",
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 3,
+  },
+
+  /* COMMON */
 
   divider: {
     height: 1,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: "#E8EDF1",
     marginHorizontal: 20,
   },
 
   section: {
     paddingHorizontal: 20,
-    paddingVertical: 25,
+    paddingVertical: 24,
   },
 
   sectionTitle: {
-    color: "#222222",
-    fontSize: 20,
+    color: "#17202A",
+    fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.25,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
-  detailList: {
-    gap: 22,
-  },
+  /* ORGANIZER */
 
-  detailRow: {
+  organizerCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-  },
 
-  detailIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#EAF8FC",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    padding: 14,
 
-  detailText: {
-    flex: 1,
-  },
+    borderRadius: 16,
 
-  detailTitle: {
-    color: "#222222",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+    backgroundColor: "#F8FAFB",
 
-  detailTitleDanger: {
-    color: "#C13515",
-  },
-
-  detailSubtitle: {
-    color: "#717171",
-    fontSize: 13,
-    marginTop: 3,
-  },
-
-  organizerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
+    borderWidth: 1,
+    borderColor: "#E7ECEF",
   },
 
   organizerAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#EAF8FC",
+
+    backgroundColor: "#E4F8FE",
+
     alignItems: "center",
     justifyContent: "center",
   },
 
   organizerText: {
     flex: 1,
+    marginLeft: 12,
   },
 
   organizerName: {
-    color: "#222222",
+    color: "#17202A",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   organizerLabel: {
-    color: "#717171",
+    color: "#7B8794",
     fontSize: 13,
     marginTop: 3,
   },
 
-  locationName: {
-    color: "#222222",
-    fontSize: 16,
-    fontWeight: "700",
+  verifiedIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+
+    backgroundColor: "#E4F8FE",
+
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  locationCity: {
-    color: "#717171",
-    fontSize: 14,
-    marginTop: 4,
-  },
+  /* LOCATION */
 
-  mapAction: {
-    alignSelf: "flex-start",
+  locationCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
-    marginTop: 18,
-    minHeight: 38,
+
+    padding: 14,
+
+    borderRadius: 16,
+
+    backgroundColor: "#F8FAFB",
+
+    borderWidth: 1,
+    borderColor: "#E7ECEF",
   },
 
-  mapActionText: {
-    color: "#087EA4",
+  locationCardPressed: {
+    opacity: 0.72,
+  },
+
+  locationIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+
+    backgroundColor: "#E4F8FE",
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  locationText: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+
+  locationName: {
+    color: "#17202A",
     fontSize: 15,
-    fontWeight: "700",
-  },
-
-  paymentPrice: {
-    color: "#222222",
-    fontSize: 24,
+    lineHeight: 20,
     fontWeight: "800",
   },
 
+  locationCity: {
+    color: "#7B8794",
+    fontSize: 13,
+    marginTop: 3,
+  },
+
+  mapActionText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 5,
+  },
+
+  /* PAYMENT */
+
+  paymentCard: {
+    padding: 16,
+
+    borderRadius: 16,
+
+    backgroundColor: "#F8FAFB",
+
+    borderWidth: 1,
+    borderColor: "#E7ECEF",
+  },
+
+  paymentTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  paymentIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+
+    backgroundColor: "#E4F8FE",
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  paymentPrice: {
+    color: "#17202A",
+    fontSize: 23,
+    fontWeight: "900",
+  },
+
   paymentDescription: {
-    color: "#717171",
+    color: "#64748B",
     fontSize: 14,
     lineHeight: 21,
-    marginTop: 8,
+    marginTop: 12,
     maxWidth: 500,
   },
 

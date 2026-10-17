@@ -5,6 +5,7 @@ import { Calendar } from "react-native-calendars";
 import { Modal } from "react-native";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -439,101 +440,112 @@ export default function HomeScreen() {
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          {/* HEADER */}
+          {/* CINEMATIC HERO */}
 
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>{t("discover.title")}</Text>
-
-              <Pressable
-                style={styles.location}
-                onPress={() => setCityModalVisible(true)}
-              >
-                <Ionicons
-                  name="location-outline"
-                  size={18}
-                  color={COLORS.textSecondary}
-                />
-
-                <Text style={styles.locationText}>
-                  {selectedCity === "All Ethiopia"
-                    ? t("discover.allEthiopia")
-                    : selectedCity}
+          <View style={styles.hero}>
+            <Image
+              source={require("../../../assets/images/discover-hero.png")}
+              style={styles.heroArtwork}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <View style={styles.heroTopBar}>
+                <View>
+                  <Text style={styles.heroBrand}>
+                    Addis <Text style={styles.heroBrandAccent}>Football</Text>
+                  </Text>
+                  <Pressable
+                    style={styles.heroLocation}
+                    onPress={() => setCityModalVisible(true)}
+                  >
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color="rgba(255,255,255,0.85)"
+                    />
+                    <Text style={styles.heroLocationText}>
+                      {selectedCity === "All Ethiopia"
+                        ? t("discover.allEthiopia")
+                        : selectedCity}
+                    </Text>
+                    <Ionicons
+                      name="chevron-down"
+                      size={15}
+                      color="rgba(255,255,255,0.85)"
+                    />
+                  </Pressable>
+                </View>
+                <Pressable style={styles.heroNotificationButton}>
+                  <Ionicons
+                    name="notifications-outline"
+                    size={22}
+                    color="#FFFFFF"
+                  />
+                  <View style={styles.notificationDot} />
+                </Pressable>
+              </View>
+              <View style={styles.heroMessage}>
+                <Text style={styles.heroTitle}>
+                  {t("discover.findYourNextGame")}
                 </Text>
 
-                <Ionicons
-                  name="chevron-down"
-                  size={17}
-                  color={COLORS.textSecondary}
+                <Text style={styles.heroSubtitle}>
+                  {t("discover.heroSubtitle")}
+                </Text>
+              </View>
+              <View style={styles.heroSearchBox}>
+                <Ionicons name="search" size={21} color="#222222" />
+                <TextInput
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder={t("discover.searchPlaceholder")}
+                  placeholderTextColor="#8A8A8A"
+                  style={styles.heroSearchInput}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  selectionColor={COLORS.primary}
                 />
-              </Pressable>
-            </View>
-
-            <Pressable style={styles.notificationButton}>
-              <Ionicons name="notifications" size={22} color={COLORS.text} />
-
-              <View style={styles.notificationDot} />
-            </Pressable>
-          </View>
-
-          {/* SEARCH */}
-
-          <View style={styles.searchRow}>
-            <View style={styles.searchBox}>
-              <Ionicons name="search" size={21} color={COLORS.text} />
-
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder={t("discover.searchPlaceholder")}
-                placeholderTextColor={COLORS.textMuted}
-                style={styles.searchInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                selectionColor={COLORS.primary}
-              />
-
-              {search.length > 0 && (
+                {search.length > 0 && (
+                  <Pressable
+                    style={styles.searchActionButton}
+                    onPress={() => setSearch("")}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name="close"
+                      size={22}
+                      color={COLORS.textSecondary}
+                    />
+                  </Pressable>
+                )}
+                <View style={styles.heroSearchDivider} />
                 <Pressable
-                  style={styles.searchActionButton}
-                  onPress={() => setSearch("")}
-                  hitSlop={8}
+                  style={[
+                    styles.heroFilterButton,
+                    (skillFilter ||
+                      formatFilter ||
+                      priceFilter ||
+                      sortBy !== "soonest") &&
+                      styles.heroFilterButtonActive,
+                  ]}
+                  onPress={() => setFilterModalVisible(true)}
+                  hitSlop={6}
                 >
                   <Ionicons
-                    name="close"
-                    size={23}
-                    color={COLORS.textSecondary}
+                    name="options-outline"
+                    size={21}
+                    color={
+                      skillFilter ||
+                      formatFilter ||
+                      priceFilter ||
+                      sortBy !== "soonest"
+                        ? "#FFFFFF"
+                        : COLORS.primary
+                    }
                   />
                 </Pressable>
-              )}
-
-              <View style={styles.searchDivider} />
-
-              <Pressable
-                style={[
-                  styles.searchFilterButton,
-                  (skillFilter ||
-                    formatFilter ||
-                    priceFilter ||
-                    sortBy !== "soonest") &&
-                    styles.searchFilterButtonActive,
-                ]}
-                onPress={() => setFilterModalVisible(true)}
-                hitSlop={6}
-              >
-                <Ionicons
-                  name="options-outline"
-                  size={21}
-                  color={
-                    skillFilter ||
-                    formatFilter ||
-                    priceFilter ||
-                    sortBy !== "soonest"
-                      ? "#fff"
-                      : COLORS.primary
-                  }
-                />
-              </Pressable>
+              </View>
             </View>
           </View>
 
@@ -583,11 +595,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("discover.openCalendar")}
             >
-              <Ionicons
-                name="calendar-outline"
-                size={22}
-                color={COLORS.primary}
-              />
+              <Ionicons name="calendar-outline" size={22} color="#FFFFFF" />
             </Pressable>
           </ScrollView>
 
@@ -650,35 +658,63 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* GAME CARDS */}
+          {/* CINEMATIC DISCOVER SECTIONS */}
 
-          {!loading &&
-            visibleGames.map((game, index) => {
-              const gameDate = game.starts_at
-                ? getAddisDateKey(game.starts_at)
-                : null;
-
-              const previousGame = index > 0 ? visibleGames[index - 1] : null;
-
-              const previousGameDate = previousGame?.starts_at
-                ? getAddisDateKey(previousGame.starts_at)
-                : null;
-
-              const showDateLabel =
-                Boolean(gameDate) && gameDate !== previousGameDate;
-
-              return (
-                <View key={game.id} style={styles.gameWrapper}>
-                  {showDateLabel && game.starts_at && (
-                    <Text style={styles.gameDateLabel}>
-                      {formatGameDate(game.starts_at)}
+          {!loading && visibleGames.length > 0 && (
+            <>
+              <View style={styles.discoverySection}>
+                <View style={styles.discoverySectionHeader}>
+                  <View style={styles.discoverySectionTitleRow}>
+                    <Text style={styles.discoverySectionEmoji}>🔥</Text>
+                    <Text style={styles.discoverySectionTitle}>
+                      {t("discover.playingSoon")}
                     </Text>
-                  )}
-
-                  <GameCard game={game} />
+                  </View>
+                  <Text style={styles.discoverySectionMeta}>
+                    {Math.min(visibleGames.length, 3)}{" "}
+                    {visibleGames.length === 1
+                      ? t("discover.game")
+                      : t("discover.gamesCount")}
+                  </Text>
                 </View>
-              );
-            })}
+
+                {visibleGames.slice(0, 3).map((game) => (
+                  <View key={`soon-${game.id}`} style={styles.gameWrapper}>
+                    <GameCard game={game} />
+                  </View>
+                ))}
+              </View>
+
+              {visibleGames.length > 3 && (
+                <View style={styles.discoverySection}>
+                  <View style={styles.discoverySectionHeader}>
+                    <View style={styles.discoverySectionTitleRow}>
+                      <Ionicons
+                        name="football-outline"
+                        size={18}
+                        color={COLORS.primary}
+                      />
+                      <Text style={styles.discoverySectionTitle}>
+                        {t("discover.moreGames")}
+                      </Text>
+                    </View>
+                    <Text style={styles.discoverySectionMeta}>
+                      {visibleGames.length - 3}{" "}
+                      {visibleGames.length - 3 === 1
+                        ? t("discover.game")
+                        : t("discover.gamesCount")}
+                    </Text>
+                  </View>
+
+                  {visibleGames.slice(3).map((game) => (
+                    <View key={`near-${game.id}`} style={styles.gameWrapper}>
+                      <GameCard game={game} />
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
 
           <View style={{ height: 30 }} />
         </ScrollView>
@@ -1340,6 +1376,114 @@ function EthiopianCalendar({
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    minHeight: 440,
+    borderRadius: 28,
+    overflow: "hidden",
+    marginBottom: 18,
+    backgroundColor: "#07131A",
+  },
+  heroArtwork: {
+    position: "absolute",
+    width: "100%",
+    height: 760,
+    left: 0,
+    bottom: -150,
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(2, 10, 18, 0.22)",
+  },
+  heroContent: {
+    flex: 1,
+    minHeight: 440,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    justifyContent: "space-between",
+  },
+  heroTopBar: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  heroBrand: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  heroBrandAccent: { color: COLORS.primary },
+  heroLocation: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 5,
+  },
+  heroLocationText: {
+    color: "rgba(255,255,255,0.88)",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  heroNotificationButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.28)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+  },
+  heroMessage: { marginTop: "auto", marginBottom: 16 },
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 40,
+    lineHeight: 41,
+    fontWeight: "900",
+    letterSpacing: -1.3,
+    maxWidth: 300,
+  },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.88)",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "500",
+    maxWidth: 290,
+    marginTop: 10,
+  },
+  heroSearchBox: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 17,
+    paddingRight: 7,
+  },
+  heroSearchInput: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 9,
+    marginRight: 4,
+    color: "#222222",
+    fontSize: 15,
+  },
+  heroSearchDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 28,
+    backgroundColor: "#DDDDDD",
+    marginHorizontal: 4,
+  },
+  heroFilterButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroFilterButtonActive: { backgroundColor: COLORS.primary },
+
   filterChipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1480,12 +1624,12 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#050B12",
   },
 
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#050B12",
   },
 
   header: {
@@ -1629,16 +1773,16 @@ const styles = StyleSheet.create({
     minHeight: 62,
     paddingHorizontal: 13,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#111B25",
     borderWidth: 1,
-    borderColor: "#DDDDDD",
+    borderColor: "#1D2A36",
     justifyContent: "center",
     alignItems: "center",
   },
 
   dateButtonActive: {
-    backgroundColor: "#222222",
-    borderColor: "#222222",
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
 
   dateButtonPressed: {
@@ -1646,20 +1790,20 @@ const styles = StyleSheet.create({
   },
 
   dateDay: {
-    color: "#717171",
-    fontWeight: "600",
+    color: "#C8D0D8",
+    fontWeight: "700",
     fontSize: 11,
   },
 
   dateNumber: {
-    color: "#222222",
-    fontWeight: "700",
+    color: "#FFFFFF",
+    fontWeight: "800",
     fontSize: 18,
     marginTop: 1,
   },
 
   dateTextActive: {
-    color: "#FFFFFF",
+    color: "#041017",
   },
 
   sectionHeader: {
@@ -1670,13 +1814,13 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: "#222222",
+    color: "#FFFFFF",
     fontSize: 23,
     fontWeight: "700",
   },
 
   sectionDate: {
-    color: "#717171",
+    color: "#AAB4BE",
     fontSize: 13,
     marginTop: 2,
   },
@@ -1739,12 +1883,49 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
+  discoverySection: {
+    marginTop: 4,
+    marginBottom: 18,
+  },
+
+  discoverySectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    paddingHorizontal: 3,
+  },
+
+  discoverySectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+
+  discoverySectionEmoji: {
+    fontSize: 17,
+  },
+
+  discoverySectionTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+  },
+
+  discoverySectionMeta: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   gameWrapper: {
     marginBottom: 10,
   },
 
   gameDateLabel: {
-    color: "#717171",
+    color: "#AAB4BE",
     fontSize: 12,
     fontWeight: "600",
     marginBottom: 6,

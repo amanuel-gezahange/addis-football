@@ -23,7 +23,19 @@ const om = {
     profile: "Profaayilii",
   },
 
+  bookingSuccess: {
+    youreIn: "Seenteetta!",
+    bookingConfirmed: "Iddoon kee mirkanaa’eera",
+    viewMyBookings: "Taphoota galmaa’e koo ilaali",
+    spotConfirmed: "Iddoon taphaa kee mirkanaa’eera.",
+  },
+
   discover: {
+    findYourNextGame: "Tapha itti aanu kee argadhu",
+    heroSubtitle: "Taphoota naannoo kee jiranitti makami.",
+    moreGames: "Taphoota dabalataa",
+    playingSoon: "Dhiheenyatti jalqaba",
+    nearYou: "Naannoo kee",
     allEthiopia: "Itoophiyaa guutuu",
     chooseCity: "Magaalaa fili",
     openCalendar: "Kaalaandarii bani",
@@ -787,8 +799,6 @@ const om = {
     organizerSubtitle: "Taphoota kubbaa miilaa kee bulchi",
 
     adminAccess: "Taphoota hunda ilaaluu dandeessa",
-
-    organizerAccess: "Taphoota kee qofa ilaaluu dandeessa",
 
     noGames: "Taphoonni hin jiran",
 

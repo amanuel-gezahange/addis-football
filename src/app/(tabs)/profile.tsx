@@ -46,6 +46,8 @@ export default function ProfileScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+
   const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function ProfileScreen() {
 
   async function changeLanguage(nextLanguage: Language) {
     await setLanguage(nextLanguage);
+    setLanguageMenuOpen(false);
   }
 
   async function loadProfile() {
@@ -304,166 +307,165 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
-
         {/* LANGUAGE */}
+        <View style={styles.sectionCard}>
+          <Pressable
+            style={styles.languageRow}
+            onPress={() => setLanguageMenuOpen((open) => !open)}
+          >
+            <View style={styles.languageRowLeft}>
+              <View style={styles.sectionIcon}>
+                <Ionicons
+                  name="language-outline"
+                  size={20}
+                  color={COLORS.primary}
+                />
+              </View>
 
-        <Text style={styles.label}>{t("profile.language")}</Text>
+              <View style={styles.languageRowText}>
+                <Text style={styles.sectionTitle}>{t("profile.language")}</Text>
 
-        <View style={styles.languageContainer}>
-          {languageOptions.map((option) => {
-            const selected = language === option.code;
-
-            return (
-              <Pressable
-                key={option.code}
-
-                style={[
-                  styles.languageButton,
-
-                  selected && styles.languageButtonSelected,
-                ]}
-
-                onPress={() => changeLanguage(option.code)}
-              >
-                <View style={styles.languageTextContainer}>
-                  <Text
-                    style={[
-                      styles.languageButtonText,
-
-                      selected && styles.languageButtonTextSelected,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-
-                  <Text
-                    style={[
-                      styles.languageCode,
-
-                      selected && styles.languageCodeSelected,
-                    ]}
-                  >
-                    {option.code.toUpperCase()}
-                  </Text>
-                </View>
-
-                {selected && (
-                  <Ionicons
-                    name="checkmark-circle"
-
-                    size={20}
-
-                    color={COLORS.background}
-                  />
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* FULL NAME */}
-
-        <Text style={styles.label}>{t("profile.fullName")}</Text>
-
-        <TextInput
-          style={styles.input}
-
-          placeholder={t("profile.namePlaceholder")}
-
-          placeholderTextColor={COLORS.textMuted}
-
-          value={fullName}
-
-          onChangeText={setFullName}
-
-          returnKeyType="done"
-
-          blurOnSubmit
-        />
-
-        {/* PHONE */}
-
-        <Text style={styles.label}>{t("profile.phone")}</Text>
-
-        <View style={styles.phoneBox}>
-          <Ionicons
-            name="call-outline"
-
-            size={20}
-
-            color={COLORS.textSecondary}
-          />
-
-          <Text style={styles.phoneBoxText}>{phone}</Text>
-
-          <Ionicons
-            name="lock-closed-outline"
-
-            size={17}
-
-            color={COLORS.textMuted}
-          />
-        </View>
-
-        <Text style={styles.phoneHelp}>{t("profile.phoneHelp")}</Text>
-
-        {/* SKILL LEVEL */}
-
-        <Text style={styles.label}>{t("profile.skillLevel")}</Text>
-
-        <View style={styles.skillContainer}>
-          {skillLevels.map((level) => {
-            const selected = skillLevel === level;
-
-            return (
-              <Pressable
-                key={level}
-
-                style={[
-                  styles.skillButton,
-
-                  selected && styles.skillButtonSelected,
-                ]}
-
-                onPress={() => setSkillLevel(level)}
-              >
-                <Text
-                  numberOfLines={1}
-
-                  adjustsFontSizeToFit
-
-                  minimumFontScale={0.75}
-
-                  style={[
-                    styles.skillButtonText,
-
-                    selected && styles.skillButtonTextSelected,
-                  ]}
-                >
-                  {skillLabel(level)}
+                <Text style={styles.currentLanguage}>
+                  {languageOptions.find((option) => option.code === language)
+                    ?.label || language.toUpperCase()}
                 </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+              </View>
+            </View>
 
-        {/* SAVE */}
+            <Ionicons
+              name={languageMenuOpen ? "chevron-up" : "chevron-down"}
+              size={21}
+              color="#7D8994"
+            />
+          </Pressable>
 
-        <Pressable
-          style={[styles.saveButton, saving && styles.disabledButton]}
+          {languageMenuOpen && (
+            <View style={styles.languageMenu}>
+              {languageOptions.map((option) => {
+                const selected = language === option.code;
 
-          onPress={handleSave}
+                return (
+                  <Pressable
+                    key={option.code}
+                    style={[
+                      styles.languageOption,
+                      selected && styles.languageOptionSelected,
+                    ]}
+                    onPress={() => changeLanguage(option.code)}
+                  >
+                    <View style={styles.languageOptionTextWrap}>
+                      <Text
+                        style={[
+                          styles.languageOptionText,
+                          selected && styles.languageOptionTextSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
 
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={COLORS.background} />
-          ) : (
-            <Text style={styles.saveButtonText}>
-              {t("profile.saveProfile")}
-            </Text>
+                      <Text
+                        style={[
+                          styles.languageOptionCode,
+                          selected && styles.languageOptionCodeSelected,
+                        ]}
+                      >
+                        {option.code.toUpperCase()}
+                      </Text>
+                    </View>
+
+                    {selected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={COLORS.primary}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
           )}
-        </Pressable>
+        </View>
+        <View style={styles.detailsCard}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIcon}>
+              <Ionicons
+                name="football-outline"
+                size={20}
+                color={COLORS.primary}
+              />
+            </View>
+            <Text style={styles.sectionTitle}>
+              {t("profile.footballPlayer")}
+            </Text>
+          </View>
+          <Text style={styles.cardLabel}>{t("profile.fullName")}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={t("profile.namePlaceholder")}
+            placeholderTextColor={COLORS.textMuted}
+            value={fullName}
+            onChangeText={setFullName}
+            returnKeyType="done"
+            blurOnSubmit
+          />
+          <Text style={styles.cardLabel}>{t("profile.phone")}</Text>
+          <View style={styles.phoneBox}>
+            <Ionicons
+              name="call-outline"
+              size={20}
+              color={COLORS.textSecondary}
+            />
+            <Text style={styles.phoneBoxText}>{phone}</Text>
+            <Ionicons
+              name="lock-closed-outline"
+              size={17}
+              color={COLORS.textMuted}
+            />
+          </View>
+          <Text style={styles.cardHelp}>{t("profile.phoneHelp")}</Text>
+          <Text style={styles.cardLabel}>{t("profile.skillLevel")}</Text>
+          <View style={styles.skillContainer}>
+            {skillLevels.map((level) => {
+              const selected = skillLevel === level;
+              return (
+                <Pressable
+                  key={level}
+                  style={[
+                    styles.skillButton,
+                    selected && styles.skillButtonSelected,
+                  ]}
+                  onPress={() => setSkillLevel(level)}
+                >
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    style={[
+                      styles.skillButtonText,
+                      selected && styles.skillButtonTextSelected,
+                    ]}
+                  >
+                    {skillLabel(level)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Pressable
+            style={[styles.saveButton, saving && styles.disabledButton]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color={COLORS.background} />
+            ) : (
+              <Text style={styles.saveButtonText}>
+                {t("profile.saveProfile")}
+              </Text>
+            )}
+          </Pressable>
+        </View>
 
         {/* ADMIN TOOLS */}
 
@@ -626,12 +628,12 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#07111F",
   },
 
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#07111F",
   },
 
   content: {
@@ -654,7 +656,7 @@ const styles = StyleSheet.create({
 
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#07111F",
 
     alignItems: "center",
 
@@ -662,50 +664,50 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    color: "#717171",
+    color: "#8FA1AF",
     fontSize: 14,
     marginTop: 12,
   },
 
   title: {
-    color: "#222222",
+    color: "#FFFFFF",
     fontSize: 32,
     fontWeight: "800",
     letterSpacing: -0.8,
   },
 
   subtitle: {
-    color: "#717171",
+    color: "#8FA1AF",
     fontSize: 15,
     marginTop: 3,
   },
 
   avatarSection: {
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: 18,
+    marginBottom: 4,
   },
 
   avatar: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: "#F7F7F7",
+    backgroundColor: "#102231",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#1C3A4E",
   },
 
   playerName: {
-    color: "#222222",
+    color: "#FFFFFF",
     fontSize: 19,
     fontWeight: "700",
     marginTop: 11,
   },
 
   phoneText: {
-    color: "#717171",
+    color: "#8FA1AF",
     fontSize: 14,
     marginTop: 3,
   },
@@ -714,9 +716,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F2FBFE",
+    backgroundColor: "#102A3A",
     borderWidth: 1,
-    borderColor: "#CDEFF8",
+    borderColor: "#1C5368",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 18,
@@ -724,18 +726,163 @@ const styles = StyleSheet.create({
   },
 
   roleBadgeText: {
-    color: "#087EA4",
+    color: COLORS.primary,
     fontSize: 12,
     fontWeight: "700",
   },
 
   label: {
-    color: "#222222",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 8,
     marginTop: 17,
   },
+
+  sectionCard: {
+    marginTop: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#DCE5EA",
+  },
+  detailsCard: {
+    marginTop: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#DCE5EA",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
+  },
+  sectionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#EAF9FE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  languageRow: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  languageRowLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  languageRowText: {
+    flex: 1,
+  },
+
+  currentLanguage: {
+    color: "#7D8994",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  languageMenu: {
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#E8EDF0",
+    gap: 6,
+  },
+
+  languageOption: {
+    minHeight: 50,
+    borderRadius: 13,
+    paddingHorizontal: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F7F9FA",
+    borderWidth: 1,
+    borderColor: "#E4E9ED",
+  },
+
+  languageOptionSelected: {
+    backgroundColor: "#EAF9FE",
+    borderColor: "#B9EAF8",
+  },
+
+  languageOptionTextWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  languageOptionText: {
+    color: "#222222",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  languageOptionTextSelected: {
+    color: "#07111F",
+  },
+
+  languageOptionCode: {
+    color: "#9A9A9A",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  languageOptionCodeSelected: {
+    color: "#568091",
+  },
+  sectionTitle: { color: "#17202A", fontSize: 16, fontWeight: "800" },
+  languageCompactContainer: { flexDirection: "row", gap: 7 },
+  languageCompactButton: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#DDE3E8",
+    backgroundColor: "#F7F9FA",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+  },
+  languageCompactButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  languageCompactText: {
+    color: "#222222",
+    fontSize: 12,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  languageCompactTextSelected: { color: "#07111F" },
+  languageCompactCode: {
+    color: "#9A9A9A",
+    fontSize: 9,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  languageCompactCodeSelected: { color: "#173040" },
+  cardLabel: {
+    color: "#222222",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 7,
+    marginTop: 13,
+  },
+  cardHelp: { color: "#7D8994", fontSize: 11, marginTop: 6 },
 
   languageContainer: {
     gap: 7,
@@ -817,7 +964,7 @@ const styles = StyleSheet.create({
   },
 
   phoneHelp: {
-    color: "#8A8A8A",
+    color: "#8FA1AF",
     fontSize: 12,
     marginTop: 6,
   },
@@ -848,8 +995,8 @@ const styles = StyleSheet.create({
   },
 
   skillButtonSelected: {
-    backgroundColor: "#222222",
-    borderColor: "#222222",
+    backgroundColor: "#102231",
+    borderColor: COLORS.primary,
   },
 
   skillButtonText: {
@@ -882,7 +1029,7 @@ const styles = StyleSheet.create({
   },
 
   adminSection: {
-    marginTop: 28,
+    marginTop: 14,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E5E5",

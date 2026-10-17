@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Clipboard,
@@ -15,16 +16,9 @@ import { supabase } from "../lib/supabase";
 
 const c = Colors.dark;
 
-type BookingStatus =
-  | "confirmed"
-  | "waitlisted"
-  | "pending_payment"
-  | null;
+type BookingStatus = "confirmed" | "waitlisted" | "pending_payment" | null;
 
-type PaymentMethod =
-  | "free"
-  | "venue"
-  | "organizer";
+type PaymentMethod = "free" | "venue" | "organizer";
 
 type PaymentDetails = {
   payment_method: PaymentMethod;
@@ -52,101 +46,61 @@ export default function GameBookingAction({
 }: Props) {
   const { t } = useLanguage();
 
-  const [bookingStatus, setBookingStatus] =
-    useState<BookingStatus>(null);
+  const [bookingStatus, setBookingStatus] = useState<BookingStatus>(null);
 
-  const [bookingId, setBookingId] =
-    useState<number | null>(null);
+  const [bookingId, setBookingId] = useState<number | null>(null);
 
-  const [paymentStatus, setPaymentStatus] =
-    useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
 
-  const [
-    paymentOfferExpiresAt,
-    setPaymentOfferExpiresAt,
-  ] = useState<string | null>(null);
+  const [paymentOfferExpiresAt, setPaymentOfferExpiresAt] = useState<
+    string | null
+  >(null);
 
-  const [
-    offerSecondsLeft,
-    setOfferSecondsLeft,
-  ] = useState<number | null>(null);
+  const [offerSecondsLeft, setOfferSecondsLeft] = useState<number | null>(null);
 
-  const [
-    offerExpiredLocally,
-    setOfferExpiredLocally,
-  ] = useState(false);
+  const [offerExpiredLocally, setOfferExpiredLocally] = useState(false);
 
-  const [joining, setJoining] =
-    useState(false);
+  const [joining, setJoining] = useState(false);
 
-  const [stateLoading, setStateLoading] =
-    useState(true);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
 
-  const [
-    paymentModalVisible,
-    setPaymentModalVisible,
-  ] = useState(false);
+  const [stateLoading, setStateLoading] = useState(true);
 
-  const [
-    paymentMessage,
-    setPaymentMessage,
-  ] = useState<string | null>(null);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 
-  const [spotsLeft, setSpotsLeft] =
-    useState(
-      Number(initialSpotsLeft ?? 0),
-    );
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
 
-  const [
-    paymentDetails,
-    setPaymentDetails,
-  ] = useState<PaymentDetails>({
-    payment_method:
-      Number(price ?? 0) > 0
-        ? "organizer"
-        : "free",
+  const [spotsLeft, setSpotsLeft] = useState(Number(initialSpotsLeft ?? 0));
+
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>({
+    payment_method: Number(price ?? 0) > 0 ? "organizer" : "free",
 
     payment_provider: null,
     payment_phone: null,
     payment_account_name: null,
   });
 
-  const numericPrice =
-    Number(price ?? 0);
+  const numericPrice = Number(price ?? 0);
 
-  const isPaidGame =
-    numericPrice > 0;
+  const isPaidGame = numericPrice > 0;
 
-  const isFull =
-    status === "full" ||
-    spotsLeft <= 0;
+  const isFull = status === "full" || spotsLeft <= 0;
 
-  const isConfirmed =
-    bookingStatus === "confirmed";
+  const isConfirmed = bookingStatus === "confirmed";
 
-  const isWaitlisted =
-    bookingStatus === "waitlisted";
+  const isWaitlisted = bookingStatus === "waitlisted";
 
-  const isPendingPayment =
-    bookingStatus ===
-    "pending_payment";
+  const isPendingPayment = bookingStatus === "pending_payment";
 
-  const isPaymentSubmitted =
-    paymentStatus === "submitted";
+  const isPaymentSubmitted = paymentStatus === "submitted";
 
-  const isOrganizerPayment =
-    paymentDetails.payment_method ===
-    "organizer";
+  const isOrganizerPayment = paymentDetails.payment_method === "organizer";
 
   useEffect(() => {
-    setSpotsLeft(
-      Number(initialSpotsLeft ?? 0),
-    );
+    setSpotsLeft(Number(initialSpotsLeft ?? 0));
   }, [initialSpotsLeft]);
 
-  function updateSpots(
-    nextSpotsLeft: number,
-  ) {
+  function updateSpots(nextSpotsLeft: number) {
     setSpotsLeft(nextSpotsLeft);
     onSpotsChange?.(nextSpotsLeft);
   }
@@ -154,10 +108,7 @@ export default function GameBookingAction({
   async function loadState() {
     setStateLoading(true);
 
-    const {
-      data: gameRow,
-      error: gameError,
-    } = await supabase
+    const { data: gameRow, error: gameError } = await supabase
       .from("games")
       .select(
         `
@@ -176,30 +127,17 @@ export default function GameBookingAction({
       setPaymentDetails({
         payment_method:
           (gameRow.payment_method as PaymentMethod) ??
-          (numericPrice > 0
-            ? "organizer"
-            : "free"),
+          (numericPrice > 0 ? "organizer" : "free"),
 
-        payment_provider:
-          gameRow.payment_provider ??
-          null,
+        payment_provider: gameRow.payment_provider ?? null,
 
-        payment_phone:
-          gameRow.payment_phone ??
-          null,
+        payment_phone: gameRow.payment_phone ?? null,
 
-        payment_account_name:
-          gameRow.payment_account_name ??
-          null,
+        payment_account_name: gameRow.payment_account_name ?? null,
       });
 
-      if (
-        typeof gameRow.spots_left ===
-        "number"
-      ) {
-        updateSpots(
-          Number(gameRow.spots_left),
-        );
+      if (typeof gameRow.spots_left === "number") {
+        updateSpots(Number(gameRow.spots_left));
       }
     }
 
@@ -218,10 +156,7 @@ export default function GameBookingAction({
       return;
     }
 
-    const {
-      data: booking,
-      error: bookingError,
-    } = await supabase
+    const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .select(
         `
@@ -232,15 +167,8 @@ export default function GameBookingAction({
         `,
       )
       .eq("user_id", user.id)
-      .eq(
-        "game_id",
-        Number(gameId),
-      )
-      .in("status", [
-        "confirmed",
-        "waitlisted",
-        "pending_payment",
-      ])
+      .eq("game_id", Number(gameId))
+      .in("status", ["confirmed", "waitlisted", "pending_payment"])
       .order("created_at", {
         ascending: false,
       })
@@ -248,10 +176,7 @@ export default function GameBookingAction({
       .maybeSingle();
 
     if (bookingError) {
-      console.log(
-        "Booking check error:",
-        bookingError.message,
-      );
+      console.log("Booking check error:", bookingError.message);
 
       setStateLoading(false);
       return;
@@ -268,65 +193,38 @@ export default function GameBookingAction({
       return;
     }
 
-    setBookingId(
-      Number(booking.id),
-    );
+    setBookingId(Number(booking.id));
 
-    setPaymentStatus(
-      booking.payment_status ?? null,
-    );
+    setPaymentStatus(booking.payment_status ?? null);
 
-    const offerExpiry =
-      booking.payment_offer_expires_at ??
-      null;
+    const offerExpiry = booking.payment_offer_expires_at ?? null;
 
-    setPaymentOfferExpiresAt(
-      offerExpiry,
-    );
+    setPaymentOfferExpiresAt(offerExpiry);
 
     if (
       offerExpiry &&
-      booking.status ===
-        "pending_payment" &&
-      booking.payment_status ===
-        "pending"
+      booking.status === "pending_payment" &&
+      booking.payment_status === "pending"
     ) {
       const seconds = Math.max(
         0,
-        Math.ceil(
-          (new Date(
-            offerExpiry,
-          ).getTime() -
-            Date.now()) /
-            1000,
-        ),
+        Math.ceil((new Date(offerExpiry).getTime() - Date.now()) / 1000),
       );
 
       setOfferSecondsLeft(seconds);
 
-      setOfferExpiredLocally(
-        seconds <= 0,
-      );
+      setOfferExpiredLocally(seconds <= 0);
     } else {
       setOfferSecondsLeft(null);
       setOfferExpiredLocally(false);
     }
 
-    if (
-      booking.status === "confirmed"
-    ) {
+    if (booking.status === "confirmed") {
       setBookingStatus("confirmed");
-    } else if (
-      booking.status === "waitlisted"
-    ) {
+    } else if (booking.status === "waitlisted") {
       setBookingStatus("waitlisted");
-    } else if (
-      booking.status ===
-      "pending_payment"
-    ) {
-      setBookingStatus(
-        "pending_payment",
-      );
+    } else if (booking.status === "pending_payment") {
+      setBookingStatus("pending_payment");
     } else {
       setBookingStatus(null);
     }
@@ -339,11 +237,7 @@ export default function GameBookingAction({
   }, [gameId, numericPrice]);
 
   useEffect(() => {
-    if (
-      !paymentOfferExpiresAt ||
-      !isPendingPayment ||
-      isPaymentSubmitted
-    ) {
+    if (!paymentOfferExpiresAt || !isPendingPayment || isPaymentSubmitted) {
       setOfferSecondsLeft(null);
       return;
     }
@@ -352,11 +246,7 @@ export default function GameBookingAction({
       const seconds = Math.max(
         0,
         Math.ceil(
-          (new Date(
-            paymentOfferExpiresAt,
-          ).getTime() -
-            Date.now()) /
-            1000,
+          (new Date(paymentOfferExpiresAt).getTime() - Date.now()) / 1000,
         ),
       );
 
@@ -367,73 +257,42 @@ export default function GameBookingAction({
 
         setPaymentModalVisible(false);
 
-        setPaymentMessage(
-          t(
-            "gameCard.paymentTimeExpired",
-          ),
-        );
+        setPaymentMessage(t("gameCard.paymentTimeExpired"));
       }
     };
 
     updateCountdown();
 
-    const timer = setInterval(
-      updateCountdown,
-      1000,
-    );
+    const timer = setInterval(updateCountdown, 1000);
 
-    return () =>
-      clearInterval(timer);
-  }, [
-    paymentOfferExpiresAt,
-    isPendingPayment,
-    isPaymentSubmitted,
-  ]);
+    return () => clearInterval(timer);
+  }, [paymentOfferExpiresAt, isPendingPayment, isPaymentSubmitted]);
 
   useEffect(() => {
     if (!offerExpiredLocally) {
       return;
     }
 
-    const refreshExpiredOffer =
-      setInterval(
-        () => loadState(),
-        2000,
-      );
+    const refreshExpiredOffer = setInterval(() => loadState(), 2000);
 
-    return () =>
-      clearInterval(
-        refreshExpiredOffer,
-      );
-  }, [
-    offerExpiredLocally,
-    gameId,
-  ]);
+    return () => clearInterval(refreshExpiredOffer);
+  }, [offerExpiredLocally, gameId]);
 
-  function formatOfferCountdown(
-    totalSeconds: number | null,
-  ) {
+  function formatOfferCountdown(totalSeconds: number | null) {
     if (totalSeconds === null) {
       return null;
     }
 
-    const safeSeconds = Math.max(
-      0,
-      totalSeconds,
-    );
+    const safeSeconds = Math.max(0, totalSeconds);
 
-    const minutes = Math.floor(
-      safeSeconds / 60,
-    );
+    const minutes = Math.floor(safeSeconds / 60);
 
-    const seconds =
-      safeSeconds % 60;
+    const seconds = safeSeconds % 60;
 
-    return `${String(
-      minutes,
-    ).padStart(2, "0")}:${String(
-      seconds,
-    ).padStart(2, "0")}`;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0",
+    )}`;
   }
 
   async function handleJoinGame() {
@@ -441,10 +300,7 @@ export default function GameBookingAction({
 
     setPaymentMessage(null);
 
-    if (
-      isConfirmed ||
-      isWaitlisted
-    ) {
+    if (isConfirmed || isWaitlisted) {
       return;
     }
 
@@ -452,22 +308,14 @@ export default function GameBookingAction({
       if (offerExpiredLocally) {
         setPaymentModalVisible(false);
 
-        setPaymentMessage(
-          t(
-            "gameCard.paymentTimeExpired",
-          ),
-        );
+        setPaymentMessage(t("gameCard.paymentTimeExpired"));
 
         await loadState();
         return;
       }
 
       if (isPaymentSubmitted) {
-        setPaymentMessage(
-          t(
-            "gameCard.paymentSubmitted",
-          ),
-        );
+        setPaymentMessage(t("gameCard.paymentSubmitted"));
 
         return;
       }
@@ -485,10 +333,8 @@ export default function GameBookingAction({
     }
 
     if (
-      paymentDetails.payment_method ===
-        "free" ||
-      paymentDetails.payment_method ===
-        "venue" ||
+      paymentDetails.payment_method === "free" ||
+      paymentDetails.payment_method === "venue" ||
       !isPaidGame
     ) {
       await handleNormalJoin();
@@ -500,11 +346,7 @@ export default function GameBookingAction({
       return;
     }
 
-    setPaymentMessage(
-      t(
-        "gameCard.paymentMethodNotAvailable",
-      ),
-    );
+    setPaymentMessage(t("gameCard.paymentMethodNotAvailable"));
   }
 
   async function handleNormalJoin() {
@@ -514,88 +356,46 @@ export default function GameBookingAction({
       const {
         data: { user },
         error: userError,
-      } =
-        await supabase.auth.getUser();
+      } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        setPaymentMessage(
-          t(
-            "gameCard.signInFirst",
-          ),
-        );
+        setPaymentMessage(t("gameCard.signInFirst"));
         return;
       }
 
-      const { data, error } =
-        await supabase.rpc(
-          "join_game",
-          {
-            p_game_id:
-              Number(gameId),
-          },
-        );
+      const { data, error } = await supabase.rpc("join_game", {
+        p_game_id: Number(gameId),
+      });
 
       if (error) {
-        console.log(
-          "Join game error:",
-          error.message,
-        );
+        console.log("Join game error:", error.message);
 
-        if (
-          error.message
-            .toLowerCase()
-            .includes("already joined")
-        ) {
+        if (error.message.toLowerCase().includes("already joined")) {
           setPaymentMessage(null);
           await loadState();
           return;
         }
 
-        setPaymentMessage(
-          t(
-            "gameCard.bookingCouldNotBeCreated",
-          ),
-        );
+        setPaymentMessage(t("gameCard.bookingCouldNotBeCreated"));
 
         return;
       }
 
       if (data?.booking_id) {
-        setBookingId(
-          Number(data.booking_id),
-        );
+        setBookingId(Number(data.booking_id));
       }
 
-      if (
-        data?.booking_status ===
-        "confirmed"
-      ) {
-        setBookingStatus(
-          "confirmed",
-        );
-      } else if (
-        data?.booking_status ===
-        "waitlisted"
-      ) {
-        setBookingStatus(
-          "waitlisted",
-        );
-      } else if (
-        data?.booking_status ===
-        "pending_payment"
-      ) {
-        setBookingStatus(
-          "pending_payment",
-        );
+      if (data?.booking_status === "confirmed") {
+        setBookingStatus("confirmed");
+        setSuccessModalVisible(true);
+      } else if (data?.booking_status === "waitlisted") {
+        setBookingStatus("waitlisted");
+      } else if (data?.booking_status === "pending_payment") {
+        setBookingStatus("pending_payment");
       }
 
-      if (
-        typeof data?.spots_left ===
-        "number"
-      ) {
-        updateSpots(
-          Number(data.spots_left),
-        );
+      if (typeof data?.spots_left === "number") {
+        updateSpots(Number(data.spots_left));
       }
     } finally {
       setJoining(false);
@@ -609,65 +409,39 @@ export default function GameBookingAction({
       const {
         data: { user },
         error: userError,
-      } =
-        await supabase.auth.getUser();
+      } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        setPaymentMessage(
-          t(
-            "gameCard.signInFirst",
-          ),
-        );
+        setPaymentMessage(t("gameCard.signInFirst"));
 
         return;
       }
 
-      const { data, error } =
-        await supabase.rpc(
-          "reserve_organizer_paid_game",
-          {
-            p_game_id:
-              Number(gameId),
-          },
-        );
+      const { data, error } = await supabase.rpc(
+        "reserve_organizer_paid_game",
+        {
+          p_game_id: Number(gameId),
+        },
+      );
 
       if (error) {
-        console.log(
-          "Reserve organizer game error:",
-          error.message,
-        );
+        console.log("Reserve organizer game error:", error.message);
 
-        setPaymentMessage(
-          t(
-            "gameCard.couldNotReserve",
-          ),
-        );
+        setPaymentMessage(t("gameCard.couldNotReserve"));
 
         return;
       }
 
       if (data?.booking_id) {
-        setBookingId(
-          Number(data.booking_id),
-        );
+        setBookingId(Number(data.booking_id));
       }
 
-      setBookingStatus(
-        "pending_payment",
-      );
+      setBookingStatus("pending_payment");
 
-      setPaymentStatus(
-        data?.payment_status ??
-          "pending",
-      );
+      setPaymentStatus(data?.payment_status ?? "pending");
 
-      if (
-        typeof data?.spots_left ===
-        "number"
-      ) {
-        updateSpots(
-          Number(data.spots_left),
-        );
+      if (typeof data?.spots_left === "number") {
+        updateSpots(Number(data.spots_left));
       }
 
       setPaymentMessage(null);
@@ -682,19 +456,13 @@ export default function GameBookingAction({
     if (
       offerExpiredLocally ||
       (paymentOfferExpiresAt &&
-        new Date(
-          paymentOfferExpiresAt,
-        ).getTime() <= Date.now())
+        new Date(paymentOfferExpiresAt).getTime() <= Date.now())
     ) {
       setPaymentModalVisible(false);
 
       setOfferExpiredLocally(true);
 
-      setPaymentMessage(
-        t(
-          "gameCard.paymentTimeExpired",
-        ),
-      );
+      setPaymentMessage(t("gameCard.paymentTimeExpired"));
 
       await loadState();
       return;
@@ -703,30 +471,16 @@ export default function GameBookingAction({
     const {
       data: { user },
       error: authError,
-    } =
-      await supabase.auth.getUser();
+    } = await supabase.auth.getUser();
 
-    console.log(
-      "PAYMENT DEBUG USER:",
-      user?.id,
-    );
+    console.log("PAYMENT DEBUG USER:", user?.id);
 
-    console.log(
-      "PAYMENT DEBUG AUTH ERROR:",
-      authError,
-    );
+    console.log("PAYMENT DEBUG AUTH ERROR:", authError);
 
-    console.log(
-      "PAYMENT DEBUG BOOKING ID:",
-      bookingId,
-    );
+    console.log("PAYMENT DEBUG BOOKING ID:", bookingId);
 
     if (!bookingId) {
-      setPaymentMessage(
-        t(
-          "gameCard.bookingNotFound",
-        ),
-      );
+      setPaymentMessage(t("gameCard.bookingNotFound"));
 
       return;
     }
@@ -734,65 +488,34 @@ export default function GameBookingAction({
     setJoining(true);
 
     try {
-      const { data, error } =
-        await supabase.rpc(
-          "submit_organizer_payment",
-          {
-            p_booking_id:
-              bookingId,
+      const { data, error } = await supabase.rpc("submit_organizer_payment", {
+        p_booking_id: bookingId,
 
-            p_player_reference:
-              null,
-          },
-        );
+        p_player_reference: null,
+      });
 
       if (error) {
-        console.log(
-          "Submit organizer payment error:",
-          error.message,
-        );
+        console.log("Submit organizer payment error:", error.message);
 
-        if (
-          error.message
-            .toLowerCase()
-            .includes("expired")
-        ) {
-          setPaymentModalVisible(
-            false,
-          );
+        if (error.message.toLowerCase().includes("expired")) {
+          setPaymentModalVisible(false);
 
-          setOfferExpiredLocally(
-            true,
-          );
+          setOfferExpiredLocally(true);
 
-          setPaymentMessage(
-            t(
-              "gameCard.paymentTimeExpired",
-            ),
-          );
+          setPaymentMessage(t("gameCard.paymentTimeExpired"));
 
           await loadState();
         } else {
-          setPaymentMessage(
-            t(
-              "gameCard.couldNotSubmitPayment",
-            ),
-          );
+          setPaymentMessage(t("gameCard.couldNotSubmitPayment"));
         }
 
         return;
       }
 
       if (data?.success) {
-        setPaymentStatus(
-          "submitted",
-        );
+        setPaymentStatus("submitted");
 
-        setPaymentMessage(
-          t(
-            "gameCard.paymentSubmitted",
-          ),
-        );
+        setPaymentMessage(t("gameCard.paymentSubmitted"));
 
         setPaymentModalVisible(false);
       }
@@ -804,24 +527,15 @@ export default function GameBookingAction({
   function getButtonText() {
     if (joining) {
       if (isPendingPayment) {
-        return t(
-          "gameCard.submittingPayment",
-        );
+        return t("gameCard.submittingPayment");
       }
 
       if (isFull) {
-        return t(
-          "gameCard.joiningWaitlist",
-        );
+        return t("gameCard.joiningWaitlist");
       }
 
-      if (
-        isOrganizerPayment &&
-        isPaidGame
-      ) {
-        return t(
-          "gameCard.reserving",
-        );
+      if (isOrganizerPayment && isPaidGame) {
+        return t("gameCard.reserving");
       }
 
       return t("gameCard.joining");
@@ -832,116 +546,72 @@ export default function GameBookingAction({
     }
 
     if (isWaitlisted) {
-      return t(
-        "gameCard.waitlisted",
-      );
+      return t("gameCard.waitlisted");
     }
 
     if (isPendingPayment) {
       if (offerExpiredLocally) {
-        return t(
-          "gameCard.offerExpired",
-        );
+        return t("gameCard.offerExpired");
       }
 
       if (isPaymentSubmitted) {
-        return t(
-          "gameCard.waitingForOrganizer",
-        );
+        return t("gameCard.waitingForOrganizer");
       }
 
       return t("gameCard.ivePaid");
     }
 
     if (isFull) {
-      return t(
-        "gameCard.joinWaitlist",
-      );
+      return t("gameCard.joinWaitlist");
     }
 
-    if (
-      isOrganizerPayment &&
-      isPaidGame
-    ) {
-      return t(
-        "gameCard.reserveSpot",
-      );
+    if (isOrganizerPayment && isPaidGame) {
+      return t("gameCard.reserveSpot");
     }
 
-    if (
-      paymentDetails.payment_method ===
-      "venue"
-    ) {
-      return t(
-        "gameCard.reserveSpot",
-      );
+    if (paymentDetails.payment_method === "venue") {
+      return t("gameCard.reserveSpot");
     }
 
     return t("gameCard.joinGame");
   }
 
-  const useStackedFooter =
-    isPendingPayment &&
-    isPaymentSubmitted;
+  const useStackedFooter = isPendingPayment && isPaymentSubmitted;
 
   const actionDisabled =
     stateLoading ||
     joining ||
     isConfirmed ||
     isWaitlisted ||
-    (isPendingPayment &&
-      isPaymentSubmitted) ||
-    (isPendingPayment &&
-      offerExpiredLocally);
+    (isPendingPayment && isPaymentSubmitted) ||
+    (isPendingPayment && offerExpiredLocally);
 
   return (
     <>
-      <View
-        style={[
-          styles.wrapper,
-          useStackedFooter &&
-            styles.wrapperStacked,
-        ]}
-      >
+      <View style={[styles.wrapper, useStackedFooter && styles.wrapperStacked]}>
         <View
           style={[
             styles.footerInfo,
-            useStackedFooter &&
-              styles.footerInfoStacked,
+            useStackedFooter && styles.footerInfoStacked,
           ]}
         >
           <Text style={styles.price}>
-            {numericPrice === 0
-              ? t("gameCard.free")
-              : `${numericPrice} ETB`}
+            {numericPrice === 0 ? t("gameCard.free") : `${numericPrice} ETB`}
           </Text>
 
-          <Text
-            style={[
-              styles.spots,
-              isFull &&
-                styles.spotsFull,
-            ]}
-          >
+          <Text style={[styles.spots, isFull && styles.spotsFull]}>
             {isFull
               ? t("gameCard.gameFull")
-              : `${spotsLeft} ${t(
-                  "gameCard.spotsLeft",
-                )}`}
+              : `${spotsLeft} ${t("gameCard.spotsLeft")}`}
           </Text>
         </View>
 
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
-            useStackedFooter &&
-              styles.actionButtonStacked,
-            isFull &&
-              !bookingStatus &&
-              styles.waitlistButton,
-            (actionDisabled ||
-              pressed) &&
-              styles.actionButtonPressed,
+            useStackedFooter && styles.actionButtonStacked,
+            isFull && !bookingStatus && styles.waitlistButton,
+            (actionDisabled || pressed) && styles.actionButtonPressed,
           ]}
           onPress={handleJoinGame}
           disabled={actionDisabled}
@@ -949,20 +619,14 @@ export default function GameBookingAction({
           <Text
             style={[
               styles.actionButtonText,
-              isFull &&
-                !bookingStatus &&
-                styles.waitlistButtonText,
+              isFull && !bookingStatus && styles.waitlistButtonText,
             ]}
           >
             {getButtonText()}
           </Text>
 
           {joining && (
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={18}
-              color="#07111F"
-            />
+            <Ionicons name="ellipsis-horizontal" size={18} color="#07111F" />
           )}
         </Pressable>
       </View>
@@ -971,47 +635,20 @@ export default function GameBookingAction({
         !isPaymentSubmitted &&
         paymentOfferExpiresAt &&
         !offerExpiredLocally &&
-        offerSecondsLeft !==
-          null && (
-          <View
-            style={
-              styles.offerCountdown
-            }
-          >
-            <Ionicons
-              name="timer-outline"
-              size={19}
-              color="#9A6700"
-            />
+        offerSecondsLeft !== null && (
+          <View style={styles.offerCountdown}>
+            <Ionicons name="timer-outline" size={19} color="#9A6700" />
 
-            <View
-              style={
-                styles.offerCountdownTextWrap
-              }
-            >
-              <Text
-                style={
-                  styles.offerCountdownTitle
-                }
-              >
-                {t(
-                  "gameCard.payWithin",
-                ).replace(
+            <View style={styles.offerCountdownTextWrap}>
+              <Text style={styles.offerCountdownTitle}>
+                {t("gameCard.payWithin").replace(
                   "{time}",
-                  formatOfferCountdown(
-                    offerSecondsLeft,
-                  ) ?? "00:00",
+                  formatOfferCountdown(offerSecondsLeft) ?? "00:00",
                 )}
               </Text>
 
-              <Text
-                style={
-                  styles.offerCountdownText
-                }
-              >
-                {t(
-                  "gameCard.completePaymentBeforeTimer",
-                )}
+              <Text style={styles.offerCountdownText}>
+                {t("gameCard.completePaymentBeforeTimer")}
               </Text>
             </View>
           </View>
@@ -1026,18 +663,13 @@ export default function GameBookingAction({
                 : "information-circle-outline"
             }
             size={18}
-            color={
-              isConfirmed
-                ? "#008A3B"
-                : "#9A6700"
-            }
+            color={isConfirmed ? "#008A3B" : "#9A6700"}
           />
 
           <Text
             style={[
               styles.messageText,
-              isConfirmed &&
-                styles.successMessageText,
+              isConfirmed && styles.successMessageText,
             ]}
           >
             {paymentMessage}
@@ -1046,59 +678,90 @@ export default function GameBookingAction({
       )}
 
       <Modal
+        visible={successModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSuccessModalVisible(false)}
+      >
+        <View style={styles.successBackdrop}>
+          <View style={styles.successCard}>
+            <Pressable
+              style={styles.successCloseButton}
+              onPress={() => setSuccessModalVisible(false)}
+              accessibilityRole="button"
+            >
+              <Ionicons name="close" size={22} color="#8FA1AF" />
+            </Pressable>
+
+            <View style={styles.successIcon}>
+              <Ionicons name="checkmark" size={42} color="#FFFFFF" />
+            </View>
+
+            <Text style={styles.successTitle}>
+              {t("bookingSuccess.youreIn")}
+            </Text>
+
+            <Text style={styles.successGameTitle}>{title}</Text>
+
+            <View style={styles.successSummary}>
+              <View style={styles.successSummaryRow}>
+                <View style={styles.successSummaryIcon}>
+                  <Ionicons name="checkmark-circle" size={21} color="#149447" />
+                </View>
+
+                <View style={styles.successSummaryTextWrap}>
+                  <Text style={styles.successSummaryTitle}>
+                    {t("bookingSuccess.bookingConfirmed")}
+                  </Text>
+                  <Text style={styles.successSummaryText}>
+                    {spotsLeft} {t("gameCard.spotsLeft")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.successDoneButton,
+                pressed && styles.actionButtonPressed,
+              ]}
+              onPress={() => {
+                setSuccessModalVisible(false);
+                router.push("/bookings");
+              }}
+            >
+              <Text style={styles.successDoneButtonText}>
+                {t("bookingSuccess.viewMyBookings")}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
         visible={paymentModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() =>
-          setPaymentModalVisible(false)
-        }
+        onRequestClose={() => setPaymentModalVisible(false)}
       >
-        <View
-          style={styles.modalBackdrop}
-        >
+        <View style={styles.modalBackdrop}>
           <Pressable
-            style={
-              StyleSheet.absoluteFill
-            }
-            onPress={() =>
-              setPaymentModalVisible(
-                false,
-              )
-            }
+            style={StyleSheet.absoluteFill}
+            onPress={() => setPaymentModalVisible(false)}
           />
 
           <View style={styles.modalSheet}>
-            <View
-              style={styles.modalHandle}
-            />
+            <View style={styles.modalHandle} />
 
-            <Text
-              style={styles.modalTitle}
-            >
-              {t(
-                "gameCard.payOrganizer",
-              )}
-            </Text>
+            <Text style={styles.modalTitle}>{t("gameCard.payOrganizer")}</Text>
 
-            <Text
-              style={
-                styles.modalSubtitle
-              }
-            >
+            <Text style={styles.modalSubtitle}>
               {title} • {numericPrice} ETB
             </Text>
 
-            <View
-              style={styles.accountCard}
-            >
-              <View
-                style={styles.providerRow}
-              >
-                <View
-                  style={
-                    styles.providerIcon
-                  }
-                >
+            <View style={styles.accountCard}>
+              <View style={styles.providerRow}>
+                <View style={styles.providerIcon}>
                   <Ionicons
                     name="phone-portrait-outline"
                     size={20}
@@ -1106,110 +769,56 @@ export default function GameBookingAction({
                   />
                 </View>
 
-                <Text
-                  style={
-                    styles.providerName
-                  }
-                >
-                  {paymentDetails.payment_provider ??
-                    "Telebirr"}
+                <Text style={styles.providerName}>
+                  {paymentDetails.payment_provider ?? "Telebirr"}
                 </Text>
               </View>
 
-              <View
-                style={styles.numberRow}
-              >
-                <Text
-                  style={
-                    styles.phoneNumber
-                  }
-                >
-                  {paymentDetails.payment_phone ??
-                    t(
-                      "gameCard.notProvided",
-                    )}
+              <View style={styles.numberRow}>
+                <Text style={styles.phoneNumber}>
+                  {paymentDetails.payment_phone ?? t("gameCard.notProvided")}
                 </Text>
 
                 {!!paymentDetails.payment_phone && (
                   <Pressable
-                    style={
-                      styles.copyButton
-                    }
+                    style={styles.copyButton}
                     onPress={() =>
                       Clipboard.setString(
                         paymentDetails.payment_phone as string,
                       )
                     }
                   >
-                    <Ionicons
-                      name="copy-outline"
-                      size={17}
-                      color="#18C8FF"
-                    />
+                    <Ionicons name="copy-outline" size={17} color="#18C8FF" />
 
-                    <Text
-                      style={
-                        styles.copyText
-                      }
-                    >
-                      {t(
-                        "gameCard.copy",
-                      )}
-                    </Text>
+                    <Text style={styles.copyText}>{t("gameCard.copy")}</Text>
                   </Pressable>
                 )}
               </View>
 
-              <Text
-                style={
-                  styles.accountName
-                }
-              >
+              <Text style={styles.accountName}>
                 {paymentDetails.payment_account_name ??
-                  t(
-                    "gameCard.accountNameNotProvided",
-                  )}
+                  t("gameCard.accountNameNotProvided")}
               </Text>
             </View>
 
-            <View
-              style={styles.infoRow}
-            >
+            <View style={styles.infoRow}>
               <Ionicons
                 name="information-circle-outline"
                 size={19}
                 color="#8FA1AF"
               />
 
-              <Text
-                style={
-                  styles.modalInstructions
-                }
-              >
-                {paymentOfferExpiresAt &&
-                offerSecondsLeft !== null
-                  ? t(
-                      "gameCard.sendPaymentBeforeExpiry",
-                    )
-                      .replace(
-                        "{price}",
-                        String(
-                          numericPrice,
-                        ),
-                      )
+              <Text style={styles.modalInstructions}>
+                {paymentOfferExpiresAt && offerSecondsLeft !== null
+                  ? t("gameCard.sendPaymentBeforeExpiry")
+                      .replace("{price}", String(numericPrice))
                       .replace(
                         "{time}",
-                        formatOfferCountdown(
-                          offerSecondsLeft,
-                        ) ?? "00:00",
+                        formatOfferCountdown(offerSecondsLeft) ?? "00:00",
                       )
-                  : t(
-                      "gameCard.sendPaymentPending",
-                    ).replace(
+                  : t("gameCard.sendPaymentPending").replace(
                       "{price}",
-                      String(
-                        numericPrice,
-                      ),
+                      String(numericPrice),
                     )}
               </Text>
             </View>
@@ -1217,53 +826,24 @@ export default function GameBookingAction({
             <Pressable
               style={[
                 styles.modalPaidButton,
-                (joining ||
-                  offerExpiredLocally) &&
-                  styles.disabledButton,
+                (joining || offerExpiredLocally) && styles.disabledButton,
               ]}
-              onPress={
-                handleSubmitPayment
-              }
-              disabled={
-                joining ||
-                offerExpiredLocally
-              }
+              onPress={handleSubmitPayment}
+              disabled={joining || offerExpiredLocally}
             >
-              <Text
-                style={
-                  styles.modalPaidButtonText
-                }
-              >
+              <Text style={styles.modalPaidButtonText}>
                 {joining
-                  ? t(
-                      "gameCard.submittingPayment",
-                    )
-                  : t(
-                      "gameCard.ivePaid",
-                    )}
+                  ? t("gameCard.submittingPayment")
+                  : t("gameCard.ivePaid")}
               </Text>
             </Pressable>
 
             <Pressable
-              style={
-                styles.payLaterButton
-              }
-              onPress={() =>
-                setPaymentModalVisible(
-                  false,
-                )
-              }
+              style={styles.payLaterButton}
+              onPress={() => setPaymentModalVisible(false)}
               disabled={joining}
             >
-              <Text
-                style={
-                  styles.payLaterText
-                }
-              >
-                {t(
-                  "gameCard.payLater",
-                )}
-              </Text>
+              <Text style={styles.payLaterText}>{t("gameCard.payLater")}</Text>
             </Pressable>
           </View>
         </View>
@@ -1283,8 +863,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
     gap: 18,
   },
 
@@ -1413,10 +992,127 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
 
+  successBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(3, 11, 18, 0.82)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+
+  successCard: {
+    position: "relative",
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#07111F",
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: "#183044",
+    paddingHorizontal: 22,
+    paddingTop: 42,
+    paddingBottom: 22,
+    alignItems: "center",
+  },
+
+  successCloseButton: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#102231",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  successIcon: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    backgroundColor: "#149447",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+
+  successTitle: {
+    color: "#FFFFFF",
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.7,
+    textAlign: "center",
+  },
+
+  successGameTitle: {
+    color: "#AFC0CD",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: 7,
+  },
+
+  successSummary: {
+    width: "100%",
+    backgroundColor: "#102231",
+    borderWidth: 1,
+    borderColor: "#1C3A4E",
+    borderRadius: 18,
+    padding: 15,
+    marginTop: 24,
+  },
+
+  successSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  successSummaryIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#E9F8EF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  successSummaryTextWrap: {
+    flex: 1,
+  },
+
+  successSummaryTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  successSummaryText: {
+    color: "#8FA1AF",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+
+  successDoneButton: {
+    width: "100%",
+    minHeight: 54,
+    borderRadius: 15,
+    backgroundColor: c.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 18,
+  },
+
+  successDoneButtonText: {
+    color: "#07111F",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+
   modalBackdrop: {
     flex: 1,
-    backgroundColor:
-      "rgba(0,0,0,0.45)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
 
@@ -1489,8 +1185,7 @@ const styles = StyleSheet.create({
   numberRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
     gap: 12,
   },
 
