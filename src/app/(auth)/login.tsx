@@ -29,10 +29,15 @@ WebBrowser.maybeCompleteAuthSession();
 const LOGIN_HERO = require("../../../assets/images/login-hero.png");
 
 export default function LoginScreen() {
-  const [loading, setLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<
+    "google" | "telegram" | null
+  >(null);
+
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const { language, setLanguage, t } = useLanguage();
+
+  const loading = loadingProvider !== null;
 
   function showMessage(title: string, message: string) {
     if (Platform.OS === "web") {
@@ -60,10 +65,9 @@ export default function LoginScreen() {
 
     try {
       Keyboard.dismiss();
-      setLoading(true);
+      setLoadingProvider("google");
 
-      // WEB:
-      // Use the current website origin for the callback.
+      // WEB
       if (Platform.OS === "web") {
         const redirectTo = `${window.location.origin}/auth/callback`;
 
@@ -79,15 +83,14 @@ export default function LoginScreen() {
 
           showMessage(t("login.signInFailed"), error.message);
 
-          setLoading(false);
+          setLoadingProvider(null);
         }
 
         // On success Supabase redirects the browser.
         return;
       }
 
-      // ANDROID / NATIVE:
-      // Keep using the Addis Football deep link.
+      // ANDROID / NATIVE
       const redirectTo = Linking.createURL("auth/callback", {
         scheme: "addisfootball",
       });
@@ -198,9 +201,152 @@ export default function LoginScreen() {
         error?.message || t("login.tryAgain"),
       );
     } finally {
-      // On web, successful OAuth navigates away.
-      // This mainly resets Android or failed web attempts.
-      setLoading(false);
+      setLoadingProvider(null);
+    }
+  }
+
+  async function handleTelegramSignIn() {
+    if (loading) return;
+
+    try {
+      Keyboard.dismiss();
+      setLoadingProvider("telegram");
+
+      // WEB
+      if (Platform.OS === "web") {
+        const redirectTo = `${window.location.origin}/auth/callback`;
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "custom:telegram",
+          options: {
+            redirectTo,
+          },
+        });
+
+        if (error) {
+          console.log("Telegram web OAuth error:", error);
+
+          showMessage(t("login.signInFailed"), error.message);
+
+          setLoadingProvider(null);
+        }
+
+        // On success Supabase redirects the browser.
+        return;
+      }
+
+      // ANDROID / NATIVE
+      const redirectTo = Linking.createURL("auth/callback", {
+        scheme: "addisfootball",
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "custom:telegram",
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        console.log("Telegram OAuth error:", error);
+
+        showMessage(t("login.signInFailed"), error.message);
+
+        return;
+      }
+
+      if (!data?.url) {
+        showMessage(t("login.signInFailed"), t("login.unableToStart"));
+
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectTo,
+      );
+
+      if (result.type !== "success" || !result.url) {
+        return;
+      }
+
+      const returnedUrl = result.url;
+
+      const parsedUrl = Linking.parse(returnedUrl);
+
+      const code =
+        typeof parsedUrl.queryParams?.code === "string"
+          ? parsedUrl.queryParams.code
+          : null;
+
+      // PKCE response
+      if (code) {
+        const { error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.log("Telegram code exchange error:", exchangeError);
+
+          showMessage(t("login.signInFailed"), exchangeError.message);
+
+          return;
+        }
+
+        router.replace("/");
+        return;
+      }
+
+      // Implicit response fallback
+      const hashIndex = returnedUrl.indexOf("#");
+
+      if (hashIndex !== -1) {
+        const hash = returnedUrl.substring(hashIndex + 1);
+
+        const params = new URLSearchParams(hash);
+
+        const accessToken = params.get("access_token");
+
+        const refreshToken = params.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (sessionError) {
+            console.log("Telegram session error:", sessionError);
+
+            showMessage(t("login.signInFailed"), sessionError.message);
+
+            return;
+          }
+
+          router.replace("/");
+          return;
+        }
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        router.replace("/");
+        return;
+      }
+
+      showMessage(t("login.signInFailed"), t("login.sessionFailed"));
+    } catch (error: any) {
+      console.log("Telegram sign in error:", error);
+
+      showMessage(
+        t("login.somethingWrong"),
+        error?.message || t("login.tryAgain"),
+      );
+    } finally {
+      setLoadingProvider(null);
     }
   }
 
@@ -306,7 +452,58 @@ export default function LoginScreen() {
         {/* AUTH AREA */}
 
         <View style={styles.authArea}>
-          {/* GOOGLE */}
+          {/* TELEGRAM PRIMARY */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("login.continueTelegram")}
+            disabled={loading}
+            onPress={handleTelegramSignIn}
+            style={({ pressed }) => [
+              styles.telegramButton,
+              pressed && !loading && styles.telegramButtonPressed,
+              loading && styles.authButtonDisabled,
+            ]}
+          >
+            {loadingProvider === "telegram" ? (
+              <>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+
+                <Text style={styles.telegramButtonText}>
+                  {t("login.connecting")}
+                </Text>
+              </>
+            ) : (
+              <>
+                <View style={styles.telegramIconWrap}>
+                  <Ionicons name="paper-plane" size={25} color="#FFFFFF" />
+                </View>
+
+                <Text style={styles.telegramButtonText}>
+                  {t("login.continueTelegram")}
+                </Text>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={22}
+                  color="#FFFFFF"
+                  style={styles.authChevron}
+                />
+              </>
+            )}
+          </Pressable>
+
+          {/* OR */}
+
+          <View style={styles.orRow}>
+            <View style={styles.orLine} />
+
+            <Text style={styles.orText}>{t("login.or")}</Text>
+
+            <View style={styles.orLine} />
+          </View>
+
+          {/* GOOGLE SECONDARY */}
 
           <Pressable
             accessibilityRole="button"
@@ -315,15 +512,13 @@ export default function LoginScreen() {
             onPress={handleGoogleSignIn}
             style={({ pressed }) => [
               styles.googleButton,
-
               pressed && !loading && styles.googleButtonPressed,
-
-              loading && styles.googleButtonDisabled,
+              loading && styles.authButtonDisabled,
             ]}
           >
-            {loading ? (
+            {loadingProvider === "google" ? (
               <>
-                <ActivityIndicator size="small" color="#202124" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
 
                 <Text style={styles.googleButtonText}>
                   {t("login.connecting")}
@@ -342,8 +537,8 @@ export default function LoginScreen() {
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color="#8A949D"
-                  style={styles.googleChevron}
+                  color="#FFFFFF"
+                  style={styles.authChevron}
                 />
               </>
             )}
@@ -583,13 +778,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 5,
   },
 
-  ethiopianTagline: {
-    color: "rgba(255, 255, 255, 0.84)",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 5,
-  },
-
   authArea: {
     flex: 1,
 
@@ -598,28 +786,84 @@ const styles = StyleSheet.create({
     alignSelf: "center",
 
     paddingHorizontal: 22,
-    paddingTop: 28,
+    paddingTop: 24,
     paddingBottom: 22,
 
     backgroundColor: "#07111F",
   },
 
-  welcomeText: {
+  telegramButton: {
+    width: "100%",
+    minHeight: 62,
+
+    borderRadius: 18,
+
+    backgroundColor: "#229ED9",
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 54,
+
+    borderWidth: 1,
+    borderColor: "#3DC5FF",
+
+    shadowColor: "#229ED9",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.32,
+    shadowRadius: 13,
+
+    elevation: 6,
+  },
+
+  telegramButtonPressed: {
+    backgroundColor: "#168BC4",
+    transform: [{ scale: 0.99 }],
+  },
+
+  telegramIconWrap: {
+    position: "absolute",
+    left: 21,
+
+    width: 30,
+    height: 30,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  telegramButtonText: {
     color: "#FFFFFF",
-    fontSize: 20,
-    lineHeight: 27,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "900",
     textAlign: "center",
   },
 
-  authSubtitle: {
-    color: "#8FA1AF",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
+  orRow: {
+    width: "100%",
 
-    marginTop: 5,
-    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "center",
+
+    marginVertical: 18,
+  },
+
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#314657",
+  },
+
+  orText: {
+    color: "#8294A3",
+    fontSize: 12,
+    fontWeight: "900",
+
+    marginHorizontal: 16,
   },
 
   googleButton: {
@@ -628,7 +872,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 17,
 
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#0D1C2A",
 
     flexDirection: "row",
     alignItems: "center",
@@ -637,29 +881,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 52,
 
     borderWidth: 1,
-    borderColor: "#E5E9EC",
-
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-
-    elevation: 4,
+    borderColor: "#314657",
   },
 
   googleButtonPressed: {
-    backgroundColor: "#F4F6F7",
-    transform: [
-      {
-        scale: 0.99,
-      },
-    ],
+    backgroundColor: "#14283A",
+    transform: [{ scale: 0.99 }],
   },
 
-  googleButtonDisabled: {
+  authButtonDisabled: {
     opacity: 0.65,
   },
 
@@ -681,13 +911,13 @@ const styles = StyleSheet.create({
   },
 
   googleButtonText: {
-    color: "#17202A",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
     textAlign: "center",
   },
 
-  googleChevron: {
+  authChevron: {
     position: "absolute",
     right: 18,
   },

@@ -956,6 +956,8 @@ const om = {
     oromo: "Afaan Oromoo",
   },
   login: {
+    continueTelegram: "Telegramiin itti fufi",
+    or: "YKN",
     tagline: "Tapha barbaadi. Makami. Taphadhu.",
     continueGoogle: "Google'n itti fufi",
     connecting: "Wal qunnamaa jira...",

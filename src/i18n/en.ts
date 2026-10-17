@@ -601,6 +601,8 @@ const en = {
     createErrorFallback: "Something went wrong while creating the game.",
   },
   login: {
+    continueTelegram: "Continue with Telegram",
+    or: "OR",
     tagline: "Find a game. Join. Play.",
     continueGoogle: "Continue with Google",
     connecting: "Connecting...",

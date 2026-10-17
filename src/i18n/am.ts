@@ -909,6 +909,8 @@ const am = {
     oromo: "Afaan Oromoo",
   },
   login: {
+    continueTelegram: "በTelegram ይቀጥሉ",
+    or: "ወይም",
     tagline: "ጨዋታ ያግኙ። ይቀላቀሉ። ይጫወቱ።",
     continueGoogle: "በGoogle ይቀጥሉ",
     connecting: "በመገናኘት ላይ...",
