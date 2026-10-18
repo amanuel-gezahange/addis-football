@@ -59,6 +59,8 @@ export default function PaymentRequestsScreen() {
 
     const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
+    const [confirmedId, setConfirmedId] = useState<number | null>(null);
+
     const { t } = useLanguage();
 
     const loadRequests = useCallback(async () => {
@@ -79,13 +81,9 @@ export default function PaymentRequestsScreen() {
             }
 
             const { data: profile, error: profileError } = await supabase
-
                 .from("profiles")
-
                 .select("role")
-
                 .eq("id", user.id)
-
                 .maybeSingle();
 
             if (profileError) {
@@ -106,9 +104,7 @@ export default function PaymentRequestsScreen() {
             }
 
             const { data: paymentRows, error: paymentError } = await supabase
-
                 .from("payments")
-
                 .select(
                     `
          id,
@@ -122,9 +118,7 @@ export default function PaymentRequestsScreen() {
          submitted_at
        `,
                 )
-
                 .eq("status", "submitted")
-
                 .order("submitted_at", { ascending: true });
 
             if (paymentError) {
@@ -140,9 +134,7 @@ export default function PaymentRequestsScreen() {
             const gameIds = [
                 ...new Set(
                     paymentRows
-
                         .map((payment) => payment.game_id)
-
                         .filter((id): id is number => typeof id === "number"),
                 ),
             ];
@@ -150,19 +142,14 @@ export default function PaymentRequestsScreen() {
             const userIds = [
                 ...new Set(
                     paymentRows
-
                         .map((payment) => payment.user_id)
-
                         .filter((id): id is string => Boolean(id)),
                 ),
             ];
 
             const { data: games, error: gamesError } = await supabase
-
                 .from("games")
-
                 .select("id, title, organizer, payment_method")
-
                 .in("id", gameIds);
 
             if (gamesError) {
@@ -170,11 +157,8 @@ export default function PaymentRequestsScreen() {
             }
 
             const { data: players, error: playersError } = await supabase
-
                 .from("profiles")
-
                 .select("id, full_name, phone")
-
                 .in("id", userIds);
 
             if (playersError) {
@@ -279,7 +263,6 @@ export default function PaymentRequestsScreen() {
 
             const { data, error } = await supabase.rpc(
                 "confirm_organizer_payment",
-
                 {
                     p_booking_id: request.booking_id,
                 },
@@ -299,9 +282,18 @@ export default function PaymentRequestsScreen() {
                 );
             }
 
+            // Supabase has successfully confirmed the payment.
+            // Show a visible success state before removing the card.
+            setConfirmingId(null);
+            setConfirmedId(request.id);
+
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+
             setRequests((current) =>
                 current.filter((item) => item.id !== request.id),
             );
+
+            setConfirmedId(null);
         } catch (error: any) {
             console.log("Confirm payment error:", error);
 
@@ -360,6 +352,7 @@ export default function PaymentRequestsScreen() {
                     accessibilityLabel={t("paymentRequests.goBack")}
                 >
                     <Ionicons name="arrow-back" size={20} color="#087EA4" />
+
                     <Text style={styles.backText}>
                         {t("paymentRequests.back")}
                     </Text>
@@ -374,17 +367,12 @@ export default function PaymentRequestsScreen() {
 
             <ScrollView
                 style={styles.container}
-
                 contentContainerStyle={styles.content}
-
                 showsVerticalScrollIndicator={false}
-
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-
                         onRefresh={handleRefresh}
-
                         tintColor={COLORS.primary}
                     />
                 }
@@ -394,9 +382,7 @@ export default function PaymentRequestsScreen() {
                         <View style={styles.emptyIcon}>
                             <Ionicons
                                 name="checkmark-circle-outline"
-
                                 size={34}
-
                                 color={COLORS.primary}
                             />
                         </View>
@@ -412,6 +398,7 @@ export default function PaymentRequestsScreen() {
                 ) : (
                     requests.map((request) => {
                         const isConfirming = confirmingId === request.id;
+                        const isConfirmed = confirmedId === request.id;
 
                         return (
                             <View key={request.id} style={styles.card}>
@@ -419,9 +406,7 @@ export default function PaymentRequestsScreen() {
                                     <View style={styles.gameIcon}>
                                         <Ionicons
                                             name="football-outline"
-
                                             size={22}
-
                                             color={COLORS.primary}
                                         />
                                     </View>
@@ -497,9 +482,7 @@ export default function PaymentRequestsScreen() {
 
                                     <Ionicons
                                         name="wallet-outline"
-
                                         size={27}
-
                                         color={COLORS.primary}
                                     />
                                 </View>
@@ -507,9 +490,7 @@ export default function PaymentRequestsScreen() {
                                 <View style={styles.warningBox}>
                                     <Ionicons
                                         name="information-circle-outline"
-
                                         size={20}
-
                                         color="#9A6700"
                                     />
 
@@ -529,23 +510,52 @@ export default function PaymentRequestsScreen() {
                                 <Pressable
                                     style={[
                                         styles.confirmButton,
-
-                                        isConfirming && styles.disabledButton,
+                                        isConfirming && styles.confirmingButton,
+                                        isConfirmed && styles.confirmedButton,
                                     ]}
-
                                     onPress={() => handleMarkPaid(request)}
-
-                                    disabled={isConfirming}
+                                    disabled={isConfirming || isConfirmed}
                                 >
-                                    {isConfirming ? (
-                                        <ActivityIndicator color="#07111F" />
+                                    {isConfirmed ? (
+                                        <>
+                                            <Ionicons
+                                                name="checkmark-circle"
+                                                size={21}
+                                                color="#087A35"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.confirmedButtonText
+                                                }
+                                            >
+                                                {t(
+                                                    "paymentRequests.paymentConfirmed",
+                                                )}
+                                            </Text>
+                                        </>
+                                    ) : isConfirming ? (
+                                        <>
+                                            <ActivityIndicator
+                                                size="small"
+                                                color="#FFFFFF"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.confirmingButtonText
+                                                }
+                                            >
+                                                {t(
+                                                    "paymentRequests.confirming",
+                                                )}
+                                            </Text>
+                                        </>
                                     ) : (
                                         <>
                                             <Ionicons
                                                 name="checkmark-circle"
-
                                                 size={20}
-
                                                 color="#07111F"
                                             />
 
@@ -891,7 +901,31 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
 
-    disabledButton: {
-        opacity: 0.6,
+    confirmingButton: {
+        backgroundColor: "#16A34A",
+    },
+
+    confirmingButtonText: {
+        color: "#FFFFFF",
+
+        fontSize: 15,
+
+        fontWeight: "700",
+    },
+
+    confirmedButton: {
+        backgroundColor: "#EAF8EF",
+
+        borderWidth: 1,
+
+        borderColor: "#86D5A3",
+    },
+
+    confirmedButtonText: {
+        color: "#087A35",
+
+        fontSize: 15,
+
+        fontWeight: "800",
     },
 });

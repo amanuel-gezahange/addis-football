@@ -846,6 +846,8 @@ const en = {
   },
 
   paymentRequests: {
+    confirming: "Confirming...",
+    paymentConfirmed: "Payment confirmed",
     title: "Payment Requests",
     subtitle: "Review and confirm player payments",
     back: "Back",
@@ -957,6 +959,29 @@ const en = {
   },
 
   gameDetails: {
+    paymentConfirmed: "Payment confirmed",
+    paymentMethod: "Payment method",
+
+    youreAllSet: "You're all set! 🎉",
+    spotAndPaymentConfirmed:
+      "Your spot and payment are confirmed. Here's what to do next:",
+    spotConfirmedNextSteps:
+      "Your spot is confirmed. Here's what to do next:",
+
+    goToField: "Go to the field",
+    openDirectionsToGame:
+      "Open directions to the game location.",
+
+    arriveEarly: "Arrive 15 minutes early",
+    arriveEarlyDescription:
+      "Give yourself time to get ready before kickoff.",
+
+    findOrganizer: "Find the organizer",
+    findOrganizerDescription:
+      "Look for the game organizer when you arrive.",
+
+    directionsToField: "Directions to the field",
+    organizerPaymentNotice: "After reserving, you'll receive the organizer's payment details and time to complete your payment.",
     discover: "Discover",
     gameNotFound: "Game not found.",
     couldNotLoadGame: "We couldn't load this game.",

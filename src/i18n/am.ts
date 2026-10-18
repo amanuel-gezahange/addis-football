@@ -791,6 +791,8 @@ const am = {
   },
 
   paymentRequests: {
+    confirming: "በማረጋገጥ ላይ...",
+    paymentConfirmed: "ክፍያው ተረጋግጧል",
     title: "የክፍያ ጥያቄዎች",
     subtitle: "የተጫዋቾችን ክፍያ ይመልከቱና ያረጋግጡ",
     back: "ተመለስ",
@@ -923,6 +925,29 @@ const am = {
     tryAgain: "በGoogle መቀጠል አልተቻለም። እንደገና ይሞክሩ።",
   },
   gameDetails: {
+    paymentConfirmed: "ክፍያዎ ተረጋግጧል",
+    paymentMethod: "የክፍያ ዘዴ",
+
+    youreAllSet: "ሁሉም ዝግጁ ነው! 🎉",
+    spotAndPaymentConfirmed:
+      "ቦታዎ እና ክፍያዎ ተረጋግጧል። ቀጥሎ የሚያደርጉት:",
+    spotConfirmedNextSteps:
+      "ቦታዎ ተረጋግጧል። ቀጥሎ የሚያደርጉት:",
+
+    goToField: "ወደ ሜዳው ይሂዱ",
+    openDirectionsToGame:
+      "ወደ ጨዋታው ቦታ አቅጣጫ ይክፈቱ።",
+
+    arriveEarly: "15 ደቂቃ ቀድመው ይድረሱ",
+    arriveEarlyDescription:
+      "ጨዋታው ከመጀመሩ በፊት ለመዘጋጀት ጊዜ ይኖርዎታል።",
+
+    findOrganizer: "አዘጋጁን ያግኙ",
+    findOrganizerDescription:
+      "ሜዳው ሲደርሱ የጨዋታውን አዘጋጅ ያግኙ።",
+
+    directionsToField: "ወደ ሜዳው አቅጣጫ",
+    organizerPaymentNotice: "ቦታዎን ከያዙ በኋላ የአዘጋጁን የክፍያ መረጃ እና ክፍያውን የሚፈጽሙበትን ጊዜ ያገኛሉ።",
     discover: "ፈልግ",
     gameNotFound: "ጨዋታው አልተገኘም።",
     couldNotLoadGame: "ጨዋታውን መጫን አልተቻለም።",

@@ -13,7 +13,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import GameBookingAction from "../../components/GameBookingAction";
+import GameBookingAction, {
+  type GameBookingState,
+} from "../../components/GameBookingAction";
 import { COLORS } from "../../constants/colors";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { supabase } from "../../lib/supabase";
@@ -56,6 +58,12 @@ export default function GameDetailsScreen() {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [bookingState, setBookingState] = useState<GameBookingState>({
+    bookingStatus: null,
+    paymentStatus: null,
+    paymentMethod: Number(game?.price ?? 0) > 0 ? "organizer" : "free",
+    paymentProvider: null,
+  });
 
   useEffect(() => {
     loadGame();
@@ -87,10 +95,7 @@ export default function GameDetailsScreen() {
       }
 
       if (favoriteError) {
-        console.log(
-          "Favorite lookup error:",
-          favoriteError,
-        );
+        console.log("Favorite lookup error:", favoriteError);
         return;
       }
 
@@ -141,10 +146,7 @@ export default function GameDetailsScreen() {
       .single();
 
     if (gameError || !data) {
-      console.log(
-        "Game details error:",
-        gameError?.message,
-      );
+      console.log("Game details error:", gameError?.message);
 
       setError(t("gameDetails.couldNotLoadGame"));
       setGame(null);
@@ -215,11 +217,7 @@ export default function GameDetailsScreen() {
     const area = String(game.area ?? "").trim();
     const city = String(game.city ?? "").trim();
 
-    if (
-      area &&
-      city &&
-      !area.toLowerCase().includes(city.toLowerCase())
-    ) {
+    if (area && city && !area.toLowerCase().includes(city.toLowerCase())) {
       return `${area}, ${city}`;
     }
 
@@ -255,9 +253,7 @@ export default function GameDetailsScreen() {
       .trim()
       .toLowerCase();
 
-    const city = String(game.city)
-      .trim()
-      .toLowerCase();
+    const city = String(game.city).trim().toLowerCase();
 
     if (!city) return false;
 
@@ -312,22 +308,17 @@ export default function GameDetailsScreen() {
           throw deleteError;
         }
       } else {
-        const { error: insertError } = await supabase
-          .from("favorites")
-          .insert({
-            user_id: user.id,
-            game_id: game.id,
-          });
+        const { error: insertError } = await supabase.from("favorites").insert({
+          user_id: user.id,
+          game_id: game.id,
+        });
 
         if (insertError) {
           throw insertError;
         }
       }
     } catch (favoriteError) {
-      console.log(
-        "Favorite toggle error:",
-        favoriteError,
-      );
+      console.log("Favorite toggle error:", favoriteError);
 
       setIsFavorite(previousFavoriteState);
     } finally {
@@ -338,9 +329,7 @@ export default function GameDetailsScreen() {
   async function openLocation() {
     if (!game) return;
 
-    const savedMapsUrl = String(
-      game.maps_url ?? "",
-    ).trim();
+    const savedMapsUrl = String(game.maps_url ?? "").trim();
 
     const location = getLocation();
 
@@ -353,10 +342,7 @@ export default function GameDetailsScreen() {
     try {
       await Linking.openURL(targetUrl);
     } catch (locationError) {
-      console.log(
-        "Could not open game location:",
-        locationError,
-      );
+      console.log("Could not open game location:", locationError);
     }
   }
 
@@ -364,10 +350,7 @@ export default function GameDetailsScreen() {
     return (
       <SafeAreaView style={styles.loadingSafeArea}>
         <View style={styles.centerState}>
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       </SafeAreaView>
     );
@@ -377,15 +360,8 @@ export default function GameDetailsScreen() {
     return (
       <SafeAreaView style={styles.loadingSafeArea}>
         <View style={styles.errorScreen}>
-          <Pressable
-            style={styles.errorBackButton}
-            onPress={goBack}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={21}
-              color="#087EA4"
-            />
+          <Pressable style={styles.errorBackButton} onPress={goBack}>
+            <Ionicons name="arrow-back" size={21} color="#087EA4" />
 
             <Text style={styles.errorBackText}>
               {t("gameDetails.discover")}
@@ -394,11 +370,7 @@ export default function GameDetailsScreen() {
 
           <View style={styles.errorContent}>
             <View style={styles.errorIcon}>
-              <Ionicons
-                name="football-outline"
-                size={30}
-                color="#087EA4"
-              />
+              <Ionicons name="football-outline" size={30} color="#087EA4" />
             </View>
 
             <Text style={styles.errorTitle}>
@@ -406,10 +378,7 @@ export default function GameDetailsScreen() {
             </Text>
 
             <Text style={styles.errorText}>
-              {error ??
-                t(
-                  "gameDetails.gameCouldNotBeFound",
-                )}
+              {error ?? t("gameDetails.gameCouldNotBeFound")}
             </Text>
           </View>
         </View>
@@ -421,11 +390,16 @@ export default function GameDetailsScreen() {
   const timeRange = getTimeRange();
   const location = getLocation();
 
-  const isFull =
-    game.status === "full" ||
-    Number(game.spots_left ?? 0) <= 0;
+  const isFull = game.status === "full" || Number(game.spots_left ?? 0) <= 0;
 
   const isFree = Number(game.price ?? 0) === 0;
+  const isBookingConfirmed = bookingState.bookingStatus === "confirmed";
+
+  const isPaymentConfirmed =
+    isBookingConfirmed &&
+    (isFree ||
+      bookingState.paymentStatus === "paid" ||
+      bookingState.paymentMethod === "venue");
 
   const heroImage = game.image_url
     ? { uri: game.image_url }
@@ -449,10 +423,7 @@ export default function GameDetailsScreen() {
 
           <View style={styles.heroOverlay} />
 
-          <SafeAreaView
-            edges={["top"]}
-            style={styles.heroControls}
-          >
+          <SafeAreaView edges={["top"]} style={styles.heroControls}>
             <Pressable
               style={({ pressed }) => [
                 styles.heroButton,
@@ -462,11 +433,7 @@ export default function GameDetailsScreen() {
               hitSlop={8}
               accessibilityRole="button"
             >
-              <Ionicons
-                name="arrow-back"
-                size={23}
-                color="#FFFFFF"
-              />
+              <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
             </Pressable>
 
             <Pressable
@@ -480,17 +447,9 @@ export default function GameDetailsScreen() {
               accessibilityRole="button"
             >
               <Ionicons
-                name={
-                  isFavorite
-                    ? "heart"
-                    : "heart-outline"
-                }
+                name={isFavorite ? "heart" : "heart-outline"}
                 size={24}
-                color={
-                  isFavorite
-                    ? "#18BFF2"
-                    : "#FFFFFF"
-                }
+                color={isFavorite ? "#18BFF2" : "#FFFFFF"}
               />
             </Pressable>
           </SafeAreaView>
@@ -502,22 +461,13 @@ export default function GameDetailsScreen() {
           {/* TITLE */}
 
           <View style={styles.titleSection}>
-            <Text style={styles.title}>
-              {game.title}
-            </Text>
+            <Text style={styles.title}>{game.title}</Text>
 
             {!!location && (
               <View style={styles.titleLocationRow}>
-                <Ionicons
-                  name="location"
-                  size={16}
-                  color="#64748B"
-                />
+                <Ionicons name="location" size={16} color="#64748B" />
 
-                <Text
-                  style={styles.heroLocation}
-                  numberOfLines={2}
-                >
+                <Text style={styles.heroLocation} numberOfLines={2}>
                   {location}
                 </Text>
               </View>
@@ -539,14 +489,10 @@ export default function GameDetailsScreen() {
                   </View>
 
                   <View style={styles.scheduleText}>
-                    <Text style={styles.scheduleLabel}>
-                      {date}
-                    </Text>
+                    <Text style={styles.scheduleLabel}>{date}</Text>
 
                     {!!timeRange && (
-                      <Text style={styles.scheduleValue}>
-                        {timeRange}
-                      </Text>
+                      <Text style={styles.scheduleValue}>{timeRange}</Text>
                     )}
                   </View>
                 </View>
@@ -559,10 +505,7 @@ export default function GameDetailsScreen() {
           <View style={styles.quickDetails}>
             <QuickDetail
               icon="football-outline"
-              value={
-                game.format ||
-                t("gameDetails.notSpecified")
-              }
+              value={game.format || t("gameDetails.notSpecified")}
               label={t("gameDetails.format")}
             />
 
@@ -579,17 +522,12 @@ export default function GameDetailsScreen() {
             <QuickDetail
               icon="people-outline"
               value={
-                isFull
-                  ? t("gameDetails.gameFull")
-                  : String(game.spots_left)
+                isFull ? t("gameDetails.gameFull") : String(game.spots_left)
               }
               label={
                 isFull
                   ? t("gameDetails.availability")
-                  : t("gameDetails.spotsLeft").replace(
-                      "{count}",
-                      "",
-                    ).trim()
+                  : t("gameDetails.spotsLeft").replace("{count}", "").trim()
               }
               danger={isFull}
             />
@@ -600,29 +538,20 @@ export default function GameDetailsScreen() {
           {/* HOST */}
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("gameDetails.hostedBy")}
-            </Text>
+            <Text style={styles.sectionTitle}>{t("gameDetails.hostedBy")}</Text>
 
             <View style={styles.organizerCard}>
               <View style={styles.organizerAvatar}>
-                <Ionicons
-                  name="person"
-                  size={22}
-                  color={COLORS.primary}
-                />
+                <Ionicons name="person" size={22} color={COLORS.primary} />
               </View>
 
               <View style={styles.organizerText}>
                 <Text style={styles.organizerName}>
-                  {game.organizer ||
-                    t("gameDetails.organizer")}
+                  {game.organizer || t("gameDetails.organizer")}
                 </Text>
 
                 <Text style={styles.organizerLabel}>
-                  {t(
-                    "gameDetails.gameOrganizer",
-                  )}
+                  {t("gameDetails.gameOrganizer")}
                 </Text>
               </View>
 
@@ -650,8 +579,7 @@ export default function GameDetailsScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.locationCard,
-                    pressed &&
-                      styles.locationCardPressed,
+                    pressed && styles.locationCardPressed,
                   ]}
                   onPress={openLocation}
                 >
@@ -664,36 +592,20 @@ export default function GameDetailsScreen() {
                   </View>
 
                   <View style={styles.locationText}>
-                    <Text
-                      style={styles.locationName}
-                      numberOfLines={2}
-                    >
+                    <Text style={styles.locationName} numberOfLines={2}>
                       {location}
                     </Text>
 
-                    {shouldShowCitySeparately() &&
-                      !!game.city && (
-                        <Text
-                          style={
-                            styles.locationCity
-                          }
-                        >
-                          {game.city}
-                        </Text>
-                      )}
+                    {shouldShowCitySeparately() && !!game.city && (
+                      <Text style={styles.locationCity}>{game.city}</Text>
+                    )}
 
                     <Text style={styles.mapActionText}>
-                      {t(
-                        "gameDetails.viewOnMap",
-                      )}
+                      {t("gameDetails.viewOnMap")}
                     </Text>
                   </View>
 
-                  <Ionicons
-                    name="chevron-forward"
-                    size={21}
-                    color="#94A3B8"
-                  />
+                  <Ionicons name="chevron-forward" size={21} color="#94A3B8" />
                 </Pressable>
               </View>
             </>
@@ -704,53 +616,159 @@ export default function GameDetailsScreen() {
           {/* PAYMENT */}
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t("gameDetails.payment")}
-            </Text>
+            <Text style={styles.sectionTitle}>{t("gameDetails.payment")}</Text>
 
-            <View style={styles.paymentCard}>
-              <View style={styles.paymentTopRow}>
-                <View style={styles.paymentIcon}>
-                  <Ionicons
-                    name={
-                      isFree
-                        ? "checkmark-circle-outline"
-                        : "wallet-outline"
-                    }
-                    size={23}
-                    color={COLORS.primary}
-                  />
+            {isPaymentConfirmed ? (
+              <View style={styles.paymentConfirmedCard}>
+                <View style={styles.paymentConfirmedTop}>
+                  <View style={styles.paymentConfirmedIcon}>
+                    <Ionicons name="checkmark" size={22} color="#FFFFFF" />
+                  </View>
+
+                  <View style={styles.paymentConfirmedHeading}>
+                    <Text style={styles.paymentConfirmedTitle}>
+                      {t("gameDetails.paymentConfirmed")}
+                    </Text>
+
+                    <Text style={styles.paymentConfirmedPrice}>
+                      {isFree ? t("gameDetails.free") : `${game.price} ETB`}
+                    </Text>
+                  </View>
                 </View>
 
-                <Text style={styles.paymentPrice}>
+                {!isFree && bookingState.paymentProvider && (
+                  <View style={styles.paymentMethodRow}>
+                    <Text style={styles.paymentMethodLabel}>
+                      {t("gameDetails.paymentMethod")}
+                    </Text>
+
+                    <Text style={styles.paymentMethodValue}>
+                      {bookingState.paymentProvider}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.paymentCard}>
+                <View style={styles.paymentTopRow}>
+                  <View style={styles.paymentIcon}>
+                    <Ionicons
+                      name={
+                        isFree ? "checkmark-circle-outline" : "wallet-outline"
+                      }
+                      size={23}
+                      color={COLORS.primary}
+                    />
+                  </View>
+
+                  <Text style={styles.paymentPrice}>
+                    {isFree ? t("gameDetails.free") : `${game.price} ETB`}
+                  </Text>
+                </View>
+
+                <Text style={styles.paymentDescription}>
                   {isFree
-                    ? t("gameDetails.free")
-                    : `${game.price} ETB`}
+                    ? t("gameDetails.noPaymentRequired")
+                    : game.payment_method === "venue"
+                      ? t("gameDetails.paymentAtVenue")
+                      : game.payment_method === "organizer"
+                        ? t("gameDetails.organizerPaymentInstructions")
+                        : t("gameDetails.paymentDetailsAfterReservation")}
                 </Text>
               </View>
-
-              <Text style={styles.paymentDescription}>
-                {isFree
-                  ? t(
-                      "gameDetails.noPaymentRequired",
-                    )
-                  : game.payment_method === "venue"
-                    ? t(
-                        "gameDetails.paymentAtVenue",
-                      )
-                    : game.payment_method ===
-                        "organizer"
-                      ? t(
-                          "gameDetails.organizerPaymentInstructions",
-                        )
-                      : t(
-                          "gameDetails.paymentDetailsAfterReservation",
-                        )}
-              </Text>
-            </View>
+            )}
           </View>
 
           <View style={styles.bottomSpace} />
+          {isBookingConfirmed && (
+            <>
+              <View style={styles.divider} />
+
+              <View style={styles.section}>
+                <View style={styles.allSetHeader}>
+                  <View style={styles.allSetIcon}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={25}
+                      color="#149447"
+                    />
+                  </View>
+
+                  <View style={styles.allSetHeading}>
+                    <Text style={styles.allSetTitle}>
+                      {t("gameDetails.youreAllSet")}
+                    </Text>
+
+                    <Text style={styles.allSetSubtitle}>
+                      {isPaymentConfirmed && !isFree
+                        ? t("gameDetails.spotAndPaymentConfirmed")
+                        : t("gameDetails.spotConfirmedNextSteps")}
+                    </Text>
+                  </View>
+                </View>
+
+                {!!location && (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.nextStep,
+                      pressed && styles.nextStepPressed,
+                    ]}
+                    onPress={openLocation}
+                  >
+                    <View style={styles.stepNumber}>
+                      <Text style={styles.stepNumberText}>1</Text>
+                    </View>
+
+                    <View style={styles.stepContent}>
+                      <Text style={styles.stepTitle}>
+                        {t("gameDetails.goToField")}
+                      </Text>
+
+                      <Text style={styles.stepDescription}>
+                        {t("gameDetails.openDirectionsToGame")}
+                      </Text>
+                    </View>
+                  </Pressable>
+                )}
+
+                <View style={styles.nextStep}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>
+                      {location ? "2" : "1"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepTitle}>
+                      {t("gameDetails.arriveEarly")}
+                    </Text>
+
+                    <Text style={styles.stepDescription}>
+                      {t("gameDetails.arriveEarlyDescription")}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.nextStep}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>
+                      {location ? "3" : "2"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepTitle}>
+                      {t("gameDetails.findOrganizer")}
+                    </Text>
+
+                    <Text style={styles.stepDescription}>
+                      {t("gameDetails.findOrganizerDescription")}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -762,6 +780,8 @@ export default function GameDetailsScreen() {
         price={Number(game.price ?? 0)}
         spotsLeft={Number(game.spots_left ?? 0)}
         status={game.status}
+        onBookingStateChange={setBookingState}
+        onDirectionsPress={location ? openLocation : undefined}
         onSpotsChange={(nextSpotsLeft) => {
           setGame((currentGame) => {
             if (!currentGame) {
@@ -786,29 +806,16 @@ export default function GameDetailsScreen() {
 }
 
 type QuickDetailProps = {
-  icon:
-    | "football-outline"
-    | "speedometer-outline"
-    | "people-outline";
+  icon: "football-outline" | "speedometer-outline" | "people-outline";
   value: string;
   label: string;
   danger?: boolean;
 };
 
-function QuickDetail({
-  icon,
-  value,
-  label,
-  danger = false,
-}: QuickDetailProps) {
+function QuickDetail({ icon, value, label, danger = false }: QuickDetailProps) {
   return (
     <View style={styles.quickDetail}>
-      <View
-        style={[
-          styles.quickIcon,
-          danger && styles.quickIconDanger,
-        ]}
-      >
+      <View style={[styles.quickIcon, danger && styles.quickIconDanger]}>
         <Ionicons
           name={icon}
           size={21}
@@ -817,19 +824,13 @@ function QuickDetail({
       </View>
 
       <Text
-        style={[
-          styles.quickValue,
-          danger && styles.quickValueDanger,
-        ]}
+        style={[styles.quickValue, danger && styles.quickValueDanger]}
         numberOfLines={1}
       >
         {value}
       </Text>
 
-      <Text
-        style={styles.quickLabel}
-        numberOfLines={1}
-      >
+      <Text style={styles.quickLabel} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -1304,5 +1305,147 @@ const styles = StyleSheet.create({
 
   bottomSpace: {
     height: 28,
+  },
+  paymentConfirmedCard: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#F0FAF4",
+    borderWidth: 1,
+    borderColor: "#B8E7C9",
+  },
+
+  paymentConfirmedTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  paymentConfirmedIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#149447",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  paymentConfirmedHeading: {
+    flex: 1,
+  },
+
+  paymentConfirmedTitle: {
+    color: "#149447",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  paymentConfirmedPrice: {
+    color: "#17202A",
+    fontSize: 23,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  paymentMethodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#D6EDDF",
+  },
+
+  paymentMethodLabel: {
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  paymentMethodValue: {
+    color: "#17202A",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  allSetHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 11,
+    marginBottom: 18,
+  },
+
+  allSetIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#E9F8EF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  allSetHeading: {
+    flex: 1,
+  },
+
+  allSetTitle: {
+    color: "#17202A",
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  allSetSubtitle: {
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+
+  nextStep: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EDF1F3",
+  },
+
+  nextStepPressed: {
+    opacity: 0.65,
+  },
+
+  stepNumber: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#E4F8FE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  stepNumberText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  stepContent: {
+    flex: 1,
+  },
+
+  stepTitle: {
+    color: "#17202A",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  stepDescription: {
+    color: "#64748B",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 3,
   },
 });

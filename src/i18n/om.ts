@@ -103,6 +103,29 @@ const om = {
   },
 
   gameCard: {
+    paymentConfirmed: "Kaffaltiin kee mirkanaa'eera",
+    paymentMethod: "Mala kaffaltii",
+
+    youreAllSet: "Hunduu qophaa'eera! 🎉",
+    spotAndPaymentConfirmed:
+      "Iddoon kee fi kaffaltiin kee mirkanaa'eera. Itti aansuun kana godhi:",
+    spotConfirmedNextSteps:
+      "Iddoon kee mirkanaa'eera. Itti aansuun kana godhi:",
+
+    goToField: "Gara dirree deemi",
+    openDirectionsToGame:
+      "Karaa gara bakka taphaatti geessu bani.",
+
+    arriveEarly: "Daqiiqaa 15 dursii ga'i",
+    arriveEarlyDescription:
+      "Tapha dura qophaa'uuf yeroo qabaatta.",
+
+    findOrganizer: "Qindeessaa taphaa barbaadi",
+    findOrganizerDescription:
+      "Yeroo geessu qindeessaa taphaa barbaadi.",
+
+    directionsToField: "Karaa gara dirreetti",
+    organizerPaymentNotice: "Iddoo erga qabattee booda odeeffannoo kaffaltii qindeessaa fi yeroo kaffaltii itti raawwattu argatta.",
     viewDetails: "Bal'inaan ilaali",
     viewGameDetails: "{game}. Odeeffannoo taphaa bal'inaan ilaali.",
     viewDetailsFor: "Odeeffannoo {game} bal'inaan ilaali",
@@ -836,6 +859,8 @@ const om = {
   },
 
   paymentRequests: {
+    confirming: "Mirkaneessaa jira...",
+    paymentConfirmed: "Kaffaltiin mirkanaa'eera",
     title: "Gaaffii Kaffaltii",
     subtitle: "Kaffaltii taphattootaa ilaaliitii mirkaneessi",
     back: "Deebi'i",

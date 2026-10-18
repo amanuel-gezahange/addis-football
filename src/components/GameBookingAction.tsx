@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   Clipboard,
   Modal,
@@ -27,6 +27,13 @@ type PaymentDetails = {
   payment_account_name: string | null;
 };
 
+export type GameBookingState = {
+  bookingStatus: "confirmed" | "waitlisted" | "pending_payment" | null;
+  paymentStatus: string | null;
+  paymentMethod: "free" | "venue" | "organizer";
+  paymentProvider: string | null;
+};
+
 type Props = {
   gameId: string | number;
   title: string;
@@ -34,6 +41,8 @@ type Props = {
   spotsLeft: number;
   status: string | null;
   onSpotsChange?: (spotsLeft: number) => void;
+  onBookingStateChange?: (state: GameBookingState) => void;
+  onDirectionsPress?: () => void;
 };
 
 export default function GameBookingAction({
@@ -43,6 +52,8 @@ export default function GameBookingAction({
   spotsLeft: initialSpotsLeft,
   status,
   onSpotsChange,
+  onBookingStateChange,
+  onDirectionsPress,
 }: Props) {
   const { t } = useLanguage();
 
@@ -99,6 +110,25 @@ export default function GameBookingAction({
   useEffect(() => {
     setSpotsLeft(Number(initialSpotsLeft ?? 0));
   }, [initialSpotsLeft]);
+  useEffect(() => {
+    if (stateLoading) {
+      return;
+    }
+
+    onBookingStateChange?.({
+      bookingStatus,
+      paymentStatus,
+      paymentMethod: paymentDetails.payment_method,
+      paymentProvider: paymentDetails.payment_provider,
+    });
+  }, [
+    stateLoading,
+    bookingStatus,
+    paymentStatus,
+    paymentDetails.payment_method,
+    paymentDetails.payment_provider,
+    onBookingStateChange,
+  ]);
 
   function updateSpots(nextSpotsLeft: number) {
     setSpotsLeft(nextSpotsLeft);
@@ -232,9 +262,11 @@ export default function GameBookingAction({
     setStateLoading(false);
   }
 
-  useEffect(() => {
-    loadState();
-  }, [gameId, numericPrice]);
+  useFocusEffect(
+    useCallback(() => {
+      loadState();
+    }, [gameId, numericPrice]),
+  );
 
   useEffect(() => {
     if (!paymentOfferExpiresAt || !isPendingPayment || isPaymentSubmitted) {
@@ -315,7 +347,7 @@ export default function GameBookingAction({
       }
 
       if (isPaymentSubmitted) {
-        setPaymentMessage(t("gameCard.paymentSubmitted"));
+        setPaymentMessage(null);
 
         return;
       }
@@ -515,7 +547,9 @@ export default function GameBookingAction({
       if (data?.success) {
         setPaymentStatus("submitted");
 
-        setPaymentMessage(t("gameCard.paymentSubmitted"));
+        // The CTA already communicates the submitted state.
+        // Keep the sticky footer clean instead of showing a duplicate banner.
+        setPaymentMessage(null);
 
         setPaymentModalVisible(false);
       }
@@ -588,48 +622,84 @@ export default function GameBookingAction({
 
   return (
     <>
-      <View style={[styles.wrapper, useStackedFooter && styles.wrapperStacked]}>
-        <View
-          style={[
-            styles.footerInfo,
-            useStackedFooter && styles.footerInfoStacked,
-          ]}
-        >
-          <Text style={styles.price}>
-            {numericPrice === 0 ? t("gameCard.free") : `${numericPrice} ETB`}
-          </Text>
+      {isConfirmed ? (
+        <View style={styles.confirmedFooter}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.directionsButton,
+              pressed && styles.directionsButtonPressed,
+            ]}
+            onPress={onDirectionsPress}
+            disabled={!onDirectionsPress}
+            accessibilityRole="button"
+          >
+            <Ionicons name="navigate" size={20} color="#07111F" />
 
-          <Text style={[styles.spots, isFull && styles.spotsFull]}>
-            {isFull
-              ? t("gameCard.gameFull")
-              : `${spotsLeft} ${t("gameCard.spotsLeft")}`}
-          </Text>
+            <Text style={styles.directionsButtonText}>
+              {t("gameDetails.directionsToField")}
+            </Text>
+
+            <Ionicons name="arrow-forward" size={20} color="#07111F" />
+          </Pressable>
         </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionButton,
-            useStackedFooter && styles.actionButtonStacked,
-            isFull && !bookingStatus && styles.waitlistButton,
-            (actionDisabled || pressed) && styles.actionButtonPressed,
-          ]}
-          onPress={handleJoinGame}
-          disabled={actionDisabled}
+      ) : (
+        <View
+          style={[styles.wrapper, useStackedFooter && styles.wrapperStacked]}
         >
-          <Text
+          <View
             style={[
-              styles.actionButtonText,
-              isFull && !bookingStatus && styles.waitlistButtonText,
+              styles.footerInfo,
+              useStackedFooter && styles.footerInfoStacked,
             ]}
           >
-            {getButtonText()}
-          </Text>
+            <Text style={styles.price}>
+              {numericPrice === 0 ? t("gameCard.free") : `${numericPrice} ETB`}
+            </Text>
 
-          {joining && (
-            <Ionicons name="ellipsis-horizontal" size={18} color="#07111F" />
-          )}
-        </Pressable>
-      </View>
+            <Text style={[styles.spots, isFull && styles.spotsFull]}>
+              {isFull
+                ? t("gameCard.gameFull")
+                : `${spotsLeft} ${t("gameCard.spotsLeft")}`}
+            </Text>
+          </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+
+              useStackedFooter && styles.actionButtonStacked,
+
+              isFull && !bookingStatus && styles.waitlistButton,
+
+              useStackedFooter && styles.waitingForOrganizerButton,
+
+              pressed && !actionDisabled && styles.actionButtonPressed,
+            ]}
+            onPress={handleJoinGame}
+            disabled={actionDisabled}
+          >
+            {useStackedFooter && (
+              <Ionicons name="checkmark-circle" size={19} color="#149447" />
+            )}
+
+            <Text
+              style={[
+                styles.actionButtonText,
+
+                isFull && !bookingStatus && styles.waitlistButtonText,
+
+                useStackedFooter && styles.waitingForOrganizerButtonText,
+              ]}
+            >
+              {getButtonText()}
+            </Text>
+
+            {joining && (
+              <Ionicons name="ellipsis-horizontal" size={18} color="#07111F" />
+            )}
+          </Pressable>
+        </View>
+      )}
 
       {isPendingPayment &&
         !isPaymentSubmitted &&
@@ -853,6 +923,39 @@ export default function GameBookingAction({
 }
 
 const styles = StyleSheet.create({
+  confirmedFooter: {
+    minHeight: 82,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E5E5",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+
+  directionsButton: {
+    width: "100%",
+    minHeight: 54,
+    borderRadius: 15,
+    backgroundColor: c.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+  },
+
+  directionsButtonPressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.99 }],
+  },
+
+  directionsButtonText: {
+    color: "#07111F",
+    fontSize: 16,
+    fontWeight: "900",
+    flexShrink: 1,
+    textAlign: "center",
+  },
   wrapper: {
     minHeight: 86,
     backgroundColor: "#FFFFFF",
@@ -915,6 +1018,25 @@ const styles = StyleSheet.create({
   actionButtonStacked: {
     width: "100%",
     minWidth: 0,
+  },
+
+  waitingForOrganizerButton: {
+    backgroundColor: "#E9F8EF",
+    borderWidth: 1,
+    borderColor: "#B8E7C9",
+  },
+
+  waitingForOrganizerButtonText: {
+    color: "#149447",
+  },
+  confirmedButton: {
+    backgroundColor: "#E9F8EF",
+    borderWidth: 1,
+    borderColor: "#B8E7C9",
+  },
+
+  confirmedButtonText: {
+    color: "#149447",
   },
 
   actionButtonText: {
