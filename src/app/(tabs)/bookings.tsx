@@ -21,8 +21,6 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import ConfirmModal from "../../components/ConfirmModal";
-
 import { COLORS } from "../../constants/colors";
 
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -1417,51 +1415,75 @@ export default function BookingsScreen() {
         </View>
       </Modal>
 
-      <ConfirmModal
+      <Modal
         visible={selectedBooking !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closeCancellationModal}
+      >
+        <Pressable
+          style={styles.cancelModalOverlay}
+          onPress={closeCancellationModal}
+        >
+          <Pressable
+            style={styles.cancelModalSheet}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.cancelModalHandle} />
 
-        title={
-          selectedIsWaitlisted
-            ? t("bookings.leaveWaitlistQuestion")
-            : t("bookings.cancelBookingQuestion")
-        }
+            <Text style={styles.cancelModalTitle}>
+              {selectedIsWaitlisted
+                ? t("bookings.leaveWaitlistQuestion")
+                : t("bookings.cancelBookingQuestion")}
+            </Text>
 
-        message={
-          errorMessage
-            ? `${t("bookings.somethingWentWrong")} ${errorMessage}`
-            : selectedIsWaitlisted
-              ? `${t("bookings.leaveWaitlistMessage")} ${
-                  selectedBooking?.games?.title ?? t("bookings.thisGame")
-                }? ${t("bookings.leaveWaitlistHistory")}`
-              : selectedIsOrganizerPaid
-                ? t("bookings.cancelOrganizerPaidMessage").replace(
-                    "{game}",
+            <Text style={styles.cancelModalMessage}>
+              {errorMessage
+                ? `${t("bookings.somethingWentWrong")} ${errorMessage}`
+                : selectedIsWaitlisted
+                  ? t("bookings.leaveWaitlistHistory")
+                  : selectedIsOrganizerPaid
+                    ? t("bookings.cancelOrganizerPaidMessage").replace(
+                        "{game}",
+                        selectedBooking?.games?.title ?? t("bookings.thisGame"),
+                      )
+                    : t("bookings.cancelNormalMessage")}
+            </Text>
 
-                    selectedBooking?.games?.title ?? t("bookings.thisGame"),
-                  )
-                : `${t("bookings.cancelBooking")} ${
-                    selectedBooking?.games?.title ?? t("bookings.thisGame")
-                  }? ${t("bookings.cancelNormalMessage")}`
-        }
+            <Pressable
+              style={({ pressed }) => [
+                styles.keepBookingButton,
+                pressed && styles.cancelModalButtonPressed,
+              ]}
+              onPress={closeCancellationModal}
+              disabled={cancellingId !== null}
+            >
+              <Text style={styles.keepBookingButtonText}>
+                {t("bookings.keepBooking")}
+              </Text>
+            </Pressable>
 
-        cancelText={t("bookings.keepBooking")}
-
-        confirmText={
-          selectedIsWaitlisted
-            ? t("bookings.leaveWaitlist")
-            : t("bookings.cancelBooking")
-        }
-
-        destructive
-
-        loading={
-          selectedBooking !== null && cancellingId === selectedBooking.id
-        }
-
-        onCancel={closeCancellationModal}
-
-        onConfirm={cancelSelectedBooking}
-      />
+            <Pressable
+              style={({ pressed }) => [
+                styles.confirmCancelButton,
+                pressed && styles.cancelModalButtonPressed,
+              ]}
+              onPress={cancelSelectedBooking}
+              disabled={cancellingId !== null}
+            >
+              {cancellingId !== null ? (
+                <ActivityIndicator size="small" color="#D92D20" />
+              ) : (
+                <Text style={styles.confirmCancelButtonText}>
+                  {selectedIsWaitlisted
+                    ? t("bookings.leaveWaitlist")
+                    : t("bookings.cancelBooking")}
+                </Text>
+              )}
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1939,6 +1961,76 @@ function EthiopianCalendar({
 }
 
 const styles = StyleSheet.create({
+  cancelModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.58)",
+    justifyContent: "flex-end",
+  },
+
+  cancelModalSheet: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 34,
+  },
+
+  cancelModalHandle: {
+    width: 44,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#D9DDE3",
+    alignSelf: "center",
+    marginBottom: 28,
+  },
+
+  cancelModalTitle: {
+    color: "#111827",
+    fontSize: 27,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+
+  cancelModalMessage: {
+    color: "#667085",
+    fontSize: 16,
+    lineHeight: 24,
+    marginTop: 12,
+    marginBottom: 28,
+  },
+
+  keepBookingButton: {
+    minHeight: 56,
+    borderRadius: 17,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+
+  keepBookingButtonText: {
+    color: "#07111F",
+    fontSize: 17,
+    fontWeight: "900",
+  },
+
+  confirmCancelButton: {
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+
+  confirmCancelButtonText: {
+    color: "#D92D20",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  cancelModalButtonPressed: {
+    opacity: 0.7,
+  },
   bookingFilterOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
