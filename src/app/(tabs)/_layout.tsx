@@ -86,7 +86,6 @@ export default function TabLayout() {
                   bottomInset + 8,
 
                 elevation: 0,
-                shadowOpacity: 0,
               },
 
           tabBarItemStyle: isDesktopWeb

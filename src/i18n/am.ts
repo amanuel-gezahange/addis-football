@@ -26,7 +26,7 @@ const am = {
   bookingSuccess: {
     youreIn: "ገብተዋል!",
     bookingConfirmed: "ቦታዎ ተረጋግጧል",
-    viewMyBookings: "የተመዘገብኳቸውን ጨዋታዎች ይመልከቱ",
+    viewMyBookings: "የእኔ ጨዋታዎች",
     spotConfirmed: "የጨዋታ ቦታዎ ተረጋግጧል።",
   },
 
@@ -103,6 +103,9 @@ const am = {
   },
 
   gameCard: {
+    waitlistSuccessTitle: "ተጠባባቂ ዝርዝር ላይ ነዎት",
+    waitlistSuccessSubtitle: "ቦታ ሲኖር እናሳውቅዎታለን።",
+    gotIt: "እሺ",
     viewDetails: "ዝርዝር ይመልከቱ",
     viewGameDetails: "{game}። የጨዋታውን ዝርዝር ይመልከቱ።",
     viewDetailsFor: "የ{game}ን ዝርዝር ይመልከቱ",
@@ -301,10 +304,13 @@ const am = {
 
   bookings: {
     searchPlaceholder: "ጨዋታ፣ ቦታ ወይም አዘጋጅ ይፈልጉ",
+    successUpdateSaved: "ለውጡ ተደርጓል።",
     openCalendar: "የቀን መቁጠሪያ ይክፈቱ",
     chooseDate: "ቀን ይምረጡ",
     calendarSubtitle: "የሚመጡ ቦታ ማስያዣዎችዎን በቀን ይፈልጉ",
     title: "የእኔ ጨዋታዎች",
+    leftWaitlistSuccess: "ከተጠባባቂ ዝርዝሩ ወጥተዋል።",
+    bookingCancelledSuccess: "የጨዋታ ምዝገባዎ ተሰርዟል።",
 
     subtitle: "የጨዋታ ምዝገባዎችዎ እና ታሪክ",
 

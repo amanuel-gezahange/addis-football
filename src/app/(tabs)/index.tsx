@@ -1669,13 +1669,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDDDDD",
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
     elevation: 1,
   },
 
@@ -1708,13 +1702,7 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     backgroundColor: "#FFFFFF",
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
     elevation: 1,
   },
 
@@ -2055,13 +2043,7 @@ const styles = StyleSheet.create({
     borderColor: "#DDDDDD",
     padding: 18,
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
+    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
     elevation: 8,
   },
 

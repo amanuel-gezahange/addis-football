@@ -161,7 +161,7 @@ export default function ProfileScreen() {
       .update({
         full_name: fullName.trim(),
 
-        phone: user.phone || phone,
+        phone: phone.trim() || null,
 
         skill_level: skillLevel || null,
       })
@@ -410,20 +410,17 @@ export default function ProfileScreen() {
             blurOnSubmit
           />
           <Text style={styles.cardLabel}>{t("profile.phone")}</Text>
-          <View style={styles.phoneBox}>
-            <Ionicons
-              name="call-outline"
-              size={20}
-              color={COLORS.textSecondary}
-            />
-            <Text style={styles.phoneBoxText}>{phone}</Text>
-            <Ionicons
-              name="lock-closed-outline"
-              size={17}
-              color={COLORS.textMuted}
-            />
-          </View>
-          <Text style={styles.cardHelp}>{t("profile.phoneHelp")}</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="+251 9..."
+            placeholderTextColor={COLORS.textMuted}
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            returnKeyType="done"
+            blurOnSubmit
+          />
           <Text style={styles.cardLabel}>{t("profile.skillLevel")}</Text>
           <View style={styles.skillContainer}>
             {skillLevels.map((level) => {

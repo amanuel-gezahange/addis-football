@@ -26,7 +26,7 @@ const om = {
   bookingSuccess: {
     youreIn: "Seenteetta!",
     bookingConfirmed: "Iddoon kee mirkanaa’eera",
-    viewMyBookings: "Taphoota galmaa’e koo ilaali",
+    viewMyBookings: "Taphoota koo",
     spotConfirmed: "Iddoon taphaa kee mirkanaa’eera.",
   },
 
@@ -105,6 +105,9 @@ const om = {
   gameCard: {
     paymentConfirmed: "Kaffaltiin kee mirkanaa'eera",
     paymentMethod: "Mala kaffaltii",
+    waitlistSuccessTitle: "Tarree eegumsaa keessa jirta",
+    waitlistSuccessSubtitle: "Yeroo iddoon argamu si beeksifna.",
+    gotIt: "Tole",
 
     youreAllSet: "Hunduu qophaa'eera! 🎉",
     spotAndPaymentConfirmed:
@@ -346,10 +349,13 @@ const om = {
 
   bookings: {
     searchPlaceholder: "Tapha, bakka ykn qopheessaa barbaadi",
+    successUpdateSaved: "Galmeen taphaa kee haaromfameera.",
     openCalendar: "Kaalaandarii bani",
     chooseDate: "Guyyaa fili",
     calendarSubtitle: "Qabannaa dhufaa jiru guyyaadhaan barbaadi",
     title: "Taphoota Koo",
+    leftWaitlistSuccess: "Tarree eegumsaa keessaa baateetta.",
+    bookingCancelledSuccess: "Galmeen taphaa kee haqameera.",
 
     subtitle: "Taphoota qabatte fi seenaa qabannaa kee",
 

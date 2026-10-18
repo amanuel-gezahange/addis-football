@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { router, useFocusEffect } from "expo-router";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
 import {
   ActivityIndicator,
@@ -138,6 +138,7 @@ export default function BookingsScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
@@ -150,6 +151,17 @@ export default function BookingsScreen() {
   const [bookingStatusFilter, setBookingStatusFilter] = useState<
     "all" | "confirmed" | "payment_required" | "waitlisted"
   >("all");
+  useEffect(() => {
+    if (!successMessage) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   useFocusEffect(
     useCallback(() => {
@@ -461,6 +473,8 @@ export default function BookingsScreen() {
 
     const booking = selectedBooking;
 
+    const wasWaitlisted = booking.status === "waitlisted";
+
     const game = booking.games;
 
     if (!game) {
@@ -530,9 +544,25 @@ export default function BookingsScreen() {
 
       setErrorMessage(null);
 
+      setSuccessMessage(
+        wasWaitlisted
+          ? t("bookings.leftWaitlistSuccess")
+          : t("bookings.bookingCancelledSuccess"),
+      );
+
       await fetchBookings();
     } catch (error: any) {
       console.log("Cancel booking error:", error?.message || error);
+
+      const message = String(error?.message ?? "").toLowerCase();
+
+      if (message.includes("already cancelled")) {
+        setSelectedBooking(null);
+        setErrorMessage(null);
+
+        await fetchBookings();
+        return;
+      }
 
       setErrorMessage(error?.message || t("bookings.couldNotCancelBooking"));
     } finally {
@@ -560,6 +590,27 @@ export default function BookingsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      {successMessage && (
+        <View style={styles.successBanner}>
+          <View style={styles.successBannerIcon}>
+            <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+          </View>
+
+          <View style={styles.successBannerContent}>
+            <Text style={styles.successBannerText}>{successMessage}</Text>
+
+            <Text style={styles.successBannerSubtext}>
+              {t("bookings.successUpdateSaved")}
+            </Text>
+          </View>
+
+          <Pressable onPress={() => setSuccessMessage(null)} hitSlop={10}>
+            <Ionicons name="close" size={22} color="#344054" />
+          </Pressable>
+
+          <View style={styles.successBannerProgress} />
+        </View>
+      )}
       <ScrollView
         style={styles.container}
 
@@ -1961,6 +2012,70 @@ function EthiopianCalendar({
 }
 
 const styles = StyleSheet.create({
+  successBanner: {
+    position: "absolute",
+    top: 12,
+    left: 16,
+    right: 16,
+    zIndex: 100,
+    elevation: 10,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    backgroundColor: "#F7FFF9",
+    borderWidth: 1,
+    borderColor: "#D1FADF",
+    borderRadius: 18,
+
+    paddingHorizontal: 16,
+    paddingTop: 15,
+    paddingBottom: 18,
+
+    boxShadow: "0 6px 14px rgba(0, 0, 0, 0.16)",
+
+    overflow: "hidden",
+  },
+
+  successBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#22C55E",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  successBannerContent: {
+    flex: 1,
+    paddingRight: 10,
+  },
+
+  successBannerText: {
+    color: "#101828",
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "900",
+  },
+
+  successBannerSubtext: {
+    color: "#667085",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+    marginTop: 2,
+  },
+
+  successBannerProgress: {
+    position: "absolute",
+    left: 0,
+    bottom: 0,
+    width: "65%",
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "#22C55E",
+  },
   cancelModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.58)",
@@ -2173,10 +2288,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 6,
     backgroundColor: "#FFFFFF",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
     elevation: 1,
   },
 

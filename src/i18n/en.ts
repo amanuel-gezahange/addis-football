@@ -26,7 +26,7 @@ const en = {
   bookingSuccess: {
     youreIn: "You’re in!",
     bookingConfirmed: "Booking confirmed",
-    viewMyBookings: "View my bookings",
+    viewMyBookings: "My bookings",
     spotConfirmed: "Your spot is confirmed.",
   },
 
@@ -103,6 +103,9 @@ const en = {
   },
 
   gameCard: {
+    waitlistSuccessTitle: "You’re on the waitlist",
+    waitlistSuccessSubtitle: "We’ll let you know when a spot opens.",
+    gotIt: "Got it",
     viewDetails: "View details",
     viewGameDetails: "{game}. View game details.",
     viewDetailsFor: "View details for {game}",
@@ -321,7 +324,10 @@ const en = {
     openCalendar: "Open calendar",
     chooseDate: "Choose a date",
     calendarSubtitle: "Filter your upcoming bookings by date",
+    successUpdateSaved: "Your booking has been updated.",
     title: "Bookings",
+    leftWaitlistSuccess: "You’re off the waitlist.",
+    bookingCancelledSuccess: "Your booking has been cancelled.",
 
     subtitle: "Your games and booking history",
 

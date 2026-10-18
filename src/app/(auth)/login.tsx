@@ -676,13 +676,7 @@ const styles = StyleSheet.create({
 
     backgroundColor: "#FFFFFF",
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
+   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.18)",
 
     elevation: 8,
   },
@@ -740,13 +734,6 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     fontWeight: "900",
     letterSpacing: -1.8,
-
-    textShadowColor: "rgba(0, 0, 0, 0.32)",
-    textShadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    textShadowRadius: 8,
   },
 
   brandAccent: {
@@ -755,13 +742,6 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     fontWeight: "900",
     letterSpacing: -1.8,
-
-    textShadowColor: "rgba(0, 0, 0, 0.32)",
-    textShadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    textShadowRadius: 8,
   },
 
   heroTagline: {
@@ -769,13 +749,6 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: "700",
     marginTop: 11,
-
-    textShadowColor: "rgba(0, 0, 0, 0.45)",
-    textShadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    textShadowRadius: 5,
   },
 
   authArea: {
@@ -809,13 +782,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#3DC5FF",
 
-    shadowColor: "#229ED9",
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.32,
-    shadowRadius: 13,
+   boxShadow: "0 5px 13px rgba(34, 158, 217, 0.32)",
 
     elevation: 6,
   },

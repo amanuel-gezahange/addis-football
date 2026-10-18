@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ActivityIndicator
 } from "react-native";
 
 import { Colors } from "../constants/theme";
@@ -74,6 +75,8 @@ export default function GameBookingAction({
   const [joining, setJoining] = useState(false);
 
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+
+  const [waitlistModalVisible, setWaitlistModalVisible] = useState(false);
 
   const [stateLoading, setStateLoading] = useState(true);
 
@@ -206,7 +209,6 @@ export default function GameBookingAction({
       .maybeSingle();
 
     if (bookingError) {
-      console.log("Booking check error:", bookingError.message);
 
       setStateLoading(false);
       return;
@@ -400,7 +402,6 @@ export default function GameBookingAction({
       });
 
       if (error) {
-        console.log("Join game error:", error.message);
 
         if (error.message.toLowerCase().includes("already joined")) {
           setPaymentMessage(null);
@@ -422,6 +423,7 @@ export default function GameBookingAction({
         setSuccessModalVisible(true);
       } else if (data?.booking_status === "waitlisted") {
         setBookingStatus("waitlisted");
+        setWaitlistModalVisible(true);
       } else if (data?.booking_status === "pending_payment") {
         setBookingStatus("pending_payment");
       }
@@ -457,7 +459,6 @@ export default function GameBookingAction({
       );
 
       if (error) {
-        console.log("Reserve organizer game error:", error.message);
 
         setPaymentMessage(t("gameCard.couldNotReserve"));
 
@@ -505,12 +506,6 @@ export default function GameBookingAction({
       error: authError,
     } = await supabase.auth.getUser();
 
-    console.log("PAYMENT DEBUG USER:", user?.id);
-
-    console.log("PAYMENT DEBUG AUTH ERROR:", authError);
-
-    console.log("PAYMENT DEBUG BOOKING ID:", bookingId);
-
     if (!bookingId) {
       setPaymentMessage(t("gameCard.bookingNotFound"));
 
@@ -527,7 +522,6 @@ export default function GameBookingAction({
       });
 
       if (error) {
-        console.log("Submit organizer payment error:", error.message);
 
         if (error.message.toLowerCase().includes("expired")) {
           setPaymentModalVisible(false);
@@ -671,6 +665,8 @@ export default function GameBookingAction({
 
               isFull && !bookingStatus && styles.waitlistButton,
 
+              isWaitlisted && styles.waitlistedButton,
+
               useStackedFooter && styles.waitingForOrganizerButton,
 
               pressed && !actionDisabled && styles.actionButtonPressed,
@@ -682,17 +678,23 @@ export default function GameBookingAction({
               <Ionicons name="checkmark-circle" size={19} color="#149447" />
             )}
 
-            <Text
-              style={[
-                styles.actionButtonText,
-
-                isFull && !bookingStatus && styles.waitlistButtonText,
-
-                useStackedFooter && styles.waitingForOrganizerButtonText,
-              ]}
-            >
-              {getButtonText()}
-            </Text>
+            {joining ? (
+              <ActivityIndicator
+                size="small"
+                color={isFull && !bookingStatus ? "#087EA4" : "#07111F"}
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  isFull && !bookingStatus && styles.waitlistButtonText,
+                  isWaitlisted && styles.waitlistedButtonText,
+                  useStackedFooter && styles.waitingForOrganizerButtonText,
+                ]}
+              >
+                {getButtonText()}
+              </Text>
+            )}
 
             {joining && (
               <Ionicons name="ellipsis-horizontal" size={18} color="#07111F" />
@@ -807,7 +809,55 @@ export default function GameBookingAction({
           </View>
         </View>
       </Modal>
+      <Modal
+        visible={waitlistModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setWaitlistModalVisible(false)}
+      >
+        <View style={styles.waitlistModalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setWaitlistModalVisible(false)}
+          />
 
+          <View style={styles.waitlistModalSheet}>
+            <View style={styles.waitlistModalHandle} />
+
+            <View style={styles.waitlistModalIcon}>
+              <Ionicons name="time-outline" size={32} color="#18C8FF" />
+            </View>
+
+            <Text style={styles.waitlistModalTitle}>
+              {t("gameCard.waitlistSuccessTitle")}
+            </Text>
+
+            <Text style={styles.waitlistModalSubtitle}>
+              {t("gameCard.waitlistSuccessSubtitle")}
+            </Text>
+
+            <View style={styles.waitlistGameCard}>
+              <Ionicons name="football-outline" size={22} color="#18C8FF" />
+
+              <Text style={styles.waitlistGameTitle} numberOfLines={2}>
+                {title}
+              </Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.waitlistGotItButton,
+                pressed && styles.actionButtonPressed,
+              ]}
+              onPress={() => setWaitlistModalVisible(false)}
+            >
+              <Text style={styles.waitlistGotItButtonText}>
+                {t("gameCard.gotIt")}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={paymentModalVisible}
         transparent
@@ -971,8 +1021,8 @@ const styles = StyleSheet.create({
   },
 
   footerInfo: {
-    flexShrink: 1,
-    minWidth: 0,
+    flexShrink: 0,
+    minWidth: 82,
   },
 
   wrapperStacked: {
@@ -990,6 +1040,7 @@ const styles = StyleSheet.create({
     color: "#222222",
     fontSize: 18,
     fontWeight: "800",
+    flexShrink: 0,
   },
 
   spots: {
@@ -1054,6 +1105,17 @@ const styles = StyleSheet.create({
 
   waitlistButtonText: {
     color: "#087EA4",
+  },
+
+  waitlistedButton: {
+    backgroundColor: "#EEF4F8",
+    borderWidth: 1,
+    borderColor: "#D7E2EA",
+  },
+
+  waitlistedButtonText: {
+    color: "#46647A",
+    fontWeight: "800",
   },
 
   actionButtonPressed: {
@@ -1230,6 +1292,99 @@ const styles = StyleSheet.create({
     color: "#07111F",
     fontSize: 16,
     fontWeight: "900",
+    textAlign: "center",
+  },
+
+  waitlistModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(3, 11, 18, 0.72)",
+    justifyContent: "flex-end",
+  },
+
+  waitlistModalSheet: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    paddingBottom: 24,
+    alignItems: "center",
+  },
+
+  waitlistModalHandle: {
+    width: 42,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#D0D5DD",
+    marginBottom: 24,
+  },
+
+  waitlistModalIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#EAF9FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+
+  waitlistModalTitle: {
+    color: "#101828",
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+
+  waitlistModalSubtitle: {
+    color: "#667085",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 7,
+    paddingHorizontal: 12,
+  },
+
+  waitlistGameCard: {
+    width: "100%",
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E4E7EC",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 22,
+  },
+
+  waitlistGameTitle: {
+    flex: 1,
+    color: "#101828",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+
+  waitlistGotItButton: {
+    width: "100%",
+    minHeight: 54,
+    borderRadius: 15,
+    backgroundColor: c.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 18,
+  },
+
+  waitlistGotItButtonText: {
+    color: "#07111F",
+    fontSize: 16,
+    fontWeight: "900",
+    textAlign: "center",
   },
 
   modalBackdrop: {
