@@ -225,6 +225,18 @@ export default function ProfileScreen() {
     return level;
   }
 
+  function profileRoleLabel() {
+    if (role === "admin") {
+      return t("profile.admin");
+    }
+
+    if (role === "organizer") {
+      return t("profile.organizer");
+    }
+
+    return t("profile.footballPlayer");
+  }
+
   if (loading) {
     return (
       <SafeAreaView
@@ -395,9 +407,7 @@ export default function ProfileScreen() {
                 color={COLORS.primary}
               />
             </View>
-            <Text style={styles.sectionTitle}>
-              {t("profile.footballPlayer")}
-            </Text>
+            <Text style={styles.sectionTitle}>{profileRoleLabel()}</Text>
           </View>
           <Text style={styles.cardLabel}>{t("profile.fullName")}</Text>
           <TextInput
