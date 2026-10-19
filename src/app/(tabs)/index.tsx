@@ -14,6 +14,8 @@ import {
   TextInput,
   useWindowDimensions,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 
 import GameCard from "../../components/GameCard";
@@ -23,15 +25,12 @@ import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   measure,
-  type SharedValue,
   useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
-  withTiming,
+  type SharedValue,
 } from "react-native-reanimated";
 
 type Game = {
@@ -62,82 +61,6 @@ type DiscoverGame = Game & {
   image: string;
 };
 
-function FocusGameCard({
-  game,
-  scrollY,
-  viewportHeight,
-  enabled,
-}: {
-  game: DiscoverGame;
-  scrollY: SharedValue<number>;
-  viewportHeight: number;
-  enabled: boolean;
-}) {
-  const cardRef = useAnimatedRef<View>();
-  const scale = useSharedValue(1);
-  const wasInFocus = useSharedValue(false);
-  const layoutVersion = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  useAnimatedReaction(
-    () => ({
-      scrollPosition: scrollY.value,
-      layoutVersion: layoutVersion.value,
-    }),
-    () => {
-      if (!enabled) {
-        wasInFocus.value = false;
-        return;
-      }
-
-      const measurement = measure(cardRef);
-
-      if (!measurement) {
-        return;
-      }
-
-      const cardCenter = measurement.pageY + measurement.height / 2;
-      const focusTop = viewportHeight * 0.34;
-      const focusBottom = viewportHeight * 0.66;
-      const isInFocus = cardCenter >= focusTop && cardCenter <= focusBottom;
-
-      if (isInFocus && !wasInFocus.value) {
-        scale.value = withSequence(
-          withTiming(0.975, { duration: 70 }),
-          withSpring(1.018, {
-            damping: 10,
-            stiffness: 260,
-            mass: 0.45,
-          }),
-          withSpring(1, {
-            damping: 12,
-            stiffness: 240,
-            mass: 0.5,
-          }),
-        );
-      }
-
-      wasInFocus.value = isInFocus;
-    },
-    [enabled, viewportHeight],
-  );
-
-  return (
-    <Animated.View
-      ref={cardRef}
-      style={animatedStyle}
-      onLayout={() => {
-        layoutVersion.value += 1;
-      }}
-    >
-      <GameCard game={game} />
-    </Animated.View>
-  );
-}
-
 type DateOption = {
   key: string;
   day: string;
@@ -162,6 +85,56 @@ const CITY_OPTIONS = [
   "Harar",
 ] as const;
 
+type FocusGameCardProps = {
+  game: DiscoverGame;
+  scrollY: SharedValue<number>;
+  viewportHeight: number;
+  wrapperStyle?: StyleProp<ViewStyle>;
+};
+
+function FocusGameCard({
+  game,
+  scrollY,
+  viewportHeight,
+  wrapperStyle,
+}: FocusGameCardProps) {
+  const cardRef = useAnimatedRef<View>();
+  const focusScale = useSharedValue(1);
+
+  useAnimatedReaction(
+    () => {
+      // Reading scrollY makes this recalculate continuously while scrolling.
+      scrollY.value;
+
+      const layout = measure(cardRef);
+      if (!layout || viewportHeight <= 0) return 1;
+
+      const cardCenter = layout.pageY + layout.height / 2;
+      const screenCenter = viewportHeight * 0.52;
+      const focusRadius = Math.max(viewportHeight * 0.48, 280);
+      const distance = Math.abs(cardCenter - screenCenter);
+      const progress = Math.max(0, Math.min(1, 1 - distance / focusRadius));
+
+      // Smoothly zoom in near the focus point and back out as it leaves.
+      return 1 + progress * 0.04;
+    },
+    (nextScale) => {
+      focusScale.value = nextScale;
+    },
+    [viewportHeight],
+  );
+
+  const focusStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: focusScale.value }],
+  }));
+
+  return (
+    <Animated.View ref={cardRef} style={[wrapperStyle, focusStyle]}>
+      <GameCard game={game} />
+    </Animated.View>
+  );
+}
+
 export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { width, height } = useWindowDimensions();
@@ -171,6 +144,10 @@ export default function HomeScreen() {
   const isTabletLayout = width >= 768 && width < 1100;
   const isDesktopLayout = width >= 1100;
   const isPhoneLayout = width < 768;
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   /*
     Display dates in the selected language,
@@ -197,14 +174,6 @@ export default function HomeScreen() {
   const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
 
   const isSearchMode = searchFocused || search.trim().length > 0;
-
-  const scrollY = useSharedValue(0);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
 
   /*
     Generate the next 7 days.
@@ -536,9 +505,9 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
         <Animated.ScrollView
-          showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
             isDesktopWeb && styles.scrollContentDesktop,
@@ -896,17 +865,13 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.gameGrid}>
                   {visibleGames.map((game) => (
-                    <View
+                    <FocusGameCard
                       key={`search-${game.id}`}
-                      style={styles.gameWrapper}
-                    >
-                      <FocusGameCard
-                        game={game}
-                        scrollY={scrollY}
-                        viewportHeight={height}
-                        enabled={isPhoneLayout}
-                      />
-                    </View>
+                      game={game}
+                      scrollY={scrollY}
+                      viewportHeight={height}
+                      wrapperStyle={styles.gameWrapper}
+                    />
                   ))}
                 </View>
               </View>
@@ -933,21 +898,17 @@ export default function HomeScreen() {
 
                     <View style={styles.gameGrid}>
                       {visibleGames.slice(0, 3).map((game) => (
-                        <View
+                        <FocusGameCard
                           key={`soon-${game.id}`}
-                          style={[
+                          game={game}
+                          scrollY={scrollY}
+                          viewportHeight={height}
+                          wrapperStyle={[
                             styles.gameWrapper,
                             isTabletLayout && styles.gameWrapperTablet,
                             isDesktopLayout && styles.gameWrapperDesktop,
                           ]}
-                        >
-                          <FocusGameCard
-                            game={game}
-                            scrollY={scrollY}
-                            viewportHeight={height}
-                            enabled={isPhoneLayout}
-                          />
-                        </View>
+                        />
                       ))}
                     </View>
                   </View>
@@ -975,21 +936,17 @@ export default function HomeScreen() {
 
                       <View style={styles.gameGrid}>
                         {visibleGames.slice(3).map((game) => (
-                          <View
-                          key={`more-${game.id}`}
-                          style={[
+                          <FocusGameCard
+                            key={`more-${game.id}`}
+                            game={game}
+                            scrollY={scrollY}
+                            viewportHeight={height}
+                            wrapperStyle={[
                               styles.gameWrapper,
                               isTabletLayout && styles.gameWrapperTablet,
                               isDesktopLayout && styles.gameWrapperDesktop,
                             ]}
-                        >
-                          <FocusGameCard
-                              game={game}
-                              scrollY={scrollY}
-                              viewportHeight={height}
-                              enabled={isPhoneLayout}
-                            />
-                        </View>
+                          />
                         ))}
                       </View>
                     </View>
