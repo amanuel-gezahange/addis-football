@@ -552,23 +552,6 @@ export default function GameDetailsScreen() {
             >
               <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
             </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.heroButton,
-                pressed && styles.heroButtonPressed,
-              ]}
-              onPress={toggleFavorite}
-              disabled={favoriteLoading}
-              hitSlop={8}
-              accessibilityRole="button"
-            >
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={24}
-                color={isFavorite ? "#18BFF2" : "#FFFFFF"}
-              />
-            </Pressable>
           </SafeAreaView>
         </View>
 
@@ -1062,6 +1045,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
 
     paddingHorizontal: 18,
+    paddingTop: 8,
   },
 
   heroButton: {
