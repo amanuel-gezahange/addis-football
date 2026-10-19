@@ -165,6 +165,114 @@ export default function GameDetailsScreen() {
       router.replace("/(tabs)");
     }
   }
+  type EthiopianLanguage = "am" | "om";
+
+  const AMHARIC_MONTHS = [
+    "መስከረም",
+    "ጥቅምት",
+    "ኅዳር",
+    "ታኅሣሥ",
+    "ጥር",
+    "የካቲት",
+    "መጋቢት",
+    "ሚያዝያ",
+    "ግንቦት",
+    "ሰኔ",
+    "ሐምሌ",
+    "ነሐሴ",
+    "ጳጉሜ",
+  ];
+
+  const OROMO_MONTHS = [
+    "Fulbaana",
+    "Onkololeessa",
+    "Sadaasa",
+    "Muddee",
+    "Amajjii",
+    "Guraandhala",
+    "Bitooteessa",
+    "Ebla",
+    "Caamsaa",
+    "Waxabajjii",
+    "Adooleessa",
+    "Hagayya",
+    "Qaammee",
+  ];
+
+  const AMHARIC_WEEKDAYS = ["እሑድ", "ሰኞ", "ማክሰኞ", "ረቡዕ", "ሐሙስ", "ዓርብ", "ቅዳሜ"];
+
+  const OROMO_WEEKDAYS = [
+    "Dilbata",
+    "Wiixata",
+    "Kibxata",
+    "Roobii",
+    "Kamisa",
+    "Jimaata",
+    "Sanbata",
+  ];
+
+  function gregorianToJdn(year: number, month: number, day: number) {
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+
+    return (
+      day +
+      Math.floor((153 * m + 2) / 5) +
+      365 * y +
+      Math.floor(y / 4) -
+      Math.floor(y / 100) +
+      Math.floor(y / 400) -
+      32045
+    );
+  }
+
+  function jdnToEthiopian(jdn: number) {
+    const r = (jdn - 1724221) % 1461;
+    const n = (r % 365) + 365 * Math.floor(r / 1460);
+
+    return {
+      year:
+        4 * Math.floor((jdn - 1724221) / 1461) +
+        Math.floor(r / 365) -
+        Math.floor(r / 1460) +
+        1,
+      month: Math.floor(n / 30) + 1,
+      day: (n % 30) + 1,
+    };
+  }
+
+  function getEthiopianDate(
+    timestamp: string | Date,
+    language: EthiopianLanguage,
+  ) {
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Africa/Addis_Ababa",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(date);
+
+    const year = Number(parts.find((part) => part.type === "year")?.value);
+
+    const month = Number(parts.find((part) => part.type === "month")?.value);
+
+    const day = Number(parts.find((part) => part.type === "day")?.value);
+
+    const eth = jdnToEthiopian(gregorianToJdn(year, month, day));
+
+    const months = language === "om" ? OROMO_MONTHS : AMHARIC_MONTHS;
+
+    const weekdays = language === "om" ? OROMO_WEEKDAYS : AMHARIC_WEEKDAYS;
+
+    return {
+      ...eth,
+      monthName: months[eth.month - 1],
+      weekday: weekdays[date.getDay()],
+    };
+  }
 
   function getLocale() {
     if (language === "am") return "am-ET";
@@ -176,11 +284,20 @@ export default function GameDetailsScreen() {
   function formatDate(value: string | null) {
     if (!value) return null;
 
-    return new Intl.DateTimeFormat(getLocale(), {
+    if (language === "am" || language === "om") {
+      const ethiopian = getEthiopianDate(value, language as EthiopianLanguage);
+
+      const separator = language === "am" ? "፣ " : ", ";
+
+      return `${ethiopian.weekday}${separator}${ethiopian.monthName} ${ethiopian.day}, ${ethiopian.year}`;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
       timeZone: "Africa/Addis_Ababa",
       weekday: "long",
       month: "long",
       day: "numeric",
+      year: "numeric",
     }).format(new Date(value));
   }
 
