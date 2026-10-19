@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 
 import { Colors } from "../constants/theme";
@@ -81,6 +81,8 @@ export default function GameBookingAction({
   const [stateLoading, setStateLoading] = useState(true);
 
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [paymentSubmittedModalVisible, setPaymentSubmittedModalVisible] =
+    useState(false);
 
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
 
@@ -209,7 +211,6 @@ export default function GameBookingAction({
       .maybeSingle();
 
     if (bookingError) {
-
       setStateLoading(false);
       return;
     }
@@ -402,7 +403,6 @@ export default function GameBookingAction({
       });
 
       if (error) {
-
         if (error.message.toLowerCase().includes("already joined")) {
           setPaymentMessage(null);
           await loadState();
@@ -436,116 +436,79 @@ export default function GameBookingAction({
     }
   }
 
-  async function handleOrganizerReservation() {
+  function handleOrganizerReservation() {
+    setPaymentMessage(null);
+    setPaymentModalVisible(true);
+  }
+
+  async function handleSubmitPayment() {
+    if (joining) return;
+
     setJoining(true);
+    setPaymentMessage(null);
 
     try {
       const {
         data: { user },
-        error: userError,
+        error: authError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
+      if (authError || !user) {
         setPaymentMessage(t("gameCard.signInFirst"));
-
         return;
       }
 
       const { data, error } = await supabase.rpc(
-        "reserve_organizer_paid_game",
+        "submit_new_organizer_payment",
         {
           p_game_id: Number(gameId),
+          p_player_reference: null,
         },
       );
 
       if (error) {
+        const message = error.message.toLowerCase();
 
-        setPaymentMessage(t("gameCard.couldNotReserve"));
-
-        return;
-      }
-
-      if (data?.booking_id) {
-        setBookingId(Number(data.booking_id));
-      }
-
-      setBookingStatus("pending_payment");
-
-      setPaymentStatus(data?.payment_status ?? "pending");
-
-      if (typeof data?.spots_left === "number") {
-        updateSpots(Number(data.spots_left));
-      }
-
-      setPaymentMessage(null);
-
-      setPaymentModalVisible(true);
-    } finally {
-      setJoining(false);
-    }
-  }
-
-  async function handleSubmitPayment() {
-    if (
-      offerExpiredLocally ||
-      (paymentOfferExpiresAt &&
-        new Date(paymentOfferExpiresAt).getTime() <= Date.now())
-    ) {
-      setPaymentModalVisible(false);
-
-      setOfferExpiredLocally(true);
-
-      setPaymentMessage(t("gameCard.paymentTimeExpired"));
-
-      await loadState();
-      return;
-    }
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (!bookingId) {
-      setPaymentMessage(t("gameCard.bookingNotFound"));
-
-      return;
-    }
-
-    setJoining(true);
-
-    try {
-      const { data, error } = await supabase.rpc("submit_organizer_payment", {
-        p_booking_id: bookingId,
-
-        p_player_reference: null,
-      });
-
-      if (error) {
-
-        if (error.message.toLowerCase().includes("expired")) {
+        if (message.includes("game is full")) {
           setPaymentModalVisible(false);
-
-          setOfferExpiredLocally(true);
-
-          setPaymentMessage(t("gameCard.paymentTimeExpired"));
-
+          setPaymentMessage(t("gameCard.bookingCouldNotBeCreated"));
           await loadState();
-        } else {
-          setPaymentMessage(t("gameCard.couldNotSubmitPayment"));
+          return;
         }
 
+        if (message.includes("already have an active booking")) {
+          setPaymentModalVisible(false);
+          await loadState();
+          return;
+        }
+
+        setPaymentMessage(t("gameCard.couldNotSubmitPayment"));
         return;
       }
 
       if (data?.success) {
+        if (data?.booking_id) {
+          setBookingId(Number(data.booking_id));
+        }
+
+        setBookingStatus("pending_payment");
         setPaymentStatus("submitted");
 
-        // The CTA already communicates the submitted state.
-        // Keep the sticky footer clean instead of showing a duplicate banner.
+        if (typeof data?.spots_left === "number") {
+          updateSpots(Number(data.spots_left));
+        }
+
+        setPaymentOfferExpiresAt(null);
+        setOfferSecondsLeft(null);
+        setOfferExpiredLocally(false);
+
         setPaymentMessage(null);
 
+        // Close the payment instructions sheet.
         setPaymentModalVisible(false);
+
+        // Show the payment-submitted success sheet.
+        setPaymentSubmittedModalVisible(true);
       }
     } finally {
       setJoining(false);
@@ -636,7 +599,7 @@ export default function GameBookingAction({
             <Ionicons name="arrow-forward" size={20} color="#07111F" />
           </Pressable>
         </View>
-      ) : (
+      ) : isPendingPayment && isPaymentSubmitted ? null : (
         <View
           style={[styles.wrapper, useStackedFooter && styles.wrapperStacked]}
         >
@@ -858,6 +821,7 @@ export default function GameBookingAction({
           </View>
         </View>
       </Modal>
+      {/* Pay Organizer Modal */}
       <Modal
         visible={paymentModalVisible}
         transparent
@@ -865,13 +829,16 @@ export default function GameBookingAction({
         onRequestClose={() => setPaymentModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setPaymentModalVisible(false)}
-          />
-
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
+
+            <Pressable
+              style={styles.modalCloseButton}
+              onPress={() => setPaymentModalVisible(false)}
+              accessibilityRole="button"
+            >
+              <Ionicons name="close" size={22} color="#667085" />
+            </Pressable>
 
             <Text style={styles.modalTitle}>{t("gameCard.payOrganizer")}</Text>
 
@@ -929,17 +896,10 @@ export default function GameBookingAction({
               />
 
               <Text style={styles.modalInstructions}>
-                {paymentOfferExpiresAt && offerSecondsLeft !== null
-                  ? t("gameCard.sendPaymentBeforeExpiry")
-                      .replace("{price}", String(numericPrice))
-                      .replace(
-                        "{time}",
-                        formatOfferCountdown(offerSecondsLeft) ?? "00:00",
-                      )
-                  : t("gameCard.sendPaymentPending").replace(
-                      "{price}",
-                      String(numericPrice),
-                    )}
+                {t("gameCard.sendPaymentPending").replace(
+                  "{price}",
+                  String(numericPrice),
+                )}
               </Text>
             </View>
 
@@ -957,13 +917,68 @@ export default function GameBookingAction({
                   : t("gameCard.ivePaid")}
               </Text>
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Payment Submitted Success Modal */}
+      <Modal
+        visible={paymentSubmittedModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPaymentSubmittedModalVisible(false)}
+      >
+        <View style={styles.waitlistModalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setPaymentSubmittedModalVisible(false)}
+          />
+
+          <View style={styles.waitlistModalSheet}>
+            <View style={styles.waitlistModalHandle} />
+
+            <View style={styles.paymentSubmittedIcon}>
+              <Ionicons name="checkmark" size={34} color="#FFFFFF" />
+            </View>
+
+            <Text style={styles.waitlistModalTitle}>
+              {t("gameCard.paymentSubmittedTitle")}
+            </Text>
+
+            <Text style={styles.waitlistModalSubtitle}>
+              {t("gameCard.paymentSubmittedSubtitle")}
+            </Text>
+
+            <View style={styles.paymentSubmittedStatus}>
+              <Ionicons name="time-outline" size={21} color="#149447" />
+
+              <Text style={styles.paymentSubmittedStatusText}>
+                {t("gameCard.waitingForOrganizer")}
+              </Text>
+            </View>
 
             <Pressable
-              style={styles.payLaterButton}
-              onPress={() => setPaymentModalVisible(false)}
-              disabled={joining}
+              style={({ pressed }) => [
+                styles.waitlistGotItButton,
+                pressed && styles.actionButtonPressed,
+              ]}
+              onPress={() => {
+                setPaymentSubmittedModalVisible(false);
+                router.push("/bookings");
+              }}
             >
-              <Text style={styles.payLaterText}>{t("gameCard.payLater")}</Text>
+              <Text style={styles.waitlistGotItButtonText}>
+                {t("bookingSuccess.viewMyBookings")}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.paymentSubmittedDoneButton}
+              onPress={() => setPaymentSubmittedModalVisible(false)}
+            >
+              <Text style={styles.paymentSubmittedDoneText}>
+                {t("gameCard.gotIt")}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -973,6 +988,62 @@ export default function GameBookingAction({
 }
 
 const styles = StyleSheet.create({
+  paymentSubmittedIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#149447",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+
+  paymentSubmittedStatus: {
+    width: "100%",
+    minHeight: 58,
+    marginTop: 22,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: "#E9F8EF",
+    borderWidth: 1,
+    borderColor: "#B8E7C9",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  paymentSubmittedStatusText: {
+    color: "#149447",
+    fontSize: 15,
+    fontWeight: "800",
+    textAlign: "center",
+    flexShrink: 1,
+  },
+
+  paymentSubmittedDoneButton: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+
+  paymentSubmittedDoneText: {
+    color: "#667085",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 14,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
   confirmedFooter: {
     minHeight: 82,
     backgroundColor: "#FFFFFF",
@@ -1525,18 +1596,5 @@ const styles = StyleSheet.create({
     color: "#07111F",
     fontSize: 17,
     fontWeight: "900",
-  },
-
-  payLaterButton: {
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-  },
-
-  payLaterText: {
-    color: "#717171",
-    fontSize: 15,
-    fontWeight: "700",
   },
 });

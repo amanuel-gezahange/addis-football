@@ -103,6 +103,9 @@ const om = {
   },
 
   gameCard: {
+    paymentSubmittedTitle: "Kaffaltiin ergameera",
+    paymentSubmittedSubtitle:
+      "Iddoon kee qabameera. Qindeessaan kaffaltii kee ni mirkaneessa.",
     paymentConfirmed: "Kaffaltiin kee mirkanaa'eera",
     paymentMethod: "Mala kaffaltii",
     waitlistSuccessTitle: "Tarree eegumsaa keessa jirta",
@@ -169,7 +172,7 @@ const om = {
 
     submittingPayment: "Kaffaltii galchaa jira...",
 
-    waitingForOrganizer: "Mirkaneessa qopheessaa eegaa jira",
+    waitingForOrganizer: "Mirkaneessa qindeessaa eegaa jira",
 
     paymentSubmitted:
       "Kaffaltiin galfameera. Mirkaneessa qopheessaa eegaa jira.",
@@ -344,7 +347,7 @@ const om = {
       "Akkaawuntii armaan olii fayyadamuun {price} ETB ergi. Bakka kee eeguuf yeroo {time} keessatti kaffali.",
 
     sendPaymentPending:
-      "Akkaawuntii armaan olii fayyadamuun {price} ETB ergi. Kaffaltiin osoo eegamaa jiruu bakki kee qabameera.",
+      "Akkaawuntii armaan oliitti {price} ETB ergi, sana booda iddoo kee qabachuuf “Kaffaleera” tuqi.",
   },
 
   bookings: {
@@ -1007,7 +1010,7 @@ const om = {
     couldNotLoadGame: "Tapha kana fe'uu hin dandeenye.",
     gameUnavailable: "Taphi kun hin jiru",
     gameCouldNotBeFound: "Tapha kana argachuun hin danda'amne.",
-
+    payAtVenue: "Iddoo taphaatti kaffali",
     gameDetails: "Bal'ina taphaa",
     notSpecified: "Hin ibsamne",
     format: "Gosa taphaa",

@@ -103,6 +103,9 @@ const am = {
   },
 
   gameCard: {
+    paymentSubmittedTitle: "ክፍያው ተልኳል",
+    paymentSubmittedSubtitle:
+      "ቦታዎ ተይዟል። አዘጋጁ ክፍያዎን ያረጋግጣል።",
     waitlistSuccessTitle: "ተጠባባቂ ዝርዝር ላይ ነዎት",
     waitlistSuccessSubtitle: "ቦታ ሲኖር እናሳውቅዎታለን።",
     gotIt: "እሺ",
@@ -299,7 +302,7 @@ const am = {
       "ከላይ ያለውን አካውንት በመጠቀም {price} ETB ይላኩ። ቦታዎን ለማቆየት በ{time} ውስጥ ይክፈሉ።",
 
     sendPaymentPending:
-      "ከላይ ያለውን አካውንት በመጠቀም {price} ETB ይላኩ። ክፍያው እስኪጠናቀቅ ድረስ ቦታዎ ተይዟል።",
+      "ከላይ ባለው አካውንት {price} ብር ይላኩ፣ ከዚያ ቦታዎን ለመያዝ “ከፍያለሁ” የሚለውን ይጫኑ።",
   },
 
   bookings: {
@@ -933,7 +936,7 @@ const am = {
   gameDetails: {
     paymentConfirmed: "ክፍያዎ ተረጋግጧል",
     paymentMethod: "የክፍያ ዘዴ",
-
+    payAtVenue: "በሜዳው ላይ ይክፈሉ",
     youreAllSet: "ሁሉም ዝግጁ ነው! 🎉",
     spotAndPaymentConfirmed:
       "ቦታዎ እና ክፍያዎ ተረጋግጧል። ቀጥሎ የሚያደርጉት:",

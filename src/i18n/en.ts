@@ -103,6 +103,9 @@ const en = {
   },
 
   gameCard: {
+    paymentSubmittedTitle: "Payment submitted",
+    paymentSubmittedSubtitle:
+      "Your spot is reserved while the organizer confirms your payment.",
     waitlistSuccessTitle: "You’re on the waitlist",
     waitlistSuccessSubtitle: "We’ll let you know when a spot opens.",
     gotIt: "Got it",
@@ -316,7 +319,7 @@ const en = {
       "Send {price} ETB using the account above. Pay within {time} to keep this spot.",
 
     sendPaymentPending:
-      "Send {price} ETB using the account above. Your spot is reserved while payment is pending.",
+      "Send {price} ETB using the account above, then tap “I've paid” to reserve your spot.",
   },
 
   bookings: {
@@ -372,7 +375,7 @@ const en = {
 
     paymentSubmitted: "Payment submitted",
 
-    waitingForOrganizer: "Waiting for organizer",
+    waitingForOrganizer: "Awaiting organizer confirmation",
 
     waitingForOrganizerConfirmation: "Waiting for organizer confirmation.",
 
@@ -967,7 +970,7 @@ const en = {
   gameDetails: {
     paymentConfirmed: "Payment confirmed",
     paymentMethod: "Payment method",
-
+    payAtVenue: "Pay at the venue",
     youreAllSet: "You're all set! 🎉",
     spotAndPaymentConfirmed:
       "Your spot and payment are confirmed. Here's what to do next:",

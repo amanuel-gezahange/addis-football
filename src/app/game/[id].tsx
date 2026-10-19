@@ -512,11 +512,18 @@ export default function GameDetailsScreen() {
   const isFree = Number(game.price ?? 0) === 0;
   const isBookingConfirmed = bookingState.bookingStatus === "confirmed";
 
+  const isPaymentSubmitted =
+    bookingState.bookingStatus === "pending_payment" &&
+    bookingState.paymentStatus === "submitted";
+
+  const isPayAtVenue =
+    isBookingConfirmed &&
+    !isFree &&
+    bookingState.paymentMethod === "venue";
+
   const isPaymentConfirmed =
     isBookingConfirmed &&
-    (isFree ||
-      bookingState.paymentStatus === "paid" ||
-      bookingState.paymentMethod === "venue");
+    (isFree || bookingState.paymentStatus === "paid");
 
   const heroImage = game.image_url
     ? { uri: game.image_url }
@@ -718,7 +725,30 @@ export default function GameDetailsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("gameDetails.payment")}</Text>
 
-            {isPaymentConfirmed ? (
+            {isPayAtVenue ? (
+              <View style={styles.paymentCard}>
+                <View style={styles.paymentTopRow}>
+                  <View style={styles.paymentIcon}>
+                    <Ionicons
+                      name="location-outline"
+                      size={23}
+                      color={COLORS.primary}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.payAtVenueTitle}>
+                      {t("gameDetails.payAtVenue")}
+                    </Text>
+                    <Text style={styles.paymentPrice}>{game.price} ETB</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.paymentDescription}>
+                  {t("gameDetails.paymentAtVenue")}
+                </Text>
+              </View>
+            ) : isPaymentConfirmed ? (
               <View style={styles.paymentConfirmedCard}>
                 <View style={styles.paymentConfirmedTop}>
                   <View style={styles.paymentConfirmedIcon}>
@@ -747,6 +777,35 @@ export default function GameDetailsScreen() {
                     </Text>
                   </View>
                 )}
+              </View>
+            ) : isPaymentSubmitted ? (
+              <View style={styles.paymentSubmittedCard}>
+                <View style={styles.paymentSubmittedTop}>
+                  <View style={styles.paymentSubmittedIcon}>
+                    <Ionicons name="checkmark" size={22} color="#FFFFFF" />
+                  </View>
+
+                  <View style={styles.paymentSubmittedHeading}>
+                    <Text style={styles.paymentSubmittedTitle}>
+                      {t("gameCard.paymentSubmittedTitle")}
+                    </Text>
+
+                    <Text style={styles.paymentSubmittedPrice}>
+                      {game.price} ETB
+                      {bookingState.paymentProvider
+                        ? ` • ${bookingState.paymentProvider}`
+                        : ""}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.paymentSubmittedStatus}>
+                  <Ionicons name="time-outline" size={19} color="#9A6700" />
+
+                  <Text style={styles.paymentSubmittedStatusText}>
+                    {t("gameCard.waitingForOrganizer")}
+                  </Text>
+                </View>
               </View>
             ) : (
               <View style={styles.paymentCard}>
@@ -800,7 +859,7 @@ export default function GameDetailsScreen() {
                     </Text>
 
                     <Text style={styles.allSetSubtitle}>
-                      {isPaymentConfirmed && !isFree
+                      {!isPayAtVenue && isPaymentConfirmed && !isFree
                         ? t("gameDetails.spotAndPaymentConfirmed")
                         : t("gameDetails.spotConfirmedNextSteps")}
                     </Text>
@@ -1396,6 +1455,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
+  payAtVenueTitle: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: "800",
+    marginBottom: 2,
+  },
+
   paymentDescription: {
     color: "#64748B",
     fontSize: 14,
@@ -1407,6 +1473,68 @@ const styles = StyleSheet.create({
   bottomSpace: {
     height: 28,
   },
+  paymentSubmittedCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderRadius: 16,
+    backgroundColor: "#FFF8E7",
+    borderWidth: 1,
+    borderColor: "#F0DDA8",
+  },
+
+  paymentSubmittedTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 11,
+  },
+
+  paymentSubmittedIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#D89A00",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+
+  paymentSubmittedHeading: {
+    flex: 1,
+  },
+
+  paymentSubmittedTitle: {
+    color: "#9A6700",
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+
+  paymentSubmittedPrice: {
+    color: "#17202A",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  paymentSubmittedStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    marginTop: 13,
+    paddingTop: 13,
+    borderTopWidth: 1,
+    borderTopColor: "#EAD9AA",
+  },
+
+  paymentSubmittedStatusText: {
+    flex: 1,
+    color: "#9A6700",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+
   paymentConfirmedCard: {
     padding: 16,
     borderRadius: 16,

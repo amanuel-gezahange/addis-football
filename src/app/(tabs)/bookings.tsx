@@ -828,7 +828,7 @@ export default function BookingsScreen() {
                     <View style={styles.imageShade} />
 
                     {/* STATUS ON IMAGE */}
-                    {!isCancelled && (
+                    {!isCancelled && !paymentSubmitted && (
                       <View
                         style={[
                           styles.imageStatusBadge,
@@ -1070,15 +1070,20 @@ export default function BookingsScreen() {
                     {/* ORGANIZER PAYMENT: SUBMITTED */}
                     {paymentSubmitted && (
                       <View style={styles.waitingPaymentNotice}>
-                        <Ionicons
-                          name="checkmark-circle-outline"
-                          size={18}
-                          color="#9A6700"
-                        />
-
-                        <Text style={styles.waitingPaymentTitle}>
-                          {t("bookings.paymentSubmitted")}
-                        </Text>
+                        <View style={styles.waitingPaymentHeader}>
+                          <View style={styles.waitingPaymentIcon}>
+                            <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                          </View>
+                          <View style={styles.waitingPaymentContent}>
+                            <Text style={styles.waitingPaymentTitle}>{t("bookings.paymentSubmitted")}</Text>
+                            <Text style={styles.waitingPaymentText}>{booking.price_paid ?? game.price} ETB •{" "}{game.payment_provider || "Telebirr"}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.waitingPaymentDivider} />
+                        <View style={styles.waitingPaymentStatusRow}>
+                          <Ionicons name="time-outline" size={18} color="#9A6700" />
+                          <Text style={styles.waitingPaymentStatusText}>{t("bookings.waitingForOrganizer")}</Text>
+                        </View>
                       </View>
                     )}
 
@@ -1088,7 +1093,7 @@ export default function BookingsScreen() {
                         <Ionicons
                           name="checkmark-circle"
                           size={22}
-                          color={COLORS.primary}
+                          color="#149447"
                         />
 
                         <View style={{ flex: 1 }}>
@@ -1242,11 +1247,12 @@ export default function BookingsScreen() {
                         {isCancelling ? (
                           <ActivityIndicator size="small" color="#C13515" />
                         ) : (
-                          <Text style={styles.cancelText}>
-                            {isWaitlisted
-                              ? t("bookings.leaveWaitlist")
-                              : t("bookings.cancelBooking")}
-                          </Text>
+                          <>
+                            <Ionicons name="trash-outline" size={17} color="#C13515" />
+                            <Text style={styles.cancelText}>
+                              {isWaitlisted ? t("bookings.leaveWaitlist") : t("bookings.cancelBooking")}
+                            </Text>
+                          </>
                         )}
                       </Pressable>
                     )}
@@ -2588,7 +2594,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     position: "relative",
     width: "100%",
-    height: 180,
+    height: 150,
     backgroundColor: "#0B1823",
   },
 
@@ -2662,9 +2668,9 @@ const styles = StyleSheet.create({
   },
 
   cardContent: {
-    paddingHorizontal: 18,
-    paddingTop: 17,
-    paddingBottom: 18,
+    paddingHorizontal: 16,
+    paddingTop: 13,
+    paddingBottom: 14,
   },
 
   /*
@@ -2705,15 +2711,15 @@ const styles = StyleSheet.create({
   organizer: {
     color: "#717171",
     fontSize: 14,
-    marginTop: 2,
-    marginBottom: 11,
+    marginTop: 1,
+    marginBottom: 8,
   },
 
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 7,
+    marginTop: 5,
   },
 
   infoText: {
@@ -2726,7 +2732,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 15,
+    marginTop: 12,
   },
 
   formatBadge: {
@@ -2841,24 +2847,22 @@ const styles = StyleSheet.create({
   },
 
   waitingPaymentNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
     marginTop: 14,
+    backgroundColor: "#FFF8E7",
+    borderWidth: 1,
+    borderColor: "#F0DDA8",
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
   },
-
-  waitingPaymentTitle: {
-    color: "#9A6700",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  waitingPaymentText: {
-    color: "#717171",
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 3,
-  },
+  waitingPaymentHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  waitingPaymentIcon: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#D89A00", alignItems: "center", justifyContent: "center" },
+  waitingPaymentContent: { flex: 1, minWidth: 0 },
+  waitingPaymentTitle: { color: "#9A6700", fontSize: 14, fontWeight: "800" },
+  waitingPaymentText: { color: "#8A7450", fontSize: 12, lineHeight: 17, marginTop: 2 },
+  waitingPaymentDivider: { height: StyleSheet.hairlineWidth, backgroundColor: "#EAD9AA", marginVertical: 10 },
+  waitingPaymentStatusRow: { flexDirection: "row", alignItems: "center", gap: 7 },
+  waitingPaymentStatusText: { flex: 1, color: "#9A6700", fontSize: 13, lineHeight: 18, fontWeight: "700" },
 
   confirmedPaymentNotice: {
     flexDirection: "row",
@@ -2873,7 +2877,7 @@ const styles = StyleSheet.create({
   },
 
   confirmedPaymentTitle: {
-    color: COLORS.primary,
+    color: "#149447",
     fontSize: 14,
     fontWeight: "800",
   },
@@ -3009,8 +3013,12 @@ const styles = StyleSheet.create({
 
   cancelButton: {
     alignSelf: "flex-start",
-    marginTop: 14,
-    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 13,
+    paddingVertical: 5,
+    paddingRight: 8,
   },
 
   cancelText: {
