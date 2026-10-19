@@ -21,6 +21,18 @@ import { COLORS } from "../../constants/colors";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { supabase } from "../../lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, {
+  measure,
+  type SharedValue,
+  useAnimatedReaction,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 type Game = {
   id: string;
@@ -50,6 +62,82 @@ type DiscoverGame = Game & {
   image: string;
 };
 
+function FocusGameCard({
+  game,
+  scrollY,
+  viewportHeight,
+  enabled,
+}: {
+  game: DiscoverGame;
+  scrollY: SharedValue<number>;
+  viewportHeight: number;
+  enabled: boolean;
+}) {
+  const cardRef = useAnimatedRef<View>();
+  const scale = useSharedValue(1);
+  const wasInFocus = useSharedValue(false);
+  const layoutVersion = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  useAnimatedReaction(
+    () => ({
+      scrollPosition: scrollY.value,
+      layoutVersion: layoutVersion.value,
+    }),
+    () => {
+      if (!enabled) {
+        wasInFocus.value = false;
+        return;
+      }
+
+      const measurement = measure(cardRef);
+
+      if (!measurement) {
+        return;
+      }
+
+      const cardCenter = measurement.pageY + measurement.height / 2;
+      const focusTop = viewportHeight * 0.34;
+      const focusBottom = viewportHeight * 0.66;
+      const isInFocus = cardCenter >= focusTop && cardCenter <= focusBottom;
+
+      if (isInFocus && !wasInFocus.value) {
+        scale.value = withSequence(
+          withTiming(0.975, { duration: 70 }),
+          withSpring(1.018, {
+            damping: 10,
+            stiffness: 260,
+            mass: 0.45,
+          }),
+          withSpring(1, {
+            damping: 12,
+            stiffness: 240,
+            mass: 0.5,
+          }),
+        );
+      }
+
+      wasInFocus.value = isInFocus;
+    },
+    [enabled, viewportHeight],
+  );
+
+  return (
+    <Animated.View
+      ref={cardRef}
+      style={animatedStyle}
+      onLayout={() => {
+        layoutVersion.value += 1;
+      }}
+    >
+      <GameCard game={game} />
+    </Animated.View>
+  );
+}
+
 type DateOption = {
   key: string;
   day: string;
@@ -76,7 +164,7 @@ const CITY_OPTIONS = [
 
 export default function HomeScreen() {
   const { language, t } = useLanguage();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
   const isSmallScreen = width < 375;
   const isLargeScreen = width >= 768;
@@ -109,6 +197,14 @@ export default function HomeScreen() {
   const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
 
   const isSearchMode = searchFocused || search.trim().length > 0;
+
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   /*
     Generate the next 7 days.
@@ -439,8 +535,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
-        <ScrollView
+        <Animated.ScrollView
           showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           contentContainerStyle={[
             styles.scrollContent,
             isDesktopWeb && styles.scrollContentDesktop,
@@ -798,8 +896,16 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.gameGrid}>
                   {visibleGames.map((game) => (
-                    <View key={`search-${game.id}`} style={styles.gameWrapper}>
-                      <GameCard game={game} />
+                    <View
+                      key={`search-${game.id}`}
+                      style={styles.gameWrapper}
+                    >
+                      <FocusGameCard
+                        game={game}
+                        scrollY={scrollY}
+                        viewportHeight={height}
+                        enabled={isPhoneLayout}
+                      />
                     </View>
                   ))}
                 </View>
@@ -835,7 +941,12 @@ export default function HomeScreen() {
                             isDesktopLayout && styles.gameWrapperDesktop,
                           ]}
                         >
-                          <GameCard game={game} />
+                          <FocusGameCard
+                            game={game}
+                            scrollY={scrollY}
+                            viewportHeight={height}
+                            enabled={isPhoneLayout}
+                          />
                         </View>
                       ))}
                     </View>
@@ -865,15 +976,20 @@ export default function HomeScreen() {
                       <View style={styles.gameGrid}>
                         {visibleGames.slice(3).map((game) => (
                           <View
-                            key={`more-${game.id}`}
-                            style={[
+                          key={`more-${game.id}`}
+                          style={[
                               styles.gameWrapper,
                               isTabletLayout && styles.gameWrapperTablet,
                               isDesktopLayout && styles.gameWrapperDesktop,
                             ]}
-                          >
-                            <GameCard game={game} />
-                          </View>
+                        >
+                          <FocusGameCard
+                              game={game}
+                              scrollY={scrollY}
+                              viewportHeight={height}
+                              enabled={isPhoneLayout}
+                            />
+                        </View>
                         ))}
                       </View>
                     </View>
@@ -884,7 +1000,7 @@ export default function HomeScreen() {
           )}
 
           <View style={{ height: 30 }} />
-        </ScrollView>
+        </Animated.ScrollView>
 
         {/* CITY MODAL */}
 

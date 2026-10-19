@@ -9,6 +9,15 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import Animated, {
+  cancelAnimation,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import { useLanguage } from "../i18n/LanguageContext";
 import { supabase } from "../lib/supabase";
@@ -35,6 +44,29 @@ export default function GameCard({ game }: Props) {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  /*
+   * CARD INTERACTION
+   *
+   * Idle:
+   *   scale = 1
+   *
+   * Finger down:
+   *   scale = 0.955
+   *
+   * Release:
+   *   scale = 1.018
+   *   then spring back to 1
+   *
+   * This gives the card a noticeable physical press/pop effect.
+   */
+  const cardScale = useSharedValue(1);
+
+  const animatedCardStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: cardScale.value }],
+    };
+  });
 
   const spotsLeft = Number(game.spotsLeft ?? 0);
   const price = Number(game.price ?? 0);
@@ -100,8 +132,58 @@ export default function GameCard({ game }: Props) {
     };
   }, [game.id]);
 
-  function openGameDetails() {
+  function pressCardIn() {
+    cancelAnimation(cardScale);
+
+    cardScale.value = withTiming(0.955, {
+      duration: 90,
+    });
+  }
+
+  function pressCardOut() {
+    cancelAnimation(cardScale);
+
+    cardScale.value = withSequence(
+      withTiming(1.018, {
+        duration: 110,
+      }),
+      withSpring(1, {
+        damping: 10,
+        stiffness: 260,
+        mass: 0.45,
+      }),
+    );
+  }
+
+  function navigateToGame() {
     router.push(`/game/${game.id}`);
+  }
+
+  function openGameDetails() {
+    /*
+     * Give the pop animation a moment to become visible
+     * before changing screens.
+     */
+    cancelAnimation(cardScale);
+
+    cardScale.value = withSequence(
+      withTiming(1.018, {
+        duration: 100,
+      }),
+      withSpring(
+        1,
+        {
+          damping: 10,
+          stiffness: 260,
+          mass: 0.45,
+        },
+        (finished) => {
+          if (finished) {
+            runOnJS(navigateToGame)();
+          }
+        },
+      ),
+    );
   }
 
   async function toggleFavorite() {
@@ -160,15 +242,16 @@ export default function GameCard({ game }: Props) {
   }
 
   return (
-    <View style={styles.card}>
+    <Animated.View style={[styles.card, animatedCardStyle]}>
       {/* IMAGE */}
       <Pressable
-        style={({ pressed }) => [
+        style={[
           styles.imagePressable,
           isSmallScreen && styles.imagePressableSmall,
           isLargeScreen && styles.imagePressableLarge,
-          pressed && styles.contentPressed,
         ]}
+        onPressIn={pressCardIn}
+        onPressOut={pressCardOut}
         onPress={openGameDetails}
         accessibilityRole="button"
         accessibilityLabel={t("gameCard.viewGameDetails").replace(
@@ -211,12 +294,13 @@ export default function GameCard({ game }: Props) {
 
       {/* DETAILS */}
       <Pressable
-        style={({ pressed }) => [
+        style={[
           styles.details,
           isSmallScreen && styles.detailsSmall,
           isLargeScreen && styles.detailsLarge,
-          pressed && styles.contentPressed,
         ]}
+        onPressIn={pressCardIn}
+        onPressOut={pressCardOut}
         onPress={openGameDetails}
         accessibilityRole="button"
         accessibilityLabel={t("gameCard.viewDetailsFor").replace(
@@ -299,7 +383,7 @@ export default function GameCard({ game }: Props) {
           </View>
         )}
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -339,10 +423,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 15, 25, 0.06)",
   },
 
-  contentPressed: {
-    opacity: 0.78,
-  },
-
   favorite: {
     position: "absolute",
     top: 14,
@@ -353,6 +433,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.95)",
+    zIndex: 10,
   },
 
   favoriteSmall: {
