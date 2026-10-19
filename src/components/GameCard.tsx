@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { useLanguage } from "../i18n/LanguageContext";
 import { supabase } from "../lib/supabase";
@@ -11,16 +18,6 @@ type Props = {
   game: Game;
 };
 
-/*
- * Default football images.
- *
- * If a game has its own image_url, that image is used.
- * Otherwise, one of these six images is selected based
- * on the game's ID.
- *
- * This keeps the fallback image consistent for each game
- * instead of changing randomly every refresh.
- */
 const fallbackImages = [
   require("../../assets/images/game-fallback-1.png"),
   require("../../assets/images/game-fallback-2.png"),
@@ -31,25 +28,17 @@ const fallbackImages = [
 
 export default function GameCard({ game }: Props) {
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+
+  const isSmallScreen = width < 375;
+  const isLargeScreen = width >= 768;
 
   const [isFavorite, setIsFavorite] = useState(false);
-
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const spotsLeft = Number(game.spotsLeft ?? 0);
-
   const price = Number(game.price ?? 0);
 
-  /*
-   * Pick a consistent fallback image using the game ID.
-   *
-   * Example:
-   * game 85 -> one image
-   * game 86 -> next image
-   * game 87 -> next image
-   *
-   * The same game keeps the same image after refresh.
-   */
   const numericGameId = Number(game.id);
 
   const fallbackIndex = Number.isFinite(numericGameId)
@@ -59,7 +48,6 @@ export default function GameCard({ game }: Props) {
   const fallbackImage = fallbackImages[fallbackIndex];
 
   const isFull = game.status === "full" || spotsLeft <= 0;
-
   const isLowSpots = !isFull && spotsLeft > 0 && spotsLeft <= 3;
 
   const locationGame = game as Game & {
@@ -67,7 +55,6 @@ export default function GameCard({ game }: Props) {
   };
 
   const city = String(locationGame.city ?? "").trim();
-
   const area = String(game.area ?? "").trim();
 
   const location =
@@ -100,7 +87,6 @@ export default function GameCard({ game }: Props) {
 
       if (error) {
         console.log("Favorite lookup error:", error);
-
         return;
       }
 
@@ -127,7 +113,6 @@ export default function GameCard({ game }: Props) {
 
     const previousFavoriteState = isFavorite;
 
-    // Update the heart immediately.
     setIsFavorite(!previousFavoriteState);
 
     try {
@@ -142,9 +127,7 @@ export default function GameCard({ game }: Props) {
 
       if (!user) {
         setIsFavorite(previousFavoriteState);
-
         router.push("/login");
-
         return;
       }
 
@@ -170,7 +153,6 @@ export default function GameCard({ game }: Props) {
       }
     } catch (error) {
       console.log("Favorite toggle error:", error);
-
       setIsFavorite(previousFavoriteState);
     } finally {
       setFavoriteLoading(false);
@@ -183,6 +165,8 @@ export default function GameCard({ game }: Props) {
       <Pressable
         style={({ pressed }) => [
           styles.imagePressable,
+          isSmallScreen && styles.imagePressableSmall,
+          isLargeScreen && styles.imagePressableLarge,
           pressed && styles.contentPressed,
         ]}
         onPress={openGameDetails}
@@ -193,13 +177,7 @@ export default function GameCard({ game }: Props) {
         )}
       >
         <Image
-          source={
-            game.image
-              ? {
-                  uri: game.image,
-                }
-              : fallbackImage
-          }
+          source={game.image ? { uri: game.image } : fallbackImage}
           style={styles.image}
           resizeMode="cover"
         />
@@ -211,10 +189,12 @@ export default function GameCard({ game }: Props) {
       <Pressable
         style={({ pressed }) => [
           styles.favorite,
+          isSmallScreen && styles.favoriteSmall,
           pressed && styles.favoritePressed,
         ]}
         onPress={toggleFavorite}
         disabled={favoriteLoading}
+        hitSlop={4}
         accessibilityRole="button"
         accessibilityLabel={
           isFavorite
@@ -233,6 +213,8 @@ export default function GameCard({ game }: Props) {
       <Pressable
         style={({ pressed }) => [
           styles.details,
+          isSmallScreen && styles.detailsSmall,
+          isLargeScreen && styles.detailsLarge,
           pressed && styles.contentPressed,
         ]}
         onPress={openGameDetails}
@@ -243,7 +225,14 @@ export default function GameCard({ game }: Props) {
         )}
       >
         {/* TITLE */}
-        <Text style={styles.title} numberOfLines={1}>
+        <Text
+          style={[
+            styles.title,
+            isSmallScreen && styles.titleSmall,
+            isLargeScreen && styles.titleLarge,
+          ]}
+          numberOfLines={2}
+        >
           {game.title}
         </Text>
 
@@ -251,7 +240,7 @@ export default function GameCard({ game }: Props) {
         <View style={styles.metaRow}>
           <Ionicons name="location" size={15} color="#536273" />
 
-          <Text style={styles.metaText} numberOfLines={1}>
+          <Text style={styles.metaText} numberOfLines={2}>
             {location}
           </Text>
         </View>
@@ -260,13 +249,18 @@ export default function GameCard({ game }: Props) {
         <View style={styles.metaRow}>
           <Ionicons name="time-outline" size={15} color="#536273" />
 
-          <Text style={styles.metaText} numberOfLines={1}>
+          <Text style={styles.metaText} numberOfLines={2}>
             {game.time}
           </Text>
         </View>
 
         {/* BOTTOM */}
-        <View style={styles.bottomRow}>
+        <View
+          style={[
+            styles.bottomRow,
+            isSmallScreen && styles.bottomRowSmall,
+          ]}
+        >
           <View style={styles.spotsRow}>
             <Ionicons
               name="people-outline"
@@ -274,7 +268,10 @@ export default function GameCard({ game }: Props) {
               color={isFull ? "#C13515" : "#536273"}
             />
 
-            <Text style={[styles.spotsText, isFull && styles.fullText]}>
+            <Text
+              style={[styles.spotsText, isFull && styles.fullText]}
+              numberOfLines={2}
+            >
               {isFull
                 ? t("gameCard.gameFull")
                 : `${spotsLeft} ${t("gameCard.spotsLeft")}`}
@@ -282,9 +279,12 @@ export default function GameCard({ game }: Props) {
           </View>
 
           <View
-            style={[styles.priceBadge, price === 0 && styles.freePriceBadge]}
+            style={[
+              styles.priceBadge,
+              price === 0 && styles.freePriceBadge,
+            ]}
           >
-            <Text style={styles.priceText}>
+            <Text style={styles.priceText} numberOfLines={1}>
               {price === 0 ? t("gameCard.free") : `${price} ETB`}
             </Text>
           </View>
@@ -306,26 +306,27 @@ export default function GameCard({ game }: Props) {
 const styles = StyleSheet.create({
   card: {
     position: "relative",
-
+    width: "100%",
     backgroundColor: "#FFFFFF",
-
     borderRadius: 20,
-
     borderWidth: 1,
     borderColor: "#E4E8EC",
-
     marginBottom: 18,
-
     overflow: "hidden",
   },
-
-  /* FULL-WIDTH IMAGE */
 
   imagePressable: {
     width: "100%",
     height: 190,
-
     backgroundColor: "#0B1823",
+  },
+
+  imagePressableSmall: {
+    height: 170,
+  },
+
+  imagePressableLarge: {
+    height: 220,
   },
 
   image: {
@@ -335,7 +336,6 @@ const styles = StyleSheet.create({
 
   imageOverlay: {
     ...StyleSheet.absoluteFill,
-
     backgroundColor: "rgba(0, 15, 25, 0.06)",
   },
 
@@ -343,111 +343,107 @@ const styles = StyleSheet.create({
     opacity: 0.78,
   },
 
-  /* FAVORITE */
-
   favorite: {
     position: "absolute",
-
     top: 14,
     right: 14,
-
-    width: 40,
-    height: 40,
-
-    borderRadius: 20,
-
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
-
     justifyContent: "center",
-
     backgroundColor: "rgba(255,255,255,0.95)",
+  },
+
+  favoriteSmall: {
+    top: 12,
+    right: 12,
   },
 
   favoritePressed: {
     opacity: 0.7,
-
-    transform: [
-      {
-        scale: 0.92,
-      },
-    ],
+    transform: [{ scale: 0.92 }],
   },
-
-  /* DETAILS */
 
   details: {
     position: "relative",
-
     paddingHorizontal: 16,
-
     paddingTop: 14,
-
     paddingBottom: 16,
+  },
+
+  detailsSmall: {
+    paddingHorizontal: 14,
+    paddingTop: 13,
+    paddingBottom: 14,
+  },
+
+  detailsLarge: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 18,
   },
 
   title: {
     color: "#17202A",
-
     fontSize: 19,
-
     fontWeight: "800",
-
     lineHeight: 24,
-
     letterSpacing: -0.35,
-
     paddingRight: 4,
+  },
+
+  titleSmall: {
+    fontSize: 18,
+    lineHeight: 23,
+  },
+
+  titleLarge: {
+    fontSize: 20,
+    lineHeight: 25,
   },
 
   metaRow: {
     flexDirection: "row",
-
-    alignItems: "center",
-
+    alignItems: "flex-start",
     gap: 6,
-
     marginTop: 8,
   },
 
   metaText: {
     flex: 1,
-
+    minWidth: 0,
     color: "#536273",
-
     fontSize: 14,
-
+    lineHeight: 19,
     fontWeight: "600",
   },
 
-  /* BOTTOM */
-
   bottomRow: {
     flexDirection: "row",
-
     alignItems: "center",
-
     justifyContent: "space-between",
-
     gap: 12,
-
     marginTop: 16,
   },
 
+  bottomRowSmall: {
+    alignItems: "flex-start",
+  },
+
   spotsRow: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
-
-    alignItems: "center",
-
+    alignItems: "flex-start",
     gap: 5,
-
-    flexShrink: 1,
   },
 
   spotsText: {
+    flexShrink: 1,
     color: "#334155",
-
     fontSize: 14,
-
+    lineHeight: 19,
     fontWeight: "700",
   },
 
@@ -455,17 +451,11 @@ const styles = StyleSheet.create({
     color: "#C13515",
   },
 
-  /* PRICE */
-
   priceBadge: {
     flexShrink: 0,
-
     paddingHorizontal: 13,
-
     paddingVertical: 7,
-
     borderRadius: 12,
-
     backgroundColor: "#DDF7EC",
   },
 
@@ -475,33 +465,22 @@ const styles = StyleSheet.create({
 
   priceText: {
     color: "#17202A",
-
     fontSize: 14,
-
     fontWeight: "800",
   },
 
-  /* LOW SPOTS */
-
   urgencyBadge: {
     alignSelf: "flex-start",
-
     marginTop: 11,
-
     paddingHorizontal: 9,
-
     paddingVertical: 5,
-
     borderRadius: 9,
-
     backgroundColor: "#FFE3E5",
   },
 
   urgencyText: {
     color: "#D92D3A",
-
     fontSize: 11,
-
     fontWeight: "800",
   },
 });

@@ -77,8 +77,12 @@ const CITY_OPTIONS = [
 export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { width } = useWindowDimensions();
-
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
+  const isSmallScreen = width < 375;
+  const isLargeScreen = width >= 768;
+  const isTabletLayout = width >= 768 && width < 1100;
+  const isDesktopLayout = width >= 1100;
+  const isPhoneLayout = width < 768;
 
   /*
     Display dates in the selected language,
@@ -89,6 +93,7 @@ export default function HomeScreen() {
   const [games, setGames] = useState<DiscoverGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [selectedCity, setSelectedCity] = useState("Addis Ababa");
@@ -102,6 +107,8 @@ export default function HomeScreen() {
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [formatFilter, setFormatFilter] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
+
+  const isSearchMode = searchFocused || search.trim().length > 0;
 
   /*
     Generate the next 7 days.
@@ -439,17 +446,78 @@ export default function HomeScreen() {
             isDesktopWeb && styles.scrollContentDesktop,
           ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         >
-          {/* CINEMATIC HERO */}
+          {/* CINEMATIC HERO / PHONE SEARCH MODE */}
 
-          <View style={styles.hero}>
+          {isSearchMode ? (
+            <View style={styles.searchModeHeader}>
+              <View style={styles.searchModeTopRow}>
+                <Text style={styles.searchModeBrand}>
+                  Addis <Text style={styles.heroBrandAccent}>Football</Text>
+                </Text>
+                <Pressable style={styles.searchModeLocation} onPress={() => setCityModalVisible(true)}>
+                  <Ionicons name="location-outline" size={15} color="#C8D0D8" />
+                  <Text style={styles.searchModeLocationText} numberOfLines={1}>
+                    {selectedCity === "All Ethiopia" ? t("discover.allEthiopia") : selectedCity}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color="#C8D0D8" />
+                </Pressable>
+              </View>
+              <View style={styles.searchModeBox}>
+                <Ionicons name="search" size={21} color="#222222" />
+                <TextInput
+                  value={search}
+                  onChangeText={setSearch}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  placeholder={t("discover.searchPlaceholder")}
+                  placeholderTextColor="#8A8A8A"
+                  style={styles.searchModeInput}
+                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  blurOnSubmit
+                  clearButtonMode="never"
+                  selectionColor={COLORS.primary}
+                />
+                {search.length > 0 && (
+                  <Pressable style={styles.searchActionButton} onPress={() => setSearch("")} hitSlop={8}>
+                    <Ionicons name="close" size={22} color={COLORS.textSecondary} />
+                  </Pressable>
+                )}
+                <View style={styles.heroSearchDivider} />
+                <Pressable
+                  style={[styles.heroFilterButton,(skillFilter || formatFilter || priceFilter || sortBy !== "soonest") && styles.heroFilterButtonActive]}
+                  onPress={() => setFilterModalVisible(true)}
+                  hitSlop={6}
+                >
+                  <Ionicons name="options-outline" size={21} color={skillFilter || formatFilter || priceFilter || sortBy !== "soonest" ? "#FFFFFF" : COLORS.primary} />
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+          <View
+            style={[
+              styles.hero,
+              isSmallScreen && styles.heroSmall,
+              isLargeScreen && styles.heroLarge,
+            ]}
+          >
             <Image
               source={require("../../../assets/images/discover-hero.png")}
               style={styles.heroArtwork}
               resizeMode="cover"
             />
             <View style={styles.heroOverlay} />
-            <View style={styles.heroContent}>
+            <View
+              style={[
+                styles.heroContent,
+                isSmallScreen && styles.heroContentSmall,
+                isLargeScreen && styles.heroContentLarge,
+              ]}
+            >
               <View style={styles.heroTopBar}>
                 <View>
                   <Text style={styles.heroBrand}>
@@ -486,7 +554,13 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
               <View style={styles.heroMessage}>
-                <Text style={styles.heroTitle}>
+                <Text
+                  style={[
+                    styles.heroTitle,
+                    isSmallScreen && styles.heroTitleSmall,
+                    isLargeScreen && styles.heroTitleLarge,
+                  ]}
+                >
                   {t("discover.findYourNextGame")}
                 </Text>
 
@@ -499,11 +573,16 @@ export default function HomeScreen() {
                 <TextInput
                   value={search}
                   onChangeText={setSearch}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
                   placeholder={t("discover.searchPlaceholder")}
                   placeholderTextColor="#8A8A8A"
                   style={styles.heroSearchInput}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  returnKeyType="search"
+                  blurOnSubmit
+                  clearButtonMode="never"
                   selectionColor={COLORS.primary}
                 />
                 {search.length > 0 && (
@@ -548,9 +627,11 @@ export default function HomeScreen() {
               </View>
             </View>
           </View>
+          )}
 
           {/* DATE SELECTOR */}
 
+          {!isSearchMode && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -598,8 +679,9 @@ export default function HomeScreen() {
               <Ionicons name="calendar-outline" size={22} color="#FFFFFF" />
             </Pressable>
           </ScrollView>
+          )}
 
-          {selectedDateLabel && (
+          {!isSearchMode && selectedDateLabel && (
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>{t("discover.games")}</Text>
@@ -658,8 +740,31 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* CINEMATIC DISCOVER SECTIONS */}
+          {/* SEARCH RESULTS / NORMAL DISCOVER */}
 
+          {isSearchMode ? (
+            !loading && visibleGames.length > 0 ? (
+              <View style={styles.discoverySection}>
+                <View style={styles.discoverySectionHeader}>
+                  <View style={styles.discoverySectionTitleRow}>
+                    <Ionicons name="search" size={18} color={COLORS.primary} />
+                    <Text style={styles.discoverySectionTitle}>{t("discover.games")}</Text>
+                  </View>
+                  <Text style={styles.discoverySectionMeta}>
+                    {visibleGames.length} {visibleGames.length === 1 ? t("discover.game") : t("discover.gamesCount")}
+                  </Text>
+                </View>
+                <View style={styles.gameGrid}>
+                  {visibleGames.map((game) => (
+                    <View key={`search-${game.id}`} style={styles.gameWrapper}>
+                      <GameCard game={game} />
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null
+          ) : (
+            <>
           {!loading && visibleGames.length > 0 && (
             <>
               <View style={styles.discoverySection}>
@@ -678,11 +783,20 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                {visibleGames.slice(0, 3).map((game) => (
-                  <View key={`soon-${game.id}`} style={styles.gameWrapper}>
-                    <GameCard game={game} />
-                  </View>
-                ))}
+                <View style={styles.gameGrid}>
+                  {visibleGames.slice(0, 3).map((game) => (
+                    <View
+                      key={`soon-${game.id}`}
+                      style={[
+                        styles.gameWrapper,
+                        isTabletLayout && styles.gameWrapperTablet,
+                        isDesktopLayout && styles.gameWrapperDesktop,
+                      ]}
+                    >
+                      <GameCard game={game} />
+                    </View>
+                  ))}
+                </View>
               </View>
 
               {visibleGames.length > 3 && (
@@ -706,13 +820,24 @@ export default function HomeScreen() {
                     </Text>
                   </View>
 
-                  {visibleGames.slice(3).map((game) => (
-                    <View key={`near-${game.id}`} style={styles.gameWrapper}>
-                      <GameCard game={game} />
-                    </View>
-                  ))}
+                  <View style={styles.gameGrid}>
+                    {visibleGames.slice(3).map((game) => (
+                      <View
+                        key={`more-${game.id}`}
+                        style={[
+                          styles.gameWrapper,
+                          isTabletLayout && styles.gameWrapperTablet,
+                          isDesktopLayout && styles.gameWrapperDesktop,
+                        ]}
+                      >
+                        <GameCard game={game} />
+                      </View>
+                    ))}
+                  </View>
                 </View>
               )}
+            </>
+          )}
             </>
           )}
 
@@ -1383,6 +1508,15 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     backgroundColor: "#07131A",
   },
+
+  heroSmall: {
+    minHeight: 400,
+    borderRadius: 22,
+  },
+
+  heroLarge: {
+    minHeight: 480,
+  },
   heroArtwork: {
     position: "absolute",
     width: "100%",
@@ -1401,6 +1535,20 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
     justifyContent: "space-between",
+  },
+
+  heroContentSmall: {
+    minHeight: 400,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+
+  heroContentLarge: {
+    minHeight: 480,
+    paddingHorizontal: 28,
+    paddingTop: 26,
+    paddingBottom: 26,
   },
   heroTopBar: {
     flexDirection: "row",
@@ -1444,6 +1592,19 @@ const styles = StyleSheet.create({
     letterSpacing: -1.3,
     maxWidth: 300,
   },
+
+  heroTitleSmall: {
+    fontSize: 34,
+    lineHeight: 36,
+    letterSpacing: -1,
+    maxWidth: 270,
+  },
+
+  heroTitleLarge: {
+    fontSize: 46,
+    lineHeight: 48,
+    maxWidth: 380,
+  },
   heroSubtitle: {
     color: "rgba(255,255,255,0.88)",
     fontSize: 15,
@@ -1483,6 +1644,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   heroFilterButtonActive: { backgroundColor: COLORS.primary },
+
+  searchModeHeader: { marginBottom: 14, paddingTop: 4 },
+  searchModeTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 },
+  searchModeBrand: { color: "#FFFFFF", fontSize: 20, fontWeight: "800", letterSpacing: -0.4 },
+  searchModeLocation: { maxWidth: "48%", flexDirection: "row", alignItems: "center", gap: 4 },
+  searchModeLocationText: { flexShrink: 1, color: "#C8D0D8", fontSize: 13, fontWeight: "600" },
+  searchModeBox: { height: 56, borderRadius: 28, backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", paddingLeft: 17, paddingRight: 7 },
+  searchModeInput: { flex: 1, minWidth: 0, marginLeft: 9, marginRight: 4, color: "#222222", fontSize: 15 },
 
   filterChipRow: {
     flexDirection: "row",
@@ -1908,8 +2077,23 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  gameGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -6,
+  },
+
   gameWrapper: {
-    marginBottom: 10,
+    width: "100%",
+    paddingHorizontal: 6,
+  },
+
+  gameWrapperTablet: {
+    width: "50%",
+  },
+
+  gameWrapperDesktop: {
+    width: "33.333333%",
   },
 
   gameDateLabel: {
