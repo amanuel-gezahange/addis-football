@@ -258,96 +258,167 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-
-      edges={["top"]}
-    >
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
         style={styles.container}
-
         contentContainerStyle={[
           styles.content,
-
           isDesktopWeb && styles.contentDesktop,
         ]}
-
         showsVerticalScrollIndicator={false}
-
         keyboardShouldPersistTaps="handled"
-
         keyboardDismissMode="none"
       >
-        <Text style={styles.title}>{t("profile.title")}</Text>
+        {/* HEADER */}
+        <View style={styles.pageHeader}>
+          <View style={styles.pageHeaderText}>
+            <Text style={styles.title}>{t("profile.title")}</Text>
+            <Text style={styles.subtitle}>{t("profile.subtitle")}</Text>
+          </View>
 
-        <Text style={styles.subtitle}>{t("profile.subtitle")}</Text>
+          <View style={styles.headerIconButton}>
+            <Ionicons name="settings-outline" size={23} color={COLORS.primary} />
+          </View>
+        </View>
 
-        {/* AVATAR */}
+        {/* FOOTBALL IDENTITY */}
+        <View style={styles.identityCard}>
+          <View style={styles.identityGlowOne} />
+          <View style={styles.identityGlowTwo} />
 
-        <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Ionicons
-              name="person"
+          <View style={styles.identityContent}>
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={42} color={COLORS.primary} />
+              </View>
+              <View style={styles.avatarBadge}>
+                <Ionicons name="football" size={15} color="#07111F" />
+              </View>
+            </View>
 
-              size={38}
+            <View style={styles.identityText}>
+              <Text style={styles.playerName} numberOfLines={1}>
+                {fullName || t("profile.footballPlayer")}
+              </Text>
+              <Text style={styles.playerRole}>{profileRoleLabel()}</Text>
 
-              color={COLORS.primary}
+              {!!skillLevel && (
+                <View style={styles.skillBadge}>
+                  <Ionicons name="speedometer-outline" size={15} color={COLORS.primary} />
+                  <Text style={styles.skillBadgeText}>{skillLabel(skillLevel)}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* PERSONAL INFORMATION */}
+        <Text style={styles.groupTitle}>{t("profile.personalInformation")}</Text>
+        <View style={styles.menuCard}>
+          <View style={styles.formBlock}>
+            <View style={styles.formLabelRow}>
+              <View style={styles.rowIcon}>
+                <Ionicons name="person-outline" size={20} color={COLORS.primary} />
+              </View>
+              <Text style={styles.rowTitle}>{t("profile.fullName")}</Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder={t("profile.namePlaceholder")}
+              placeholderTextColor="#667786"
+              value={fullName}
+              onChangeText={setFullName}
+              returnKeyType="done"
+              blurOnSubmit
             />
           </View>
 
-          <Text style={styles.playerName}>
-            {fullName || t("profile.footballPlayer")}
-          </Text>
+          <View style={styles.rowDivider} />
 
-          <Text style={styles.phoneText}>
-            {phone || t("profile.phoneNumber")}
-          </Text>
-
-          {canManageGames && (
-            <View style={styles.roleBadge}>
-              <Ionicons
-                name="shield-checkmark"
-
-                size={15}
-
-                color={COLORS.primary}
-              />
-
-              <Text style={styles.roleBadgeText}>
-                {role === "admin" ? t("profile.admin") : t("profile.organizer")}
-              </Text>
+          <View style={styles.formBlock}>
+            <View style={styles.formLabelRow}>
+              <View style={styles.rowIcon}>
+                <Ionicons name="call-outline" size={20} color={COLORS.primary} />
+              </View>
+              <Text style={styles.rowTitle}>{t("profile.phone")}</Text>
             </View>
-          )}
+            <TextInput
+              style={styles.input}
+              placeholder="+251 9..."
+              placeholderTextColor="#667786"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              returnKeyType="done"
+              blurOnSubmit
+            />
+          </View>
         </View>
+
+        {/* SKILL LEVEL */}
+        <View style={styles.menuCardCompact}>
+          <View style={styles.formLabelRow}>
+            <View style={styles.rowIcon}>
+              <Ionicons name="stats-chart-outline" size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.rowTitle}>{t("profile.skillLevel")}</Text>
+          </View>
+
+          <View style={styles.skillContainer}>
+            {skillLevels.map((level) => {
+              const selected = skillLevel === level;
+              return (
+                <Pressable
+                  key={level}
+                  style={({ pressed }) => [
+                    styles.skillButton,
+                    selected && styles.skillButtonSelected,
+                    pressed && styles.pressableMuted,
+                  ]}
+                  onPress={() => setSkillLevel(level)}
+                >
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.72}
+                    style={[
+                      styles.skillButtonText,
+                      selected && styles.skillButtonTextSelected,
+                    ]}
+                  >
+                    {skillLabel(level)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {/* LANGUAGE */}
-        <View style={styles.sectionCard}>
+        <View style={styles.menuCardCompact}>
           <Pressable
-            style={styles.languageRow}
+            style={({ pressed }) => [
+              styles.languageRow,
+              pressed && styles.pressableMuted,
+            ]}
             onPress={() => setLanguageMenuOpen((open) => !open)}
           >
-            <View style={styles.languageRowLeft}>
-              <View style={styles.sectionIcon}>
-                <Ionicons
-                  name="language-outline"
-                  size={20}
-                  color={COLORS.primary}
-                />
+            <View style={styles.menuRowLeft}>
+              <View style={styles.rowIcon}>
+                <Ionicons name="language-outline" size={20} color={COLORS.primary} />
               </View>
-
-              <View style={styles.languageRowText}>
-                <Text style={styles.sectionTitle}>{t("profile.language")}</Text>
-
-                <Text style={styles.currentLanguage}>
-                  {languageOptions.find((option) => option.code === language)
-                    ?.label || language.toUpperCase()}
+              <View style={styles.menuRowText}>
+                <Text style={styles.rowTitle}>{t("profile.language")}</Text>
+                <Text style={styles.rowSubtitle}>
+                  {languageOptions.find((option) => option.code === language)?.label ||
+                    language.toUpperCase()}
                 </Text>
               </View>
             </View>
-
             <Ionicons
               name={languageMenuOpen ? "chevron-up" : "chevron-down"}
               size={21}
-              color="#7D8994"
+              color="#7E93A3"
             />
           </Pressable>
 
@@ -355,13 +426,13 @@ export default function ProfileScreen() {
             <View style={styles.languageMenu}>
               {languageOptions.map((option) => {
                 const selected = language === option.code;
-
                 return (
                   <Pressable
                     key={option.code}
-                    style={[
+                    style={({ pressed }) => [
                       styles.languageOption,
                       selected && styles.languageOptionSelected,
+                      pressed && styles.pressableMuted,
                     ]}
                     onPress={() => changeLanguage(option.code)}
                   >
@@ -374,7 +445,6 @@ export default function ProfileScreen() {
                       >
                         {option.label}
                       </Text>
-
                       <Text
                         style={[
                           styles.languageOptionCode,
@@ -384,13 +454,8 @@ export default function ProfileScreen() {
                         {option.code.toUpperCase()}
                       </Text>
                     </View>
-
                     {selected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={COLORS.primary}
-                      />
+                      <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
                     )}
                   </Pressable>
                 );
@@ -398,733 +463,500 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
-        <View style={styles.detailsCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIcon}>
-              <Ionicons
-                name="football-outline"
-                size={20}
-                color={COLORS.primary}
-              />
-            </View>
-            <Text style={styles.sectionTitle}>{profileRoleLabel()}</Text>
-          </View>
-          <Text style={styles.cardLabel}>{t("profile.fullName")}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t("profile.namePlaceholder")}
-            placeholderTextColor={COLORS.textMuted}
-            value={fullName}
-            onChangeText={setFullName}
-            returnKeyType="done"
-            blurOnSubmit
-          />
-          <Text style={styles.cardLabel}>{t("profile.phone")}</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="+251 9..."
-            placeholderTextColor={COLORS.textMuted}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            returnKeyType="done"
-            blurOnSubmit
-          />
-          <Text style={styles.cardLabel}>{t("profile.skillLevel")}</Text>
-          <View style={styles.skillContainer}>
-            {skillLevels.map((level) => {
-              const selected = skillLevel === level;
-              return (
-                <Pressable
-                  key={level}
-                  style={[
-                    styles.skillButton,
-                    selected && styles.skillButtonSelected,
-                  ]}
-                  onPress={() => setSkillLevel(level)}
-                >
-                  <Text
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.75}
-                    style={[
-                      styles.skillButtonText,
-                      selected && styles.skillButtonTextSelected,
-                    ]}
-                  >
-                    {skillLabel(level)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Pressable
-            style={[styles.saveButton, saving && styles.disabledButton]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={COLORS.background} />
-            ) : (
-              <Text style={styles.saveButtonText}>
-                {t("profile.saveProfile")}
-              </Text>
-            )}
-          </Pressable>
-        </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.saveButton,
+            saving && styles.disabledButton,
+            pressed && !saving && styles.saveButtonPressed,
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#07111F" />
+          ) : (
+            <Text style={styles.saveButtonText}>{t("profile.saveProfile")}</Text>
+          )}
+        </Pressable>
 
-        {/* ADMIN TOOLS */}
-
+        {/* ADMIN / ORGANIZER TOOLS - preserved */}
         {canManageGames && (
           <View style={styles.adminSection}>
             <View style={styles.adminHeader}>
-              <View style={styles.adminIcon}>
-                <Ionicons
-                  name="shield-checkmark"
-
-                  size={22}
-
-                  color={COLORS.primary}
-                />
+              <View style={styles.rowIcon}>
+                <Ionicons name="shield-checkmark" size={20} color={COLORS.primary} />
               </View>
-
-              <View style={{ flex: 1 }}>
+              <View style={styles.menuRowText}>
                 <Text style={styles.adminTitle}>{t("profile.adminTools")}</Text>
-
-                <Text style={styles.adminSubtitle}>
-                  {t("profile.adminToolsSubtitle")}
-                </Text>
+                <Text style={styles.adminSubtitle}>{t("profile.adminToolsSubtitle")}</Text>
               </View>
             </View>
 
-            {/* CREATE GAME */}
-
-            <Pressable
-              style={styles.adminButton}
-
+            <AdminRow
+              icon="add-circle-outline"
+              title={t("profile.createGame")}
+              subtitle={t("profile.createGameSubtitle")}
               onPress={() => router.push("/admin/create-game")}
-            >
-              <View style={styles.adminButtonIcon}>
-                <Ionicons
-                  name="add-circle-outline"
-
-                  size={24}
-
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminButtonTitle}>
-                  {t("profile.createGame")}
-                </Text>
-
-                <Text style={styles.adminButtonSubtitle}>
-                  {t("profile.createGameSubtitle")}
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-
-                size={22}
-
-                color={COLORS.textMuted}
-              />
-            </Pressable>
-
-            {/* MANAGE GAMES */}
-
-            <Pressable
-              style={styles.adminButton}
-
+            />
+            <View style={styles.rowDivider} />
+            <AdminRow
+              icon="settings-outline"
+              title={t("profile.manageGames")}
+              subtitle={t("profile.manageGamesSubtitle")}
               onPress={() => router.push("/admin/manage-games")}
-            >
-              <View style={styles.adminButtonIcon}>
-                <Ionicons
-                  name="settings-outline"
-
-                  size={23}
-
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminButtonTitle}>
-                  {t("profile.manageGames")}
-                </Text>
-
-                <Text style={styles.adminButtonSubtitle}>
-                  {t("profile.manageGamesSubtitle")}
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-
-                size={22}
-
-                color={COLORS.textMuted}
-              />
-            </Pressable>
-
-            {/* PAYMENT REQUESTS */}
-
-            <Pressable
-              style={styles.adminButton}
-
+            />
+            <View style={styles.rowDivider} />
+            <AdminRow
+              icon="card-outline"
+              title={t("profile.paymentRequests")}
+              subtitle={t("profile.paymentRequestsSubtitle")}
               onPress={() => router.push("/admin/payment-requests")}
-            >
-              <View style={styles.adminButtonIcon}>
-                <Ionicons
-                  name="card-outline"
-
-                  size={23}
-
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminButtonTitle}>
-                  {t("profile.paymentRequests")}
-                </Text>
-
-                <Text style={styles.adminButtonSubtitle}>
-                  {t("profile.paymentRequestsSubtitle")}
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-
-                size={22}
-
-                color={COLORS.textMuted}
-              />
-            </Pressable>
+            />
           </View>
         )}
 
         {/* SIGN OUT */}
-
         <Pressable
-          style={styles.signOutButton}
-
+          style={({ pressed }) => [
+            styles.signOutButton,
+            pressed && styles.signOutButtonPressed,
+          ]}
           onPress={handleSignOut}
         >
-          <Ionicons
-            name="log-out-outline"
-
-            size={21}
-
-            color="#C13515"
-          />
-
+          <Ionicons name="log-out-outline" size={22} color="#FF5A62" />
           <Text style={styles.signOutText}>{t("profile.signOut")}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#708594" />
         </Pressable>
 
-        <View style={{ height: 30 }} />
+        <View style={styles.bottomSpace} />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+type AdminRowProps = {
+  icon: "add-circle-outline" | "settings-outline" | "card-outline";
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+};
+
+function AdminRow({ icon, title, subtitle, onPress }: AdminRowProps) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.adminButton, pressed && styles.pressableMuted]}
+      onPress={onPress}
+    >
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={20} color={COLORS.primary} />
+      </View>
+      <View style={styles.menuRowText}>
+        <Text style={styles.adminButtonTitle}>{title}</Text>
+        <Text style={styles.adminButtonSubtitle}>{subtitle}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="#708594" />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#07111F",
+    backgroundColor: "#07131D",
   },
-
   container: {
     flex: 1,
-    backgroundColor: "#07111F",
+    backgroundColor: "#07131D",
   },
-
   content: {
     paddingHorizontal: 20,
-
     paddingTop: 14,
   },
-
   contentDesktop: {
     width: "100%",
-
-    maxWidth: 900,
-
+    maxWidth: 680,
     alignSelf: "center",
-
     paddingHorizontal: 28,
-
     paddingTop: 24,
   },
-
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#07111F",
-
+    backgroundColor: "#07131D",
     alignItems: "center",
-
     justifyContent: "center",
   },
-
   loadingText: {
     color: "#8FA1AF",
     fontSize: 14,
     marginTop: 12,
   },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    fontWeight: "800",
-    letterSpacing: -0.8,
-  },
-
-  subtitle: {
-    color: "#8FA1AF",
-    fontSize: 15,
-    marginTop: 3,
-  },
-
-  avatarSection: {
-    alignItems: "center",
-    marginTop: 18,
-    marginBottom: 4,
-  },
-
-  avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: "#102231",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#1C3A4E",
-  },
-
-  playerName: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "700",
-    marginTop: 11,
-  },
-
-  phoneText: {
-    color: "#8FA1AF",
-    fontSize: 14,
-    marginTop: 3,
-  },
-
-  roleBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "#102A3A",
-    borderWidth: 1,
-    borderColor: "#1C5368",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 18,
-    marginTop: 9,
-  },
-
-  roleBadgeText: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  label: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-    marginTop: 17,
-  },
-
-  sectionCard: {
-    marginTop: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#DCE5EA",
-  },
-  detailsCard: {
-    marginTop: 14,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#DCE5EA",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 14,
-  },
-  sectionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: "#EAF9FE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  languageRow: {
-    minHeight: 58,
+  pageHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 16,
   },
-
-  languageRowLeft: {
+  pageHeaderText: {
     flex: 1,
+  },
+  title: {
+    color: "#FFFFFF",
+    fontSize: 32,
+    fontWeight: "900",
+    letterSpacing: -0.8,
+  },
+  subtitle: {
+    color: "#91A4B2",
+    fontSize: 15,
+    marginTop: 3,
+  },
+  headerIconButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#0D2737",
+    borderWidth: 1,
+    borderColor: "#123B50",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  identityCard: {
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 170,
+    marginTop: 22,
+    borderRadius: 22,
+    backgroundColor: "#0A2231",
+    borderWidth: 1,
+    borderColor: "#0D536B",
+    justifyContent: "center",
+  },
+  identityGlowOne: {
+    position: "absolute",
+    width: 210,
+    height: 210,
+    borderRadius: 105,
+    backgroundColor: "rgba(26, 194, 242, 0.10)",
+    right: -65,
+    top: -85,
+  },
+  identityGlowTwo: {
+    position: "absolute",
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    left: -55,
+    bottom: -70,
+  },
+  identityContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  avatarWrap: {
+    position: "relative",
+    marginRight: 17,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#102D3E",
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -1,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    borderWidth: 3,
+    borderColor: "#0A2231",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  identityText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  playerName: {
+    color: "#FFFFFF",
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: "900",
+    letterSpacing: -0.45,
+  },
+  playerRole: {
+    color: "#A9BAC5",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+  skillBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "rgba(25, 194, 242, 0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(25, 194, 242, 0.35)",
+  },
+  skillBadgeText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  groupTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+    marginTop: 26,
+    marginBottom: 11,
+  },
+  menuCard: {
+    borderRadius: 18,
+    backgroundColor: "#0C1F2B",
+    borderWidth: 1,
+    borderColor: "#173442",
+    paddingHorizontal: 15,
+  },
+  menuCardCompact: {
+    marginTop: 14,
+    borderRadius: 18,
+    backgroundColor: "#0C1F2B",
+    borderWidth: 1,
+    borderColor: "#173442",
+    padding: 15,
+  },
+  formBlock: {
+    paddingVertical: 11,
+  },
+  formLabelRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
   },
-
-  languageRowText: {
-    flex: 1,
-  },
-
-  currentLanguage: {
-    color: "#7D8994",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-
-  languageMenu: {
-    marginTop: 12,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E8EDF0",
-    gap: 6,
-  },
-
-  languageOption: {
-    minHeight: 50,
-    borderRadius: 13,
-    paddingHorizontal: 13,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F7F9FA",
-    borderWidth: 1,
-    borderColor: "#E4E9ED",
-  },
-
-  languageOptionSelected: {
-    backgroundColor: "#EAF9FE",
-    borderColor: "#B9EAF8",
-  },
-
-  languageOptionTextWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 9,
-  },
-
-  languageOptionText: {
-    color: "#222222",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  languageOptionTextSelected: {
-    color: "#07111F",
-  },
-
-  languageOptionCode: {
-    color: "#9A9A9A",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  languageOptionCodeSelected: {
-    color: "#568091",
-  },
-  sectionTitle: { color: "#17202A", fontSize: 16, fontWeight: "800" },
-  languageCompactContainer: { flexDirection: "row", gap: 7 },
-  languageCompactButton: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: "#DDE3E8",
-    backgroundColor: "#F7F9FA",
+  rowIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "#102D3E",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 5,
   },
-  languageCompactButtonSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  languageCompactText: {
-    color: "#222222",
-    fontSize: 12,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  languageCompactTextSelected: { color: "#07111F" },
-  languageCompactCode: {
-    color: "#9A9A9A",
-    fontSize: 9,
+  rowTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
     fontWeight: "800",
-    marginTop: 2,
   },
-  languageCompactCodeSelected: { color: "#173040" },
-  cardLabel: {
-    color: "#222222",
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 7,
-    marginTop: 13,
-  },
-  cardHelp: { color: "#7D8994", fontSize: 11, marginTop: 6 },
-
-  languageContainer: {
-    gap: 7,
-    marginBottom: 2,
-  },
-
-  languageButton: {
-    minHeight: 50,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  languageButtonSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-
-  languageTextContainer: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 10,
-  },
-
-  languageButtonText: {
-    color: "#222222",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-
-  languageButtonTextSelected: {
-    color: "#07111F",
-  },
-
-  languageCode: {
-    color: "#9A9A9A",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  languageCodeSelected: {
-    color: "#07111F",
-  },
-
   input: {
-    height: 52,
+    height: 46,
+    marginTop: 8,
     borderWidth: 1,
-    borderColor: "#DDDDDD",
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 15,
-    color: "#222222",
+    borderColor: "#244252",
+    borderRadius: 13,
+    backgroundColor: "#081923",
+    paddingHorizontal: 14,
+    color: "#FFFFFF",
     fontSize: 15,
   },
-
-  phoneBox: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    borderRadius: 14,
-    backgroundColor: "#F7F7F7",
-    paddingHorizontal: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 9,
+  rowDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#1D3948",
   },
-
-  phoneBoxText: {
-    flex: 1,
-    color: "#717171",
-    fontSize: 15,
-  },
-
-  phoneHelp: {
-    color: "#8FA1AF",
-    fontSize: 12,
-    marginTop: 6,
-  },
-
   skillContainer: {
     flexDirection: "row",
-
     gap: 8,
+    marginTop: 13,
   },
-
   skillButton: {
     flex: 1,
     minHeight: 44,
     borderRadius: 13,
     borderWidth: 1,
-    borderColor: "#DDDDDD",
-    backgroundColor: "#FFFFFF",
-
+    borderColor: "#284453",
+    backgroundColor: "#081923",
     alignItems: "center",
-
     justifyContent: "center",
-
-    flexDirection: "row",
-
-    gap: 5,
-
     paddingHorizontal: 6,
   },
-
   skillButtonSelected: {
-    backgroundColor: "#102231",
+    backgroundColor: "#12384A",
     borderColor: COLORS.primary,
   },
-
   skillButtonText: {
-    color: "#717171",
+    color: "#8FA1AF",
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
+    textAlign: "center",
   },
-
   skillButtonTextSelected: {
     color: "#FFFFFF",
   },
-
+  languageRow: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  menuRowLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+  menuRowText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  rowSubtitle: {
+    color: "#8FA1AF",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+  languageMenu: {
+    marginTop: 10,
+    paddingTop: 11,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#1D3948",
+    gap: 7,
+  },
+  languageOption: {
+    minHeight: 48,
+    borderRadius: 12,
+    paddingHorizontal: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#081923",
+    borderWidth: 1,
+    borderColor: "#203B49",
+  },
+  languageOptionSelected: {
+    backgroundColor: "#103245",
+    borderColor: "#1A7895",
+  },
+  languageOptionTextWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+  languageOptionText: {
+    color: "#D7E0E6",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  languageOptionTextSelected: {
+    color: "#FFFFFF",
+  },
+  languageOptionCode: {
+    color: "#6F8593",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  languageOptionCodeSelected: {
+    color: COLORS.primary,
+  },
   saveButton: {
-    height: 50,
-    borderRadius: 14,
+    height: 52,
+    borderRadius: 15,
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 24,
+    marginTop: 18,
   },
-
+  saveButtonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.99 }],
+  },
   disabledButton: {
     opacity: 0.6,
   },
-
   saveButtonText: {
     color: "#07111F",
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "900",
   },
-
   adminSection: {
-    marginTop: 14,
-    backgroundColor: "#FFFFFF",
+    marginTop: 18,
+    borderRadius: 18,
+    backgroundColor: "#0C1F2B",
     borderWidth: 1,
-    borderColor: "#E5E5E5",
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
+    borderColor: "#173442",
+    paddingHorizontal: 15,
   },
-
   adminHeader: {
     flexDirection: "row",
-
     alignItems: "center",
-
-    gap: 12,
-
-    marginBottom: 5,
+    gap: 11,
+    paddingVertical: 15,
   },
-
-  adminIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F2FBFE",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-  },
-
   adminTitle: {
-    color: "#222222",
-    fontSize: 17,
-    fontWeight: "700",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
   },
-
   adminSubtitle: {
-    color: "#717171",
-    fontSize: 13,
-    marginTop: 2,
+    color: "#8FA1AF",
+    fontSize: 12,
+    marginTop: 3,
   },
-
   adminButton: {
-    minHeight: 62,
-    borderRadius: 13,
-    backgroundColor: "#F7F7F7",
+    minHeight: 68,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 13,
+    gap: 11,
+    paddingVertical: 10,
+  },
+  adminButtonTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  adminButtonSubtitle: {
+    color: "#8FA1AF",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  signOutButton: {
+    minHeight: 62,
+    marginTop: 18,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    backgroundColor: "#0C1F2B",
+    borderWidth: 1,
+    borderColor: "#173442",
+    flexDirection: "row",
+    alignItems: "center",
     gap: 11,
   },
-
-  adminButtonIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-
-    alignItems: "center",
-
-    justifyContent: "center",
+  signOutButtonPressed: {
+    backgroundColor: "#142531",
   },
-
-  adminButtonTitle: {
-    color: "#222222",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  adminButtonSubtitle: {
-    color: "#717171",
-    fontSize: 12,
-    marginTop: 2,
-  },
-
-  signOutButton: {
-    alignSelf: "center",
-    minHeight: 42,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 7,
-    marginTop: 20,
-  },
-
   signOutText: {
-    color: "#C13515",
-    fontSize: 14,
-    fontWeight: "600",
+    flex: 1,
+    color: "#FF5A62",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  pressableMuted: {
+    opacity: 0.7,
+  },
+  bottomSpace: {
+    height: 30,
   },
 });

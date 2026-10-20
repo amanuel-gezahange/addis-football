@@ -502,6 +502,10 @@ const en = {
     city: "City",
     googleMapsLinkOptional: "Google Maps link (optional)",
     back: "Back",
+    gameTitlePlaceholder: "Bole Friday Night Football",
+    areaPlaceholder: "Bole, Addis Ababa",
+    cityPlaceholder: "Addis Ababa",
+    timezone: "Addis Ababa",
 
     title: "Create Game",
 
@@ -632,6 +636,8 @@ const en = {
   },
 
   editGame: {
+    cancelOrganizerMessage:
+      "This game has paid players. You’ll need to refund them directly after cancelling.",
     city: "City",
     cityRequired: "City is required",
     googleMapsLinkOptional: "Google Maps link (optional)",
@@ -751,6 +757,7 @@ const en = {
     keepGame: "Keep Game",
 
     confirmCancel: "Cancel Game",
+    cancelledSuccessfully: "The game has been cancelled successfully.",
 
     missingInformation: "Missing information",
 
@@ -895,8 +902,153 @@ const en = {
     markPaid: "Mark as paid",
   },
 
+  organizerTabs: {
+    dashboard: "Dashboard",
+    games: "Games",
+    players: "Players",
+    account: "Account",
+  },
+  organizerDashboard: {
+    eyebrow: "ORGANIZER",
+    title: "Dashboard",
+    subtitle: "Manage your games",
+    organizer: "Organizer",
+
+    overview: "OVERVIEW",
+    totalGames: "Total Games",
+    totalPlayers: "Total Players",
+    paymentsConfirmed: "Payments Confirmed",
+    upcomingGames: "Upcoming Games",
+
+    createNewGame: "Create New Game",
+
+    upcomingGamesTitle: "Upcoming Games",
+    upcomingGamesSubtitle: "Your next scheduled games",
+    viewAll: "View all",
+
+    noUpcomingGames: "No upcoming games",
+    noUpcomingGamesDescription:
+      "Create a game and start bringing players together.",
+
+    upcomingGame: "1 upcoming game",
+    upcomingGamesCount: "upcoming games",
+    viewManageSchedule: "View and manage your schedule",
+  },
+
+  organizerGames: {
+    eyebrow: "ORGANIZER",
+    title: "My Games",
+    subtitle: "Create and manage your football games",
+
+    upcoming: "Upcoming",
+    past: "Past",
+    cancelled: "Cancelled",
+
+    upcomingGames: "UPCOMING GAMES",
+    pastGames: "PAST GAMES",
+    cancelledGames: "CANCELLED GAMES",
+
+    noUpcomingGames: "No upcoming games",
+    noPastGames: "No past games",
+    noCancelledGames: "No cancelled games",
+
+    createFirstGame:
+      "Create your first game and start bringing players together.",
+    gamesAppearHere:
+      "Games will appear here when available.",
+
+    createGame: "Create Game",
+
+    footballGame: "Football Game",
+    completed: "Completed",
+
+    dateNotSet: "Date not set",
+    timeNotSet: "Time not set",
+    locationNotSet: "Location not set",
+
+    player: "player",
+    players: "players",
+  },
+
+  organizerPlayers: {
+    // en.ts
+    needAction: "Need action",
+    paymentsToConfirm: "PAYMENTS TO CONFIRM",
+    confirmedPlayers: "CONFIRMED PLAYERS",
+    noPaymentsToConfirm: "You're all caught up",
+    noPaymentsToConfirmDescription:
+      "No payments are waiting for confirmation.",
+    noConfirmedPlayers: "No confirmed players yet",
+    refunds: "REFUNDS",
+    pendingRefunds: "Pending refunds",
+    refundDue: "Refund due",
+    markAsRefunded: "Mark as Refunded",
+    confirmRefundTitle: "Confirm refund",
+    confirmRefundMessage:
+      "Only continue if you have already returned this player's money.",
+    keepPending: "Keep Pending",
+    confirmRefund: "Yes, Refunded",
+    refundCompleted: "Refund recorded",
+    refundCompletedMessage:
+      "This payment has been marked as refunded.",
+    refundFailed: "Couldn't record refund",
+    noPendingRefunds: "No pending refunds",
+    eyebrow: "ORGANIZER",
+    title: "Players",
+    subtitle: "Players joining your games",
+
+    totalPlayers: "Total players",
+    activeBookings: "Active bookings",
+    playerBookings: "PLAYER BOOKINGS",
+
+    noPlayersYet: "No players yet",
+    noPlayersDescription:
+      "Players will appear here when they book one of your games.",
+
+    player: "Player",
+    footballGame: "Football Game",
+
+    dateNotSet: "Date not set",
+    skillNotSet: "Skill not set",
+
+    pending: "Pending",
+    waitlist: "Waitlist",
+    booked: "Booked",
+
+    reference: "Ref",
+    confirmPayment: "Confirm Payment",
+
+    refreshPlayers: "Refresh players",
+  },
+
+  organizerAccount: {
+    eyebrow: "ORGANIZER",
+    title: "Account",
+    subtitle: "Manage your organizer profile",
+    organizer: "Organizer",
+
+    personalInformation: "PERSONAL INFORMATION",
+    fullName: "Full Name",
+    namePlaceholder: "Your name",
+    phone: "Phone",
+    phonePlaceholder: "Phone number",
+
+    language: "LANGUAGE",
+
+    saveAccount: "Save Account",
+    signOut: "Sign Out",
+    footer: "Addis Football Organizer",
+
+    accountSaved: "Account saved",
+    accountUpdated: "Your organizer information has been updated.",
+    couldNotSave: "Couldn't save account",
+    couldNotSignOut: "Couldn't sign out",
+    tryAgain: "Please try again.",
+  },
+
   profile: {
     title: "Profile",
+    personalInformation: "Personal information",
 
     subtitle: "Your player information",
 

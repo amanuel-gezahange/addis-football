@@ -802,16 +802,16 @@ export default function BookingsScreen() {
               );
 
               return (
-                <View
+                <Pressable
                   key={booking.id}
                   style={[styles.card, isCancelled && styles.cancelledCard]}
+                  onPress={() => router.push(`/game/${game.id}`)}
+                  disabled={isCancelled}
+                  accessibilityRole="button"
+                  accessibilityLabel={game.title}
                 >
                   {/* FOOTBALL IMAGE */}
-                  <Pressable
-                    style={styles.imageWrapper}
-                    onPress={() => router.push(`/game/${game.id}`)}
-                    disabled={isCancelled}
-                  >
+                  <View style={styles.imageWrapper}>
                     <Image
                       source={
                         game.image_url
@@ -870,15 +870,12 @@ export default function BookingsScreen() {
                         </Text>
                       </View>
                     )}
-                  </Pressable>
+                  </View>
 
                   {/* CARD CONTENT */}
                   <View style={styles.cardContent}>
                     {/* GAME INFO */}
-                    <Pressable
-                      onPress={() => router.push(`/game/${game.id}`)}
-                      disabled={isCancelled}
-                    >
+                    <View>
                       <Text
                         style={[
                           styles.gameTitle,
@@ -951,7 +948,7 @@ export default function BookingsScreen() {
                             : `${booking.price_paid ?? game.price} ETB`}
                         </Text>
                       </View>
-                    </Pressable>
+                    </View>
 
                     {/* ORGANIZER PAYMENT: PAYMENT REQUIRED */}
                     {paymentPending && (
@@ -1257,7 +1254,7 @@ export default function BookingsScreen() {
                       </Pressable>
                     )}
                   </View>
-                </View>
+                </Pressable>
               );
             })}
           </View>

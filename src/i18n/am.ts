@@ -475,6 +475,10 @@ const am = {
     city: "ከተማ",
     googleMapsLinkOptional: "የGoogle Maps ሊንክ (አማራጭ)",
     back: "ተመለስ",
+    gameTitlePlaceholder: "ቦሌ የአርብ ምሽት እግር ኳስ",
+    areaPlaceholder: "ቦሌ፣ አዲስ አበባ",
+    cityPlaceholder: "አዲስ አበባ",
+    timezone: "አዲስ አበባ",
 
     title: "ጨዋታ ፍጠር",
 
@@ -582,6 +586,8 @@ const am = {
   },
 
   editGame: {
+    cancelOrganizerMessage:
+      "ለዚህ ጨዋታ ክፍያ የፈጸሙ ተጫዋቾች አሉ። ጨዋታውን ከሰረዙ በኋላ ገንዘባቸውን በቀጥታ ይመልሱ።",
     city: "ከተማ",
     cityRequired: "ከተማ ያስፈልጋል",
     googleMapsLinkOptional: "የGoogle Maps ሊንክ (አማራጭ)",
@@ -696,6 +702,8 @@ const am = {
     keepGame: "ጨዋታውን አቆይ",
 
     confirmCancel: "ጨዋታ ሰርዝ",
+
+    cancelledSuccessfully: "ጨዋታው በተሳካ ሁኔታ ተሰርዟል።",
 
     missingInformation: "መረጃ ይጎድላል",
 
@@ -839,9 +847,151 @@ const am = {
 
     markPaid: "ተከፍሏል ብለው ያረጋግጡ",
   },
+  organizerTabs: {
+    dashboard: "መረጃ",
+    games: "ጨዋታዎች",
+    players: "ተጫዋቾች",
+    account: "አካውንት",
+  },
+  organizerDashboard: {
+    eyebrow: "አዘጋጅ",
+    title: "መረጃ",
+    subtitle: "ጨዋታዎችዎን ይቆጣጠሩ",
+    organizer: "አዘጋጅ",
+
+    overview: "አጠቃላይ",
+    totalGames: "ጨዋታዎች",
+    totalPlayers: "ተጫዋቾች",
+    paymentsConfirmed: "የተረጋገጠ ክፍያ",
+    upcomingGames: "መጪ ጨዋታዎች",
+
+    createNewGame: "አዲስ ጨዋታ ፍጠር",
+
+    upcomingGamesTitle: "መጪ ጨዋታዎች",
+    upcomingGamesSubtitle: "ቀጣይ ጨዋታዎችዎ",
+    viewAll: "ሁሉንም ይመልከቱ",
+
+    noUpcomingGames: "መጪ ጨዋታ የለም",
+    noUpcomingGamesDescription:
+      "አዲስ ጨዋታ ፍጠሩና ተጫዋቾችን ይሰብስቡ።",
+
+    upcomingGame: "1 መጪ ጨዋታ",
+    upcomingGamesCount: "መጪ ጨዋታዎች",
+    viewManageSchedule: "ጨዋታዎችዎን ይመልከቱ እና ያስተዳድሩ",
+  },
+
+  organizerGames: {
+    eyebrow: "አዘጋጅ",
+    title: "የእኔ ጨዋታዎች",
+    subtitle: "ጨዋታዎችን ይፍጠሩ እና ያስተዳድሩ",
+
+    upcoming: "መጪ",
+    past: "ያለፉ",
+    cancelled: "የተሰረዙ",
+
+    upcomingGames: "መጪ ጨዋታዎች",
+    pastGames: "ያለፉ ጨዋታዎች",
+    cancelledGames: "የተሰረዙ ጨዋታዎች",
+
+    noUpcomingGames: "መጪ ጨዋታ የለም",
+    noPastGames: "ያለፈ ጨዋታ የለም",
+    noCancelledGames: "የተሰረዘ ጨዋታ የለም",
+
+    createFirstGame:
+      "የመጀመሪያ ጨዋታዎን ይፍጠሩ።",
+    gamesAppearHere:
+      "ጨዋታዎች ሲኖሩ እዚህ ይታያሉ።",
+
+    createGame: "ጨዋታ ፍጠር",
+
+    footballGame: "የእግር ኳስ ጨዋታ",
+    completed: "ተጠናቋል",
+
+    dateNotSet: "ቀን አልተወሰነም",
+    timeNotSet: "ሰዓት አልተወሰነም",
+    locationNotSet: "ቦታ አልተወሰነም",
+
+    player: "ተጫዋች",
+    players: "ተጫዋቾች",
+  },
+
+  organizerPlayers: {
+    needAction: "እርምጃ የሚፈልጉ",
+    paymentsToConfirm: "የሚረጋገጡ ክፍያዎች",
+    confirmedPlayers: "የተረጋገጡ ተጫዋቾች",
+    noPaymentsToConfirm: "ሁሉም ተጠናቋል",
+    noPaymentsToConfirmDescription:
+      "ማረጋገጥ የሚፈልግ ክፍያ የለም።",
+    noConfirmedPlayers: "እስካሁን የተረጋገጠ ተጫዋች የለም",
+    refunds: "ተመላሽ ክፍያ",
+    pendingRefunds: "የሚመለሱ ክፍያዎች",
+    refundDue: "የሚመለስ ክፍያ",
+    markAsRefunded: "ተመልሷል",
+    confirmRefundTitle: "ተመላሽ ክፍያ ያረጋግጡ",
+    confirmRefundMessage:
+      "የተጫዋቹን ገንዘብ በእርግጥ ከመለሱ ብቻ ይቀጥሉ።",
+    keepPending: "እንዳለ ይቆይ",
+    confirmRefund: "አዎ፣ ተመልሷል",
+    refundCompleted: "ተመላሽ ክፍያ ተመዝግቧል",
+    refundCompletedMessage:
+      "ክፍያው እንደተመለሰ ተመዝግቧል።",
+    refundFailed: "ተመላሽ ክፍያውን መመዝገብ አልተቻለም",
+    noPendingRefunds: "የሚመለስ ክፍያ የለም",
+    eyebrow: "አዘጋጅ",
+    title: "ተጫዋቾች",
+    subtitle: "በጨዋታዎችዎ የሚሳተፉ ተጫዋቾች",
+
+    totalPlayers: "ጠቅላላ ተጫዋቾች",
+    activeBookings: "ንቁ ምዝገባዎች",
+    playerBookings: "የተጫዋቾች ምዝገባ",
+
+    noPlayersYet: "እስካሁን ተጫዋች የለም",
+    noPlayersDescription:
+      "ተጫዋቾች ለጨዋታዎ ሲመዘገቡ እዚህ ይታያሉ።",
+
+    player: "ተጫዋች",
+    footballGame: "የእግር ኳስ ጨዋታ",
+
+    dateNotSet: "ቀን አልተወሰነም",
+    skillNotSet: "ደረጃ አልተመረጠም",
+
+    pending: "በመጠባበቅ ላይ",
+    waitlist: "ተጠባባቂ",
+    booked: "ተመዝግቧል",
+
+    reference: "ማጣቀሻ",
+    confirmPayment: "ክፍያ አረጋግጥ",
+
+    refreshPlayers: "ተጫዋቾችን አድስ",
+  },
+  organizerAccount: {
+    eyebrow: "አዘጋጅ",
+    title: "አካውንት",
+    subtitle: "የአዘጋጅ ፕሮፋይልዎን ያስተዳድሩ",
+    organizer: "አዘጋጅ",
+
+    personalInformation: "የግል መረጃ",
+    fullName: "ሙሉ ስም",
+    namePlaceholder: "ስምዎን ያስገቡ",
+    phone: "ስልክ",
+    phonePlaceholder: "የስልክ ቁጥር",
+
+    language: "ቋንቋ",
+
+    saveAccount: "አካውንት አስቀምጥ",
+    signOut: "ውጣ",
+    footer: "አዲስ ፉትቦል አዘጋጅ",
+
+    accountSaved: "አካውንቱ ተቀምጧል",
+    accountUpdated: "የአዘጋጅ መረጃዎ ተዘምኗል።",
+    couldNotSave: "አካውንቱን ማስቀመጥ አልተቻለም",
+    couldNotSignOut: "መውጣት አልተቻለም",
+    tryAgain: "እባክዎ እንደገና ይሞክሩ።",
+  },
 
   profile: {
     title: "ፕሮፋይል",
+    personalInformation: "የግል መረጃ",
 
     paymentRequests: "የክፍያ ጥያቄዎች",
 

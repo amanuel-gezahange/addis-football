@@ -530,6 +530,10 @@ const om = {
     city: "Magaalaa",
     googleMapsLinkOptional: "Liinkii Google Maps (dirqama miti)",
     back: "Duubatti",
+    gameTitlePlaceholder: "Kubbaa Miilaa Bole Jimaata Galgalaa",
+    areaPlaceholder: "Bole, Finfinnee",
+    cityPlaceholder: "Finfinnee",
+    timezone: "Finfinnee",
 
     title: "Tapha uumi",
 
@@ -641,6 +645,8 @@ const om = {
   },
 
   editGame: {
+    cancelOrganizerMessage:
+      "Tapha kanaaf taphattoonni kaffalan jiru. Tapha erga haqxee booda maallaqa isaanii kallattiin deebisi.",
     city: "Magaalaa",
     cityRequired: "Magaalaan barbaachisa",
     googleMapsLinkOptional: "Liinkii Google Maps (dirqama miti)",
@@ -909,9 +915,119 @@ const om = {
 
     markPaid: "Kaffalameera",
   },
+  organizerTabs: {
+    dashboard: "Daashboordii",
+    games: "Taphoota",
+    players: "Taphattoota",
+    account: "Akkaawuntii",
+  },
+  organizerDashboard: {
+    eyebrow: "QOPHEESSAA",
+    title: "Daashboordii",
+    subtitle: "Taphoota kee bulchi",
+    organizer: "Qopheessaa",
+
+    overview: "WALIIGALA",
+    totalGames: "Taphoota",
+    totalPlayers: "Taphattoota",
+    paymentsConfirmed: "Kaffaltii Mirkanaa'e",
+    upcomingGames: "Taphoota Dhufan",
+
+    createNewGame: "Tapha Haaraa Uumi",
+
+    upcomingGamesTitle: "Taphoota Dhufan",
+    upcomingGamesSubtitle: "Taphoota kee itti aanan",
+    viewAll: "Hunda ilaali",
+
+    noUpcomingGames: "Taphi dhufu hin jiru",
+    noUpcomingGamesDescription:
+      "Tapha haaraa uumiitii taphattoota walitti qabi.",
+
+    upcomingGame: "Tapha dhufu 1",
+    upcomingGamesCount: "taphoota dhufan",
+    viewManageSchedule: "Taphoota kee ilaaliitii bulchi",
+  },
+
+  organizerPlayers: {
+    // om.ts
+    needAction: "Tarkaanfii barbaada",
+    paymentsToConfirm: "KAFFALTII MIRKANEESSAMU",
+    confirmedPlayers: "TAPHATTOOTA MIRKANOOMAN",
+    noPaymentsToConfirm: "Hunduu xumurameera",
+    noPaymentsToConfirmDescription:
+      "Kaffaltiin mirkaneeffamuu eegaa jiru hin jiru.",
+    noConfirmedPlayers:
+      "Taphataan mirkanaa'e ammaaf hin jiru",
+    refunds: "MAALLAQA DEEBII",
+    pendingRefunds: "Maallaqa deebii eegaa jiru",
+    refundDue: "Maallaqa deebifamu",
+    markAsRefunded: "Deebi'eera",
+    confirmRefundTitle: "Maallaqa deebii mirkaneessi",
+    confirmRefundMessage:
+      "Maallaqa taphataa kanaaf dhugumaan deebiste yoo ta'e qofa itti fufi.",
+    keepPending: "Eegaa haa turu",
+    confirmRefund: "Eeyyee, deebi'eera",
+    refundCompleted: "Maallaqni deebii galmaa'eera",
+    refundCompletedMessage:
+      "Kaffaltiin akka deebi'etti galmaa'eera.",
+    refundFailed: "Maallaqa deebii galmeessuun hin danda'amne",
+    noPendingRefunds: "Maallaqni deebifamu hin jiru",
+    eyebrow: "QOPHEESSAA",
+    title: "Taphattoota",
+    subtitle: "Taphattoota taphoota kee irratti hirmaatan",
+
+    totalPlayers: "Taphattoota Hunda",
+    activeBookings: "Galmeewwan Jiran",
+    playerBookings: "GALMEE TAPHATTOOTAA",
+
+    noPlayersYet: "Ammaaf taphataan hin jiru",
+    noPlayersDescription:
+      "Taphattoonni tapha kee irratti yeroo galmaa'an asitti mul'atu.",
+
+    player: "Taphataa",
+    footballGame: "Tapha Kubbaa Miilaa",
+
+    dateNotSet: "Guyyaan hin murtoofne",
+    skillNotSet: "Sadarkaan hin filatamne",
+
+    pending: "Eegaa Jira",
+    waitlist: "Tarree Eegumsaa",
+    booked: "Galmaa'eera",
+
+    reference: "Ref",
+    confirmPayment: "Kaffaltii Mirkaneessi",
+
+    refreshPlayers: "Taphattoota Haaromsi",
+  },
+
+  organizerAccount: {
+    eyebrow: "QOPHEESSAA",
+    title: "Akkaawuntii",
+    subtitle: "Profaayilii qopheessaa kee bulchi",
+    organizer: "Qopheessaa",
+
+    personalInformation: "ODEEFFANNOO DHUUNFAA",
+    fullName: "Maqaa guutuu",
+    namePlaceholder: "Maqaa kee galchi",
+    phone: "Bilbila",
+    phonePlaceholder: "Lakkoofsa bilbilaa",
+
+    language: "AFAAN",
+
+    saveAccount: "Akkaawuntii olkaa'i",
+    signOut: "Ba'i",
+    footer: "Qopheessaa Addis Football",
+
+    accountSaved: "Akkaawuntiin olkaa'ameera",
+    accountUpdated: "Odeeffannoon qopheessaa kee haaromfameera.",
+    couldNotSave: "Akkaawuntii olkaa'uun hin danda'amne",
+    couldNotSignOut: "Ba'uun hin danda'amne",
+    tryAgain: "Maaloo irra deebi'ii yaali.",
+  },
 
   profile: {
     title: "Profaayilii",
+    personalInformation: "Odeeffannoo dhuunfaa",
 
     paymentRequests: "Gaaffiiwwan kaffaltii",
 

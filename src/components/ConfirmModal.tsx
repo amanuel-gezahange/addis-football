@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   StyleSheet,
@@ -35,8 +36,6 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const confirmColor = destructive ? "#C13515" : "#087EA4";
-
   return (
     <Modal
       visible={visible}
@@ -60,29 +59,37 @@ export default function ConfirmModal({
         />
 
         <View style={styles.modal}>
-          <View
-            style={[
-              styles.iconContainer,
-              destructive
-                ? styles.destructiveIconContainer
-                : styles.normalIconContainer,
-            ]}
-          >
-            <Ionicons
-              name={
+          {/* Header */}
+          <View style={styles.header}>
+            <View
+              style={[
+                styles.iconContainer,
                 destructive
-                  ? "warning-outline"
-                  : "help-circle-outline"
-              }
-              size={27}
-              color={confirmColor}
-            />
+                  ? styles.destructiveIconContainer
+                  : styles.normalIconContainer,
+              ]}
+            >
+              <Ionicons
+                name={
+                  destructive
+                    ? "warning-outline"
+                    : "help-circle-outline"
+                }
+                size={22}
+                color={destructive ? "#C13515" : COLORS.primary}
+              />
+            </View>
+
+            <View style={styles.headerText}>
+              <Text style={styles.title}>{title}</Text>
+
+              <Text style={styles.message}>
+                {message}
+              </Text>
+            </View>
           </View>
 
-          <Text style={styles.title}>{title}</Text>
-
-          <Text style={styles.message}>{message}</Text>
-
+          {/* Actions */}
           <View style={styles.buttons}>
             <Pressable
               style={({ pressed }) => [
@@ -111,30 +118,43 @@ export default function ConfirmModal({
               onPress={onConfirm}
               disabled={loading}
             >
-              <Ionicons
-                name={
-                  destructive
-                    ? "trash-outline"
-                    : "checkmark"
-                }
-                size={18}
-                color={
-                  destructive
-                    ? "#C13515"
-                    : "#07111F"
-                }
-              />
+              {loading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={
+                    destructive
+                      ? "#FFFFFF"
+                      : "#07111F"
+                  }
+                />
+              ) : (
+                <>
+                  <Ionicons
+                    name={
+                      destructive
+                        ? "close-circle-outline"
+                        : "checkmark-circle-outline"
+                    }
+                    size={18}
+                    color={
+                      destructive
+                        ? "#FFFFFF"
+                        : "#07111F"
+                    }
+                  />
 
-              <Text
-                style={[
-                  styles.confirmButtonText,
-                  destructive
-                    ? styles.destructiveButtonText
-                    : styles.primaryButtonText,
-                ]}
-              >
-                {loading ? "Please wait..." : confirmText}
-              </Text>
+                  <Text
+                    style={[
+                      styles.confirmButtonText,
+                      destructive
+                        ? styles.destructiveButtonText
+                        : styles.primaryButtonText,
+                    ]}
+                  >
+                    {confirmText}
+                  </Text>
+                </>
+              )}
             </Pressable>
           </View>
         </View>
@@ -146,33 +166,50 @@ export default function ConfirmModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    backgroundColor: "rgba(7, 17, 31, 0.62)",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
   },
 
   modal: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 390,
+
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
-    padding: 22,
 
-   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+    borderRadius: 20,
 
-    elevation: 8,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 18,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+
+    elevation: 12,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
 
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 18,
+
+    marginRight: 13,
+    flexShrink: 0,
   },
 
   normalIconContainer: {
@@ -180,44 +217,53 @@ const styles = StyleSheet.create({
   },
 
   destructiveIconContainer: {
-    backgroundColor: "#FDEEEE",
+    backgroundColor: "#FDECEC",
+  },
+
+  headerText: {
+    flex: 1,
+    paddingTop: 1,
   },
 
   title: {
-    color: "#222222",
-    fontSize: 22,
+    color: "#171717",
+    fontSize: 20,
     fontWeight: "800",
-    letterSpacing: -0.4,
+    letterSpacing: -0.35,
   },
 
   message: {
-    color: "#717171",
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
+    color: "#666666",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 5,
   },
 
   buttons: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 24,
+    marginTop: 20,
   },
 
   button: {
     flex: 1,
-    minHeight: 50,
-    borderRadius: 14,
+    minHeight: 48,
+
+    borderRadius: 12,
+
     alignItems: "center",
     justifyContent: "center",
+
     flexDirection: "row",
     gap: 6,
+
     paddingHorizontal: 12,
   },
 
   cancelButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-    borderColor: "#DDDDDD",
+    borderColor: "#E2E2E2",
   },
 
   cancelButtonText: {
@@ -233,14 +279,14 @@ const styles = StyleSheet.create({
   },
 
   destructiveButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#C13515",
     borderWidth: 1,
-    borderColor: "#E0A6A6",
+    borderColor: "#C13515",
   },
 
   confirmButtonText: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   primaryButtonText: {
@@ -248,11 +294,12 @@ const styles = StyleSheet.create({
   },
 
   destructiveButtonText: {
-    color: "#C13515",
+    color: "#FFFFFF",
   },
 
   pressed: {
-    opacity: 0.72,
+    opacity: 0.76,
+    transform: [{ scale: 0.985 }],
   },
 
   disabled: {
