@@ -102,6 +102,8 @@ export default function GameBookingAction({
 
   const isFull = status === "full" || spotsLeft <= 0;
 
+  const isCancelled = status === "cancelled";
+
   const isConfirmed = bookingStatus === "confirmed";
 
   const isWaitlisted = bookingStatus === "waitlisted";
@@ -331,7 +333,7 @@ export default function GameBookingAction({
   }
 
   async function handleJoinGame() {
-    if (joining) return;
+    if (joining || isCancelled) return;
 
     setPaymentMessage(null);
 
@@ -572,6 +574,7 @@ export default function GameBookingAction({
   const actionDisabled =
     stateLoading ||
     joining ||
+    isCancelled ||
     isConfirmed ||
     isWaitlisted ||
     (isPendingPayment && isPaymentSubmitted) ||
@@ -579,7 +582,23 @@ export default function GameBookingAction({
 
   return (
     <>
-      {isConfirmed ? (
+      {isCancelled ? (
+        <View style={styles.cancelledFooter}>
+          <View style={styles.cancelledIcon}>
+            <Ionicons name="close" size={18} color="#B42318" />
+          </View>
+
+          <View style={styles.cancelledContent}>
+            <Text style={styles.cancelledTitle}>
+              {t("bookingAction.gameCancelled")}
+            </Text>
+
+            <Text style={styles.cancelledText}>
+              {t("bookingAction.gameCancelledDescription")}
+            </Text>
+          </View>
+        </View>
+      ) : isConfirmed ? (
         <View style={styles.confirmedFooter}>
           <Pressable
             style={({ pressed }) => [
@@ -1596,5 +1615,43 @@ const styles = StyleSheet.create({
     color: "#07111F",
     fontSize: 17,
     fontWeight: "900",
+  },
+
+  cancelledFooter: {
+    minHeight: 86,
+    backgroundColor: "#FFF5F4",
+    borderTopWidth: 1,
+    borderTopColor: "#F5C2BD",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  cancelledIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#FEE4E2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cancelledContent: {
+    flex: 1,
+  },
+
+  cancelledTitle: {
+    color: "#B42318",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+
+  cancelledText: {
+    color: "#7A4540",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 2,
   },
 });

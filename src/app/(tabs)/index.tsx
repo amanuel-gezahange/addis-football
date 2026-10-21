@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Calendar } from "react-native-calendars";
 import { Modal } from "react-native";
@@ -75,6 +75,7 @@ const CITY_OPTIONS = [
 ] as const;
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { language, t } = useLanguage();
   const { width } = useWindowDimensions();
   const isDesktopWeb = Platform.OS === "web" && width >= 900;
@@ -107,6 +108,7 @@ export default function HomeScreen() {
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [formatFilter, setFormatFilter] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   const isSearchMode = searchFocused || search.trim().length > 0;
 
@@ -183,6 +185,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchGames();
+      fetchUnreadNotifications();
     }, []),
   );
 
@@ -244,6 +247,30 @@ export default function HomeScreen() {
 
     setGames(mappedGames);
     setLoading(false);
+  }
+
+  async function fetchUnreadNotifications() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setHasUnreadNotifications(false);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+
+    if (error) {
+      console.log("Unread notifications error:", error.message);
+      return;
+    }
+
+    setHasUnreadNotifications((count ?? 0) > 0);
   }
 
   function getAddisDateKey(timestamp: string) {
@@ -569,13 +596,18 @@ export default function HomeScreen() {
                       />
                     </Pressable>
                   </View>
-                  <Pressable style={styles.heroNotificationButton}>
+                  <Pressable
+                    style={styles.heroNotificationButton}
+                    onPress={() => router.push("/notifications")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Notifications"
+                  >
                     <Ionicons
                       name="notifications-outline"
                       size={22}
                       color="#FFFFFF"
                     />
-                    <View style={styles.notificationDot} />
+                    {hasUnreadNotifications && <View style={styles.notificationDot} />}
                   </Pressable>
                 </View>
                 <View style={styles.heroMessage}>
@@ -705,15 +737,19 @@ export default function HomeScreen() {
 
               <Pressable
                 style={({ pressed }) => [
-                  styles.dateButton,
-                  styles.calendarDateButton,
-                  pressed && styles.dateButtonPressed,
+                  styles.headerNotificationButton,
+                  pressed && styles.headerNotificationButtonPressed,
                 ]}
-                onPress={() => setCalendarVisible(true)}
+                onPress={() => router.push("/notifications")}
                 accessibilityRole="button"
-                accessibilityLabel={t("discover.openCalendar")}
+                accessibilityLabel="Notifications"
               >
-                <Ionicons name="calendar-outline" size={22} color="#FFFFFF" />
+                <Ionicons
+                  name="notifications-outline"
+                  size={21}
+                  color="#FFFFFF"
+                />
+                {hasUnreadNotifications && <View style={styles.notificationDot} />}
               </Pressable>
             </ScrollView>
           )}

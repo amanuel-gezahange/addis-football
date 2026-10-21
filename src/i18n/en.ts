@@ -1,6 +1,7 @@
 const en = {
   common: {
     appName: "Addis Football",
+    back: "Go back",
 
     loading: "Loading...",
 
@@ -16,10 +17,8 @@ const en = {
   },
 
   tabs: {
-    discover: "Discover",
-
+    games: "Games",
     bookings: "Bookings",
-
     profile: "Profile",
   },
 
@@ -1048,75 +1047,142 @@ const en = {
 
   profile: {
     title: "Profile",
-    personalInformation: "Personal information",
 
-    subtitle: "Your player information",
+    footballPlayer: "Football Player",
+    admin: "Admin",
+    organizer: "Organizer",
 
-    fullName: "Full Name",
+    skillLevel: "Skill Level",
+    notSet: "Not set",
 
-    phone: "Phone",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+
+    editProfile: "Edit profile",
+    settings: "Settings",
+
+    adminTools: "Admin Tools",
+    adminToolsSubtitle: "Manage football games",
+
+    createGame: "Create Game",
+    createGameSubtitle: "Add a new football game",
+
+    manageGames: "Manage Games",
+    manageGamesSubtitle: "Edit or cancel existing games",
+
+    paymentRequests: "Payment Requests",
+    paymentRequestsSubtitle: "Confirm player payments",
+  },
+
+  editProfile: {
+    playerProfile: "Player profile",
+
+    skillDescription:
+      "Choose the level that best describes you.",
+    title: "Edit Profile",
+
+    fullName: "Full name",
+    fullNamePlaceholder: "Enter your full name",
+
+    phoneNumber: "Phone number",
+    phonePlaceholder: "Enter your phone number",
 
     skillLevel: "Skill Level",
 
     beginner: "Beginner",
-
     intermediate: "Intermediate",
-
     advanced: "Advanced",
 
-    saveProfile: "Save Profile",
-
-    createGame: "Create Game",
-
-    manageGames: "Manage Games",
-
-    signOut: "Sign Out",
-
-    language: "Language",
-
-    footballPlayer: "Football Player",
-
-    phoneNumber: "Phone number",
-
-    admin: "Admin",
-
-    organizer: "Organizer",
-
-    namePlaceholder: "Enter your name",
-
-    phoneHelp: "Your phone number is connected to your account.",
-
-    adminTools: "Admin Tools",
-
-    adminToolsSubtitle: "Manage football games",
-
-    createGameSubtitle: "Add a new football game",
-
-    manageGamesSubtitle: "Edit or cancel existing games",
-
-    paymentRequests: "Payment Requests",
-
-    paymentRequestsSubtitle: "Confirm player payments",
+    saveChanges: "Save Changes",
+    saving: "Saving...",
 
     nameRequired: "Name required",
-
     nameRequiredMessage: "Please enter your full name.",
 
     skillRequired: "Skill level required",
-
     skillRequiredMessage: "Please select your skill level.",
 
     error: "Error",
-
     notLoggedIn: "You are not logged in.",
 
-    couldNotSave: "Could not save profile",
-
-    saved: "Saved",
+    couldNotLoadProfile: "Could not load profile",
+    couldNotSaveProfile: "Could not save profile",
 
     profileUpdated: "Your profile has been updated.",
+  },
+
+  settings: {
+    title: "Settings",
+
+    general: "General",
+
+    language: "Language",
+
+    notifications: "Notifications",
+    notificationsSubtitle: "View your game updates",
+
+    support: "Support",
+
+    helpSupport: "Help & Support",
+    helpSupportSubtitle: "Get help with Addis Football",
+
+    privacyPolicy: "Privacy Policy",
+
+    account: "Account",
+
+    deleteAccount: "Delete Account",
+    signOut: "Sign Out",
 
     signOutFailed: "Sign out failed",
+
+    unableToOpenLink: "Unable to open link",
+    unableToOpenLinkMessage:
+      "This link could not be opened on your device.",
+
+    pleaseTryAgain: "Please try again.",
+
+    contactSupport: "Contact Support",
+    emailUsAt: "Email us at {email}",
+
+    supportEmailSubject: "Addis Football Support",
+
+    footer: "Addis Football",
+  },
+
+  notifications: {
+    title: "Notifications",
+
+    loading: "Loading notifications...",
+
+    empty: "No notifications yet",
+    emptyDescription:
+      "Game updates and booking notifications will appear here.",
+
+    gameUpdated: "Game updated",
+    bookingConfirmed: "Booking confirmed",
+    gameCancelled: "Game cancelled",
+    gameReminder: "Game starts in 1 hour",
+
+    gameUpdatedMessage:
+      "{game} has an important schedule or location update.",
+
+    bookingConfirmedMessage:
+      "Your booking for {game} is confirmed.",
+
+    gameCancelledMessage:
+      "{game} has been cancelled by the organizer.",
+
+    gameReminderMessage:
+      "{game} starts in about 1 hour. Time to get ready!",
+
+    couldNotLoad: "Could not load notifications.",
+  },
+
+  bookingAction: {
+    gameCancelled: "Game cancelled",
+    gameCancelledDescription:
+      "This game has been cancelled by the organizer.",
   },
 
   gameDetails: {
@@ -1142,7 +1208,9 @@ const en = {
       "Look for the game organizer when you arrive.",
 
     directionsToField: "Directions to the field",
-    organizerPaymentNotice: "After reserving, you'll receive the organizer's payment details and time to complete your payment.",
+    organizerPaymentNotice:
+      "After reserving, you'll receive the organizer's payment details and time to complete your payment.",
+
     discover: "Discover",
     gameNotFound: "Game not found.",
     couldNotLoadGame: "We couldn't load this game.",
@@ -1169,8 +1237,10 @@ const en = {
 
     payment: "Payment",
     free: "Free",
-    noPaymentRequired: "No payment is required for this game.",
-    paymentAtVenue: "Payment is made at the venue.",
+    noPaymentRequired:
+      "No payment is required for this game.",
+    paymentAtVenue:
+      "Payment is made at the venue.",
     organizerPaymentInstructions:
       "Payment instructions are provided after you reserve your spot.",
     paymentDetailsAfterReservation:

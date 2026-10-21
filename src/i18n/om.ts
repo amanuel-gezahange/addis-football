@@ -13,10 +13,11 @@ const om = {
     retry: "Irra deebi'i",
 
     error: "Rakkoon uumameera",
+    back: "Duubatti",
   },
 
   tabs: {
-    discover: "Taphoota",
+    games: "Taphoota",
 
     bookings: "Taphoota Koo",
 
@@ -1028,74 +1029,110 @@ const om = {
   profile: {
     title: "Profaayilii",
     personalInformation: "Odeeffannoo dhuunfaa",
-
     paymentRequests: "Gaaffiiwwan kaffaltii",
-
     paymentRequestsSubtitle: "Kaffaltii taphattootaa mirkaneessi",
-
     subtitle: "Odeeffannoo taphataa kee",
-
     fullName: "Maqaa guutuu",
-
     phone: "Bilbila",
-
     skillLevel: "Sadarkaa dandeettii",
-
+    notSet: "Hin filatamne",
     beginner: "Jalqabaa",
-
     intermediate: "Giddugaleessa",
-
     advanced: "Olaanaa",
-
     saveProfile: "Profaayilii olkaa'i",
-
     createGame: "Tapha uumi",
-
-    manageGames: "Taphoota bulchi",
-
-    signOut: "Ba'i",
-
-    language: "Afaan",
-
-    footballPlayer: "Taphataa kubbaa miilaa",
-
-    phoneNumber: "Lakkoofsa bilbilaa",
-
-    admin: "Bulchaa",
-
-    organizer: "Qopheessaa",
-
-    namePlaceholder: "Maqaa kee galchi",
-
-    phoneHelp: "Lakkoofsi bilbilaa kee akkaawuntii kee waliin walqabateera.",
-
-    adminTools: "Meeshaalee bulchaa",
-
-    adminToolsSubtitle: "Taphoota kubbaa miilaa bulchi",
-
     createGameSubtitle: "Tapha kubbaa miilaa haaraa dabali",
-
+    manageGames: "Taphoota bulchi",
     manageGamesSubtitle: "Taphoota jiran gulaali ykn haqi",
-
+    signOut: "Ba'i",
+    language: "Afaan",
+    footballPlayer: "Taphataa kubbaa miilaa",
+    phoneNumber: "Lakkoofsa bilbilaa",
+    admin: "Bulchaa",
+    organizer: "Qopheessaa",
+    namePlaceholder: "Maqaa kee galchi",
+    phoneHelp: "Lakkoofsi bilbilaa kee akkaawuntii kee waliin walqabateera.",
+    editProfile: "Profaayilii gulaali",
+    settings: "Qindaa'ina",
+    adminTools: "Meeshaalee bulchaa",
+    adminToolsSubtitle: "Taphoota kubbaa miilaa bulchi",
     nameRequired: "Maqaan barbaachisa",
-
     nameRequiredMessage: "Maaloo maqaa kee guutuu galchi.",
-
     skillRequired: "Sadarkaan dandeettii barbaachisa",
-
     skillRequiredMessage: "Maaloo sadarkaa dandeettii kee fili.",
-
     error: "Dogoggora",
-
     notLoggedIn: "Akkaawuntii keetti hin seenne.",
-
     couldNotSave: "Profaayilii olkaa'uun hin danda'amne",
-
     saved: "Olkaa'ameera",
-
     profileUpdated: "Profaayilli kee haaromfameera.",
-
     signOutFailed: "Ba'uun hin milkoofne",
+  },
+
+  editProfile: {
+    title: "Profaayilii Gulaali",
+    fullName: "Maqaa guutuu",
+    fullNamePlaceholder: "Maqaa kee guutuu galchi",
+    phoneNumber: "Lakkoofsa bilbilaa",
+    phonePlaceholder: "Lakkoofsa bilbilaa kee galchi",
+    skillLevel: "Sadarkaa dandeettii",
+    beginner: "Jalqabaa",
+    intermediate: "Giddugaleessa",
+    advanced: "Olaanaa",
+    saveChanges: "Jijjiirama Olkaa'i",
+    saving: "Olkaa'aa jira...",
+    nameRequired: "Maqaan barbaachisa",
+    nameRequiredMessage: "Maaloo maqaa kee guutuu galchi.",
+    skillRequired: "Sadarkaan dandeettii barbaachisa",
+    skillRequiredMessage: "Maaloo sadarkaa dandeettii kee fili.",
+    error: "Dogoggora",
+    notLoggedIn: "Akkaawuntii keetti hin seenne.",
+    couldNotLoadProfile: "Profaayilii fe'uun hin danda'amne",
+    couldNotSaveProfile: "Profaayilii olkaa'uun hin danda'amne",
+    profileUpdated: "Profaayilli kee haaromfameera.",
+  },
+
+  settings: {
+    title: "Qindaa'ina",
+    general: "Waliigala",
+    language: "Afaan",
+    notifications: "Beeksisawwan",
+    notificationsSubtitle: "Haaromsa taphoota kee ilaali",
+    support: "Deeggarsa",
+    helpSupport: "Gargaarsaa fi Deeggarsa",
+    helpSupportSubtitle: "Addis Football irratti gargaarsa argadhu",
+    privacyPolicy: "Imaammata Dhuunfaa",
+    account: "Akkaawuntii",
+    deleteAccount: "Akkaawuntii Haqi",
+    signOut: "Ba'i",
+    signOutFailed: "Ba'uun hin milkoofne",
+    unableToOpenLink: "Liinkii banuun hin danda'amne",
+    unableToOpenLinkMessage: "Liinkiin kun meeshaa kee irratti banamuu hin dandeenye.",
+    pleaseTryAgain: "Maaloo irra deebi'ii yaali.",
+    contactSupport: "Deeggarsa Qunnami",
+    emailUsAt: "Imeelii nuuf ergi: {email}",
+    supportEmailSubject: "Deeggarsa Addis Football",
+    footer: "Addis Football",
+  },
+
+  notifications: {
+    title: "Beeksisawwan",
+    loading: "Beeksisawwan fe'aa jira...",
+    empty: "Beeksisni ammaaf hin jiru",
+    emptyDescription: "Haaromsi taphaa fi beeksisni qabannaa asitti mul'ata.",
+    gameUpdated: "Taphi haaromfameera",
+    bookingConfirmed: "Qabannaan mirkanaa'eera",
+    gameCancelled: "Taphi haqameera",
+    gameReminder: "Taphi sa'aatii 1 keessatti jalqaba",
+    gameUpdatedMessage: "{game} irratti sagantaa ykn bakka ilaalchisee jijjiiramni barbaachisaan jira.",
+    bookingConfirmedMessage: "Qabannaan kee {game} irratti mirkanaa'eera.",
+    gameCancelledMessage: "{game} qopheessaan haqameera.",
+    gameReminderMessage: "{game} sa'aatii 1 keessatti jalqaba. Qophaa'i!",
+    couldNotLoad: "Beeksisawwan fe'uun hin danda'amne.",
+  },
+
+  bookingAction: {
+    gameCancelled: "Taphi haqameera",
+    gameCancelledDescription: "Taphi kun qopheessaan haqameera.",
   },
 
   languages: {

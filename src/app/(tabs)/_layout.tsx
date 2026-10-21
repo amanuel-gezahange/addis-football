@@ -126,7 +126,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: t("tabs.discover"),
+           title: t("tabs.games"),
 
             tabBarIcon: ({
               color,

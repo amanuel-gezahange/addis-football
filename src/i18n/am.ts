@@ -13,10 +13,11 @@ const am = {
     retry: "እንደገና ሞክር",
 
     error: "ችግር ተፈጥሯል",
+    back: "ተመለስ",
   },
 
   tabs: {
-    discover: "ጨዋታዎች",
+    games: "ጨዋታዎች",
 
     bookings: "የእኔ ጨዋታዎች",
 
@@ -1005,6 +1006,8 @@ const am = {
 
     skillLevel: "የችሎታ ደረጃ",
 
+    notSet: "አልተወሰነም",
+
     beginner: "ጀማሪ",
 
     intermediate: "መካከለኛ",
@@ -1041,6 +1044,10 @@ const am = {
 
     manageGamesSubtitle: "ያሉ ጨዋታዎችን ያርትዑ ወይም ይሰርዙ",
 
+    editProfile: "ፕሮፋይል አርትዕ",
+
+    settings: "ቅንብሮች",
+
     nameRequired: "ስም ያስፈልጋል",
 
     nameRequiredMessage: "እባክዎ ሙሉ ስምዎን ያስገቡ።",
@@ -1060,6 +1067,75 @@ const am = {
     profileUpdated: "ፕሮፋይልዎ ተዘምኗል።",
 
     signOutFailed: "መውጣት አልተሳካም",
+  },
+
+  editProfile: {
+    title: "ፕሮፋይል አርትዕ",
+    playerProfile: "የተጫዋች ፕሮፋይል",
+    fullName: "ሙሉ ስም",
+    fullNamePlaceholder: "ሙሉ ስምዎን ያስገቡ",
+    phoneNumber: "ስልክ ቁጥር",
+    phonePlaceholder: "የስልክ ቁጥርዎን ያስገቡ",
+    skillLevel: "የችሎታ ደረጃ",
+    skillDescription: "እርስዎን በተሻለ የሚገልጽ የችሎታ ደረጃ ይምረጡ።",
+    beginner: "ጀማሪ",
+    intermediate: "መካከለኛ",
+    advanced: "ከፍተኛ",
+    saveChanges: "ለውጦችን አስቀምጥ",
+    saving: "በማስቀመጥ ላይ...",
+    nameRequired: "ስም ያስፈልጋል",
+    nameRequiredMessage: "እባክዎ ሙሉ ስምዎን ያስገቡ።",
+    skillRequired: "የችሎታ ደረጃ ያስፈልጋል",
+    skillRequiredMessage: "እባክዎ የችሎታ ደረጃዎን ይምረጡ።",
+    error: "ስህተት",
+    notLoggedIn: "ወደ መለያዎ አልገቡም።",
+    couldNotLoadProfile: "ፕሮፋይሉን መጫን አልተቻለም",
+    couldNotSaveProfile: "ፕሮፋይሉን ማስቀመጥ አልተቻለም",
+    profileUpdated: "ፕሮፋይልዎ ተዘምኗል።",
+  },
+
+  settings: {
+    title: "ቅንብሮች",
+    general: "አጠቃላይ",
+    language: "ቋንቋ",
+    notifications: "ማሳወቂያዎች",
+    notificationsSubtitle: "የጨዋታ ዝመናዎችዎን ይመልከቱ",
+    support: "ድጋፍ",
+    helpSupport: "እገዛ እና ድጋፍ",
+    helpSupportSubtitle: "ለአዲስ ፉትቦል እገዛ ያግኙ",
+    privacyPolicy: "የግላዊነት ፖሊሲ",
+    account: "መለያ",
+    deleteAccount: "መለያ ሰርዝ",
+    signOut: "ውጣ",
+    signOutFailed: "መውጣት አልተሳካም",
+    unableToOpenLink: "ሊንኩን መክፈት አልተቻለም",
+    unableToOpenLinkMessage: "ይህን ሊንክ በመሣሪያዎ ላይ መክፈት አልተቻለም።",
+    pleaseTryAgain: "እባክዎ እንደገና ይሞክሩ።",
+    contactSupport: "ድጋፍን ያነጋግሩ",
+    emailUsAt: "በ{email} ኢሜይል ይላኩልን",
+    supportEmailSubject: "የአዲስ ፉትቦል ድጋፍ",
+    footer: "አዲስ ፉትቦል",
+  },
+
+  notifications: {
+    title: "ማሳወቂያዎች",
+    loading: "ማሳወቂያዎችን በመጫን ላይ...",
+    empty: "እስካሁን ማሳወቂያ የለም",
+    emptyDescription: "የጨዋታ ዝመናዎች እና የምዝገባ ማሳወቂያዎች እዚህ ይታያሉ።",
+    gameUpdated: "ጨዋታው ተዘምኗል",
+    bookingConfirmed: "ምዝገባው ተረጋግጧል",
+    gameCancelled: "ጨዋታው ተሰርዟል",
+    gameReminder: "ጨዋታው በ1 ሰዓት ውስጥ ይጀምራል",
+    gameUpdatedMessage: "{game} ላይ አስፈላጊ የሰዓት ወይም የቦታ ለውጥ ተደርጓል።",
+    bookingConfirmedMessage: "ለ{game} ያደረጉት ምዝገባ ተረጋግጧል።",
+    gameCancelledMessage: "{game} በአዘጋጁ ተሰርዟል።",
+    gameReminderMessage: "{game} በ1 ሰዓት ገደማ ይጀምራል። ለመዘጋጀት ጊዜው ነው!",
+    couldNotLoad: "ማሳወቂያዎችን መጫን አልተቻለም።",
+  },
+
+  bookingAction: {
+    gameCancelled: "ጨዋታው ተሰርዟል",
+    gameCancelledDescription: "ይህ ጨዋታ በአዘጋጁ ተሰርዟል።",
   },
 
   languages: {
