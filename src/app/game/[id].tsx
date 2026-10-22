@@ -48,13 +48,7 @@ type GameDetails = {
   maps_url: string | null;
 };
 
-const fallbackImages = [
-  require("../../../assets/images/game-fallback-1.png"),
-  require("../../../assets/images/game-fallback-2.png"),
-  require("../../../assets/images/game-fallback-3.png"),
-  require("../../../assets/images/game-fallback-4.png"),
-  require("../../../assets/images/game-fallback-5.png"),
-];
+const GAME_DETAIL_HERO = require("../../../assets/images/game-detail-hero.jpg");
 
 export default function GameDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -395,16 +389,6 @@ export default function GameDetailsScreen() {
     return !area.includes(city);
   }
 
-  function getFallbackImage() {
-    const numericGameId = Number(game?.id ?? id);
-
-    const index = Number.isFinite(numericGameId)
-      ? Math.abs(numericGameId) % fallbackImages.length
-      : 0;
-
-    return fallbackImages[index];
-  }
-
   async function toggleFavorite() {
     if (!game || favoriteLoading) {
       return;
@@ -540,9 +524,7 @@ export default function GameDetailsScreen() {
   const isPaymentConfirmed =
     isBookingConfirmed && (isFree || bookingState.paymentStatus === "paid");
 
-  const heroImage = game.image_url
-    ? { uri: game.image_url }
-    : getFallbackImage();
+  const heroImage = game.image_url ? { uri: game.image_url } : GAME_DETAIL_HERO;
 
   return (
     <View style={styles.screen}>
@@ -551,7 +533,7 @@ export default function GameDetailsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* CINEMATIC HERO */}
+        {/* HERO */}
 
         <View style={styles.hero}>
           <Image
@@ -562,18 +544,47 @@ export default function GameDetailsScreen() {
 
           <View style={styles.heroOverlay} />
 
-          <SafeAreaView edges={["top"]} style={styles.heroControls}>
+          <SafeAreaView
+            edges={["top"]}
+            style={styles.heroControls}
+            pointerEvents="box-none"
+          >
             <Pressable
               style={({ pressed }) => [
                 styles.heroButton,
                 pressed && styles.heroButtonPressed,
               ]}
               onPress={goBack}
-              hitSlop={8}
+              hitSlop={10}
               accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
             </Pressable>
+
+            {/* <Pressable
+              style={({ pressed }) => [
+                styles.heroButton,
+                pressed && styles.heroButtonPressed,
+              ]}
+              onPress={toggleFavorite}
+              disabled={favoriteLoading}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isFavorite ? "Remove from favorites" : "Add to favorites"
+              }
+            >
+              {favoriteLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={23}
+                  color="#FFFFFF"
+                />
+              )}
+            </Pressable> */}
           </SafeAreaView>
         </View>
 
@@ -1102,26 +1113,27 @@ const styles = StyleSheet.create({
   hero: {
     position: "relative",
     width: "100%",
-    height: 235,
-    backgroundColor: "#07131D",
+    height: 280,
+    backgroundColor: "#B58B66",
+    overflow: "hidden",
   },
 
   sheet: {
     position: "relative",
-    marginTop: -20,
+    marginTop: -24,
 
     backgroundColor: "#FFFFFF",
 
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
 
     overflow: "hidden",
   },
 
   titleSection: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 14,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
 
   title: {
@@ -1280,13 +1292,14 @@ const styles = StyleSheet.create({
   },
 
   heroImage: {
+    ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
   },
 
   heroOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(3, 12, 19, 0.18)",
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(3, 12, 19, 0.08)",
   },
 
   heroControls: {

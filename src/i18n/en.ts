@@ -496,6 +496,97 @@ const en = {
     reset: "Reset",
     showBookings: "Show bookings",
   },
+  bottomArea: {
+    position: "absolute",
+    left: 22,
+    right: 22,
+    bottom: 32,
+
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  googleButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#FFFFFF",
+
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.85)",
+
+    elevation: 7,
+
+    shadowColor: "#000000",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+  },
+
+  googleGImage: {
+    width: 23,
+    height: 23,
+  },
+
+  telegramButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 18,
+
+    backgroundColor: "#229ED9",
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingLeft: 42,
+    paddingRight: 34,
+
+    borderWidth: 1,
+    borderColor: "#43C7FF",
+
+    elevation: 7,
+
+    shadowColor: "#000000",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+  },
+
+  telegramIconWrap: {
+    position: "absolute",
+    left: 14,
+
+    width: 25,
+    height: 25,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  telegramButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    textAlign: "center",
+    flexShrink: 1,
+  },
+
+  telegramChevron: {
+    position: "absolute",
+    right: 11,
+  },
 
   createGame: {
     city: "City",

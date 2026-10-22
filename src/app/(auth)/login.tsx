@@ -11,7 +11,6 @@ import {
   Keyboard,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -20,22 +19,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { COLORS } from "../../constants/colors";
-import { Language, languageOptions } from "../../i18n";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { supabase } from "../../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LOGIN_HERO = require("../../../assets/images/login-hero.jpg");
+const GOOGLE_ICON = require("../../../assets/images/google-g-icon.png");
 
 export default function LoginScreen() {
   const [loadingProvider, setLoadingProvider] = useState<
     "google" | "telegram" | null
   >(null);
 
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   const loading = loadingProvider !== null;
 
@@ -46,18 +43,6 @@ export default function LoginScreen() {
     }
 
     Alert.alert(title, message);
-  }
-
-  async function changeLanguage(nextLanguage: Language) {
-    await setLanguage(nextLanguage);
-    setLanguageMenuOpen(false);
-  }
-
-  function currentLanguageLabel() {
-    return (
-      languageOptions.find((option) => option.code === language)?.label ||
-      language.toUpperCase()
-    );
   }
 
   async function handleGoogleSignIn() {
@@ -80,17 +65,14 @@ export default function LoginScreen() {
 
         if (error) {
           console.log("Google web OAuth error:", error);
-
           showMessage(t("login.signInFailed"), error.message);
-
           setLoadingProvider(null);
         }
 
-        // On success Supabase redirects the browser.
         return;
       }
 
-      // ANDROID / NATIVE
+      // NATIVE
       const redirectTo = Linking.createURL("auth/callback", {
         scheme: "addisfootball",
       });
@@ -105,15 +87,12 @@ export default function LoginScreen() {
 
       if (error) {
         console.log("Google OAuth error:", error);
-
         showMessage(t("login.signInFailed"), error.message);
-
         return;
       }
 
       if (!data?.url) {
         showMessage(t("login.signInFailed"), t("login.unableToStart"));
-
         return;
       }
 
@@ -127,7 +106,6 @@ export default function LoginScreen() {
       }
 
       const returnedUrl = result.url;
-
       const parsedUrl = Linking.parse(returnedUrl);
 
       const code =
@@ -135,16 +113,13 @@ export default function LoginScreen() {
           ? parsedUrl.queryParams.code
           : null;
 
-      // PKCE response
       if (code) {
         const { error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
           console.log("Google code exchange error:", exchangeError);
-
           showMessage(t("login.signInFailed"), exchangeError.message);
-
           return;
         }
 
@@ -152,16 +127,14 @@ export default function LoginScreen() {
         return;
       }
 
-      // Implicit response fallback
+      // Implicit-flow fallback
       const hashIndex = returnedUrl.indexOf("#");
 
       if (hashIndex !== -1) {
         const hash = returnedUrl.substring(hashIndex + 1);
-
         const params = new URLSearchParams(hash);
 
         const accessToken = params.get("access_token");
-
         const refreshToken = params.get("refresh_token");
 
         if (accessToken && refreshToken) {
@@ -172,9 +145,7 @@ export default function LoginScreen() {
 
           if (sessionError) {
             console.log("Google session error:", sessionError);
-
             showMessage(t("login.signInFailed"), sessionError.message);
-
             return;
           }
 
@@ -225,17 +196,14 @@ export default function LoginScreen() {
 
         if (error) {
           console.log("Telegram web OAuth error:", error);
-
           showMessage(t("login.signInFailed"), error.message);
-
           setLoadingProvider(null);
         }
 
-        // On success Supabase redirects the browser.
         return;
       }
 
-      // ANDROID / NATIVE
+      // NATIVE
       const redirectTo = Linking.createURL("auth/callback", {
         scheme: "addisfootball",
       });
@@ -250,15 +218,12 @@ export default function LoginScreen() {
 
       if (error) {
         console.log("Telegram OAuth error:", error);
-
         showMessage(t("login.signInFailed"), error.message);
-
         return;
       }
 
       if (!data?.url) {
         showMessage(t("login.signInFailed"), t("login.unableToStart"));
-
         return;
       }
 
@@ -272,7 +237,6 @@ export default function LoginScreen() {
       }
 
       const returnedUrl = result.url;
-
       const parsedUrl = Linking.parse(returnedUrl);
 
       const code =
@@ -280,16 +244,13 @@ export default function LoginScreen() {
           ? parsedUrl.queryParams.code
           : null;
 
-      // PKCE response
       if (code) {
         const { error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
           console.log("Telegram code exchange error:", exchangeError);
-
           showMessage(t("login.signInFailed"), exchangeError.message);
-
           return;
         }
 
@@ -297,16 +258,14 @@ export default function LoginScreen() {
         return;
       }
 
-      // Implicit response fallback
+      // Implicit-flow fallback
       const hashIndex = returnedUrl.indexOf("#");
 
       if (hashIndex !== -1) {
         const hash = returnedUrl.substring(hashIndex + 1);
-
         const params = new URLSearchParams(hash);
 
         const accessToken = params.get("access_token");
-
         const refreshToken = params.get("refresh_token");
 
         if (accessToken && refreshToken) {
@@ -317,9 +276,7 @@ export default function LoginScreen() {
 
           if (sessionError) {
             console.log("Telegram session error:", sessionError);
-
             showMessage(t("login.signInFailed"), sessionError.message);
-
             return;
           }
 
@@ -352,108 +309,52 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {/* HERO */}
+      <View style={styles.container}>
+        {/* BACKGROUND PHOTO */}
+        <Image
+          source={LOGIN_HERO}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
 
-        <View style={styles.hero}>
-          <Image
-            source={LOGIN_HERO}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
+        {/* SUBTLE DARK OVERLAY */}
+        <View style={styles.overlay} />
 
-          <View style={styles.heroDarkOverlay} />
+        {/* BRAND */}
+        <View style={styles.brand}>
+          <Text style={styles.brandLine}>Addis</Text>
 
-          {/* LANGUAGE */}
+          <Text style={styles.brandAccent}>Football</Text>
 
-          {/* <View style={styles.languageArea}>
-            <Pressable
-              style={styles.languageButton}
-              onPress={() => setLanguageMenuOpen((open) => !open)}
-              accessibilityRole="button"
-            >
-              <Ionicons name="globe-outline" size={19} color="#FFFFFF" />
-
-              <Text style={styles.languageButtonText}>
-                {currentLanguageLabel()}
-              </Text>
-
-              <Ionicons
-                name={languageMenuOpen ? "chevron-up" : "chevron-down"}
-                size={17}
-                color="#FFFFFF"
-              />
-            </Pressable>
-
-            {languageMenuOpen && (
-              <View style={styles.languageMenu}>
-                {languageOptions.map((option) => {
-                  const selected = language === option.code;
-
-                  return (
-                    <Pressable
-                      key={option.code}
-                      style={[
-                        styles.languageOption,
-                        selected && styles.languageOptionSelected,
-                      ]}
-                      onPress={() => changeLanguage(option.code)}
-                    >
-                      <View style={styles.languageOptionTextWrap}>
-                        <Text
-                          style={[
-                            styles.languageOptionText,
-                            selected && styles.languageOptionTextSelected,
-                          ]}
-                        >
-                          {option.label}
-                        </Text>
-
-                        <Text
-                          style={[
-                            styles.languageOptionCode,
-                            selected && styles.languageOptionCodeSelected,
-                          ]}
-                        >
-                          {option.code.toUpperCase()}
-                        </Text>
-                      </View>
-
-                      {selected && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={19}
-                          color={COLORS.primary}
-                        />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
-          </View> */}
-
-          {/* BRAND */}
-
-          <View style={styles.heroBrand}>
-            <Text style={styles.brandLine}>Addis</Text>
-
-            <Text style={styles.brandAccent}>Football</Text>
-
-            <Text style={styles.heroTagline}>Our city. Our game.</Text>
-          </View>
+          <Text style={styles.tagline}>Find games. Play!</Text>
         </View>
 
-        {/* AUTH AREA */}
+        {/* LOGIN ACTIONS */}
+        <View style={styles.bottomArea}>
+          {/* GOOGLE */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("login.continueGoogle")}
+            disabled={loading}
+            onPress={handleGoogleSignIn}
+            style={({ pressed }) => [
+              styles.googleButton,
+              pressed && !loading && styles.googleButtonPressed,
+              loading && styles.authButtonDisabled,
+            ]}
+          >
+            {loadingProvider === "google" ? (
+              <ActivityIndicator size="small" color="#4285F4" />
+            ) : (
+              <Image
+                source={GOOGLE_ICON}
+                style={styles.googleGImage}
+                resizeMode="contain"
+              />
+            )}
+          </Pressable>
 
-        <View style={styles.authArea}>
-          {/* TELEGRAM PRIMARY */}
-
+          {/* TELEGRAM */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("login.continueTelegram")}
@@ -475,130 +376,21 @@ export default function LoginScreen() {
               </>
             ) : (
               <>
-                <View style={styles.telegramIconWrap}>
-                  <Ionicons name="paper-plane" size={25} color="#FFFFFF" />
-                </View>
+                <Ionicons
+                  name="paper-plane"
+                  size={21}
+                  color="#FFFFFF"
+                  style={styles.telegramIcon}
+                />
 
-                <Text style={styles.telegramButtonText}>
+                <Text style={styles.telegramButtonText} numberOfLines={1}>
                   {t("login.continueTelegram")}
                 </Text>
-
-                <Ionicons
-                  name="chevron-forward"
-                  size={22}
-                  color="#FFFFFF"
-                  style={styles.authChevron}
-                />
               </>
             )}
           </Pressable>
-
-          {/* OR */}
-
-          <View style={styles.orRow}>
-            <View style={styles.orLine} />
-
-            <Text style={styles.orText}>{t("login.or")}</Text>
-
-            <View style={styles.orLine} />
-          </View>
-
-          {/* GOOGLE SECONDARY */}
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("login.continueGoogle")}
-            disabled={loading}
-            onPress={handleGoogleSignIn}
-            style={({ pressed }) => [
-              styles.googleButton,
-              pressed && !loading && styles.googleButtonPressed,
-              loading && styles.authButtonDisabled,
-            ]}
-          >
-            {loadingProvider === "google" ? (
-              <>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-
-                <Text style={styles.googleButtonText}>
-                  {t("login.connecting")}
-                </Text>
-              </>
-            ) : (
-              <>
-                <View style={styles.googleIcon}>
-                  <Text style={styles.googleG}>G</Text>
-                </View>
-
-                <Text style={styles.googleButtonText}>
-                  {t("login.continueGoogle")}
-                </Text>
-
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color="#FFFFFF"
-                  style={styles.authChevron}
-                />
-              </>
-            )}
-          </Pressable>
-
-          {/* VALUE PROPOSITION */}
-
-          <View style={styles.features}>
-            <View style={styles.feature}>
-              <View style={styles.featureIcon}>
-                <Ionicons
-                  name="people-outline"
-                  size={21}
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <Text style={styles.featureTitle}>Real</Text>
-
-              <Text style={styles.featureText}>players</Text>
-            </View>
-
-            <View style={styles.featureDivider} />
-
-            <View style={styles.feature}>
-              <View style={styles.featureIcon}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={21}
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <Text style={styles.featureTitle}>Weekly</Text>
-
-              <Text style={styles.featureText}>games</Text>
-            </View>
-
-            <View style={styles.featureDivider} />
-
-            <View style={styles.feature}>
-              <View style={styles.featureIcon}>
-                <Ionicons
-                  name="location-outline"
-                  size={21}
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <Text style={styles.featureTitle}>Across</Text>
-
-              <Text style={styles.featureText}>Addis</Text>
-            </View>
-          </View>
-
-          <Text style={styles.helperText}>{t("login.helper")}</Text>
-
-          <Text style={styles.footer}>Addis Football</Text>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -609,165 +401,118 @@ const styles = StyleSheet.create({
     backgroundColor: "#07111F",
   },
 
-  scrollView: {
+  container: {
     flex: 1,
-    backgroundColor: "#07111F",
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-    backgroundColor: "#07111F",
-  },
-
-  hero: {
-    width: "100%",
-    height: 470,
     position: "relative",
     overflow: "hidden",
+    backgroundColor: "#07111F",
   },
 
   heroImage: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
   },
 
-  heroDarkOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(4, 13, 22, 0.24)",
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(4, 10, 16, 0.20)",
   },
 
-  languageArea: {
+  /* BRAND */
+
+  brand: {
     position: "absolute",
-    top: 18,
-    right: 18,
-    zIndex: 20,
-    alignItems: "flex-end",
+    left: 26,
+    right: 22,
+    top: "23%",
   },
 
-  languageButton: {
-    minHeight: 44,
-    paddingHorizontal: 14,
-    borderRadius: 24,
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-
-    backgroundColor: "rgba(7, 17, 31, 0.72)",
-
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.28)",
-  },
-
-  languageButtonText: {
+  brandLine: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 54,
+    lineHeight: 55,
+    fontWeight: "900",
+    letterSpacing: -2,
   },
 
-  languageMenu: {
-    width: 190,
-    marginTop: 8,
-    padding: 7,
-
-    borderRadius: 16,
-
-    backgroundColor: "#FFFFFF",
-
-   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.18)",
-
-    elevation: 8,
+  brandAccent: {
+    color: COLORS.primary,
+    fontSize: 54,
+    lineHeight: 56,
+    fontWeight: "900",
+    letterSpacing: -2,
   },
 
-  languageOption: {
-    minHeight: 47,
-    paddingHorizontal: 11,
-    borderRadius: 11,
+  tagline: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "800",
+    marginTop: 10,
 
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    textShadowColor: "rgba(0,0,0,0.35)",
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 4,
   },
 
-  languageOptionSelected: {
-    backgroundColor: "#EAF9FE",
-  },
+  /* BOTTOM LOGIN ROW */
 
-  languageOptionTextWrap: {
+  bottomArea: {
+    position: "absolute",
+    left: 22,
+    right: 22,
+    bottom: 32,
+
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
 
-  languageOptionText: {
-    color: "#17202A",
-    fontSize: 14,
-    fontWeight: "700",
+  googleButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    flexShrink: 0,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#FFFFFF",
+
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.85)",
+
+    elevation: 7,
+
+    shadowColor: "#000000",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
   },
 
-  languageOptionTextSelected: {
-    color: "#07111F",
+  googleGImage: {
+    width: 24,
+    height: 24,
   },
 
-  languageOptionCode: {
-    color: "#98A2AA",
-    fontSize: 9,
-    fontWeight: "800",
+  googleButtonPressed: {
+    transform: [{ scale: 0.96 }],
+    opacity: 0.94,
   },
 
-  languageOptionCodeSelected: {
-    color: "#568091",
-  },
-
-  heroBrand: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    bottom: 34,
-  },
-
-  brandLine: {
-    color: "#FFFFFF",
-    fontSize: 44,
-    lineHeight: 46,
-    fontWeight: "900",
-    letterSpacing: -1.8,
-  },
-
-  brandAccent: {
-    color: COLORS.primary,
-    fontSize: 44,
-    lineHeight: 46,
-    fontWeight: "900",
-    letterSpacing: -1.8,
-  },
-
-  heroTagline: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "700",
-    marginTop: 11,
-  },
-
-  authArea: {
-    flex: 1,
-
-    width: "100%",
-    maxWidth: 560,
-    alignSelf: "center",
-
-    paddingHorizontal: 22,
-    paddingTop: 24,
-    paddingBottom: 22,
-
-    backgroundColor: "#07111F",
-  },
+  /* TELEGRAM */
 
   telegramButton: {
-    width: "100%",
-    minHeight: 62,
+    flex: 1,
+    height: 56,
+    minWidth: 0,
 
     borderRadius: 18,
 
@@ -777,14 +522,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
 
-    paddingHorizontal: 54,
+    paddingHorizontal: 12,
+    gap: 9,
 
     borderWidth: 1,
-    borderColor: "#3DC5FF",
+    borderColor: "#43C7FF",
 
-   boxShadow: "0 5px 13px rgba(34, 158, 217, 0.32)",
+    elevation: 7,
 
-    elevation: 6,
+    shadowColor: "#000000",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
   },
 
   telegramButtonPressed: {
@@ -792,179 +544,23 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
 
-  telegramIconWrap: {
-    position: "absolute",
-    left: 21,
-
-    width: 30,
-    height: 30,
-
-    alignItems: "center",
-    justifyContent: "center",
+  telegramIcon: {
+    flexShrink: 0,
   },
 
   telegramButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "900",
     textAlign: "center",
+
+    flexShrink: 1,
   },
 
-  orRow: {
-    width: "100%",
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    marginVertical: 18,
-  },
-
-  orLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#314657",
-  },
-
-  orText: {
-    color: "#8294A3",
-    fontSize: 12,
-    fontWeight: "900",
-
-    marginHorizontal: 16,
-  },
-
-  googleButton: {
-    width: "100%",
-    minHeight: 60,
-
-    borderRadius: 17,
-
-    backgroundColor: "#0D1C2A",
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-
-    paddingHorizontal: 52,
-
-    borderWidth: 1,
-    borderColor: "#314657",
-  },
-
-  googleButtonPressed: {
-    backgroundColor: "#14283A",
-    transform: [{ scale: 0.99 }],
-  },
+  /* SHARED */
 
   authButtonDisabled: {
     opacity: 0.65,
-  },
-
-  googleIcon: {
-    position: "absolute",
-    left: 20,
-
-    width: 28,
-    height: 28,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  googleG: {
-    color: "#4285F4",
-    fontSize: 22,
-    fontWeight: "900",
-  },
-
-  googleButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  authChevron: {
-    position: "absolute",
-    right: 18,
-  },
-
-  features: {
-    minHeight: 104,
-
-    marginTop: 24,
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-
-    borderRadius: 18,
-
-    backgroundColor: "#0D1C2A",
-
-    borderWidth: 1,
-    borderColor: "#193143",
-
-    paddingHorizontal: 10,
-  },
-
-  feature: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  featureIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-
-    backgroundColor: "#102A3A",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginBottom: 6,
-
-    borderWidth: 1,
-    borderColor: "#1C5368",
-  },
-
-  featureTitle: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  featureText: {
-    color: "#8FA1AF",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 1,
-  },
-
-  featureDivider: {
-    width: 1,
-    height: 42,
-    backgroundColor: "#233746",
-  },
-
-  helperText: {
-    color: "#738695",
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: "center",
-
-    marginTop: 18,
-    paddingHorizontal: 12,
-  },
-
-  footer: {
-    color: "#536877",
-    fontSize: 11,
-    fontWeight: "700",
-    textAlign: "center",
-
-    marginTop: 16,
   },
 });
