@@ -65,7 +65,6 @@ function getBankOption(name: string) {
   return [...TOP_BANKS, ...OTHER_BANKS].find((bank) => bank.name === name);
 }
 
-
 export default function OrganizerAccount() {
   const insets = useSafeAreaInsets();
 
@@ -120,7 +119,9 @@ export default function OrganizerAccount() {
       const [profileResult, applicationResult] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, phone, role, accepts_telebirr, accepts_mobile_banking, telebirr_phone, telebirr_account_name, bank_name, bank_account_number, bank_account_name")
+          .select(
+            "full_name, phone, role, accepts_telebirr, accepts_mobile_banking, telebirr_phone, telebirr_account_name, bank_name, bank_account_number, bank_account_name",
+          )
           .eq("id", user.id)
           .maybeSingle(),
 
@@ -132,10 +133,7 @@ export default function OrganizerAccount() {
       ]);
 
       if (profileResult.error) {
-        console.error(
-          "Error loading organizer profile:",
-          profileResult.error,
-        );
+        console.error("Error loading organizer profile:", profileResult.error);
       }
 
       if (applicationResult.error) {
@@ -149,9 +147,7 @@ export default function OrganizerAccount() {
       const application = applicationResult.data;
 
       const resolvedName =
-        profile?.full_name?.trim() ||
-        application?.organizer_name?.trim() ||
-        "";
+        profile?.full_name?.trim() || application?.organizer_name?.trim() || "";
 
       const resolvedPhone =
         profile?.phone?.trim() ||
@@ -412,11 +408,7 @@ export default function OrganizerAccount() {
     }
 
     // If details are already loaded, simply turn the method back on.
-    if (
-      bankName.trim() &&
-      bankAccountNumber.trim() &&
-      bankAccountName.trim()
-    ) {
+    if (bankName.trim() && bankAccountNumber.trim() && bankAccountName.trim()) {
       try {
         setSavingPayments(true);
 
@@ -516,7 +508,10 @@ export default function OrganizerAccount() {
               setEditingPayment(null);
             } catch (error) {
               console.error("Error removing Mobile Banking:", error);
-              Alert.alert("Could not remove Mobile Banking", "Please try again.");
+              Alert.alert(
+                "Could not remove Mobile Banking",
+                "Please try again.",
+              );
             } finally {
               setSavingPayments(false);
             }
@@ -594,45 +589,33 @@ export default function OrganizerAccount() {
         {/* HEADER */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.eyebrow}>
-              {t("organizerAccount.eyebrow")}
-            </Text>
+            <Text style={styles.eyebrow}>{t("organizerAccount.eyebrow")}</Text>
 
-            <Text style={styles.title}>
-              {t("organizerAccount.title")}
-            </Text>
+            <Text style={styles.title}>{t("organizerAccount.title")}</Text>
 
             <Text style={styles.subtitle}>
               {t("organizerAccount.subtitle")}
             </Text>
           </View>
 
-          <View style={styles.headerIcon}>
+          {/* <View style={styles.headerIcon}>
             <Ionicons
               name="settings-outline"
               size={25}
               color={COLORS.primary}
             />
-          </View>
+          </View> */}
         </View>
 
         {/* ORGANIZER IDENTITY */}
         <View style={styles.identityCard}>
           <View style={styles.avatar}>
-            <Ionicons
-              name="person"
-              size={28}
-              color="#07131D"
-            />
+            <Ionicons name="person" size={28} color="#07131D" />
           </View>
 
           <View style={styles.identityContent}>
-            <Text
-              style={styles.identityName}
-              numberOfLines={1}
-            >
-              {fullName.trim() ||
-                t("organizerAccount.organizer")}
+            <Text style={styles.identityName} numberOfLines={1}>
+              {fullName.trim() || t("organizerAccount.organizer")}
             </Text>
 
             <View style={styles.roleRow}>
@@ -644,17 +627,11 @@ export default function OrganizerAccount() {
             </View>
           </View>
 
-          <Ionicons
-            name="shield-checkmark"
-            size={23}
-            color={COLORS.primary}
-          />
+          <Ionicons name="shield-checkmark" size={23} color={COLORS.primary} />
         </View>
 
         {/* PERSONAL INFORMATION */}
-        <Text style={styles.sectionLabel}>
-          PERSONAL INFORMATION
-        </Text>
+        <Text style={styles.sectionLabel}>PERSONAL INFORMATION</Text>
 
         <View style={styles.card}>
           {!editing ? (
@@ -662,17 +639,11 @@ export default function OrganizerAccount() {
               {/* ORGANIZER NAME */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
-                  <Ionicons
-                    name="business-outline"
-                    size={19}
-                    color="#718894"
-                  />
+                  <Ionicons name="business-outline" size={19} color="#718894" />
                 </View>
 
                 <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>
-                    Organizer Name
-                  </Text>
+                  <Text style={styles.infoLabel}>Organizer Name</Text>
 
                   <Text style={styles.infoValue}>
                     {fullName || "Not provided"}
@@ -685,17 +656,11 @@ export default function OrganizerAccount() {
               {/* PHONE */}
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
-                  <Ionicons
-                    name="call-outline"
-                    size={19}
-                    color="#718894"
-                  />
+                  <Ionicons name="call-outline" size={19} color="#718894" />
                 </View>
 
                 <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>
-                    Phone
-                  </Text>
+                  <Text style={styles.infoLabel}>Phone</Text>
 
                   <Text style={styles.infoValue}>
                     {phone || "Not provided"}
@@ -719,25 +684,17 @@ export default function OrganizerAccount() {
                   color={COLORS.primary}
                 />
 
-                <Text style={styles.editButtonText}>
-                  Edit Profile
-                </Text>
+                <Text style={styles.editButtonText}>Edit Profile</Text>
               </Pressable>
             </>
           ) : (
             <>
               {/* ORGANIZER NAME INPUT */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>
-                  Organizer Name
-                </Text>
+                <Text style={styles.fieldLabel}>Organizer Name</Text>
 
                 <View style={styles.inputContainer}>
-                  <Ionicons
-                    name="business-outline"
-                    size={19}
-                    color="#718894"
-                  />
+                  <Ionicons name="business-outline" size={19} color="#718894" />
 
                   <TextInput
                     value={fullName}
@@ -754,16 +711,10 @@ export default function OrganizerAccount() {
 
               {/* PHONE INPUT */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>
-                  Phone
-                </Text>
+                <Text style={styles.fieldLabel}>Phone</Text>
 
                 <View style={styles.inputContainer}>
-                  <Ionicons
-                    name="call-outline"
-                    size={19}
-                    color="#718894"
-                  />
+                  <Ionicons name="call-outline" size={19} color="#718894" />
 
                   <TextInput
                     value={phone}
@@ -787,9 +738,7 @@ export default function OrganizerAccount() {
                     saving && styles.buttonDisabled,
                   ]}
                 >
-                  <Text style={styles.cancelButtonText}>
-                    Cancel
-                  </Text>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
                 </Pressable>
 
                 <Pressable
@@ -802,21 +751,12 @@ export default function OrganizerAccount() {
                   ]}
                 >
                   {saving ? (
-                    <ActivityIndicator
-                      size="small"
-                      color="#07131D"
-                    />
+                    <ActivityIndicator size="small" color="#07131D" />
                   ) : (
                     <>
-                      <Ionicons
-                        name="checkmark"
-                        size={19}
-                        color="#07131D"
-                      />
+                      <Ionicons name="checkmark" size={19} color="#07131D" />
 
-                      <Text style={styles.saveChangesText}>
-                        Save Changes
-                      </Text>
+                      <Text style={styles.saveChangesText}>Save Changes</Text>
                     </>
                   )}
                 </Pressable>
@@ -978,7 +918,9 @@ export default function OrganizerAccount() {
                 </Pressable>
 
                 <View style={styles.paymentEditHeaderText}>
-                  <Text style={styles.paymentEditTitle}>Edit Mobile Banking</Text>
+                  <Text style={styles.paymentEditTitle}>
+                    Edit Mobile Banking
+                  </Text>
                   <Text style={styles.paymentEditSubtitle}>
                     Players can transfer payments to your bank account.
                   </Text>
@@ -998,7 +940,12 @@ export default function OrganizerAccount() {
                     pressed && styles.buttonPressed,
                   ]}
                 >
-                  <BankLogo bankName={getBankOption(bankName)?.name || TOP_BANKS[0].name} size={36} />
+                  <BankLogo
+                    bankName={
+                      getBankOption(bankName)?.name || TOP_BANKS[0].name
+                    }
+                    size={36}
+                  />
 
                   <View style={styles.bankSelectorContent}>
                     <Text
@@ -1015,11 +962,7 @@ export default function OrganizerAccount() {
                     </Text>
                   </View>
 
-                  <Ionicons
-                    name="chevron-forward"
-                    size={19}
-                    color="#718894"
-                  />
+                  <Ionicons name="chevron-forward" size={19} color="#718894" />
                 </Pressable>
               </View>
 
@@ -1036,8 +979,6 @@ export default function OrganizerAccount() {
                   />
 
                   <View style={styles.bankPickerSheet}>
-
-
                     <ScrollView
                       horizontal
                       style={styles.bankPickerScroll}
@@ -1049,17 +990,17 @@ export default function OrganizerAccount() {
                       showsVerticalScrollIndicator={false}
                       bounces
                     >
-                    {TOP_BANKS.map((bank) => (
-                      <BankPickerRow
-                        key={bank.name}
-                        bank={bank}
-                        selected={bankName === bank.name}
-                        onPress={() => {
-                          setBankName(bank.name);
-                          setBankPickerOpen(false);
-                        }}
-                      />
-                    ))}
+                      {TOP_BANKS.map((bank) => (
+                        <BankPickerRow
+                          key={bank.name}
+                          bank={bank}
+                          selected={bankName === bank.name}
+                          onPress={() => {
+                            setBankName(bank.name);
+                            setBankPickerOpen(false);
+                          }}
+                        />
+                      ))}
                     </ScrollView>
                   </View>
                 </View>
@@ -1146,14 +1087,17 @@ export default function OrganizerAccount() {
                 color={COLORS.primary}
               />
               <Text style={styles.paymentHintText}>
-                Players will see the payment methods you enable when joining your
-                games.
+                Players will see the payment methods you enable when joining
+                your games.
               </Text>
             </View>
           )}
         </View>
 
-        {/* LANGUAGE */}
+        {/* LANGUAGE — HIDDEN FOR V1 (English only)
+            Amharic and Afaan Oromo code is intentionally preserved below.
+            Re-enable this block when additional languages are ready.
+
         <Text style={styles.sectionLabel}>
           {t("organizerAccount.language")}
         </Text>
@@ -1238,6 +1182,8 @@ export default function OrganizerAccount() {
           )}
         </View>
 
+        */}
+
         {/* SIGN OUT */}
         <Pressable
           disabled={signingOut}
@@ -1249,17 +1195,10 @@ export default function OrganizerAccount() {
           ]}
         >
           {signingOut ? (
-            <ActivityIndicator
-              size="small"
-              color="#FF6B6B"
-            />
+            <ActivityIndicator size="small" color="#FF6B6B" />
           ) : (
             <>
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color="#FF6B6B"
-              />
+              <Ionicons name="log-out-outline" size={20} color="#FF6B6B" />
 
               <Text style={styles.signOutText}>
                 {t("organizerAccount.signOut")}
@@ -1268,9 +1207,7 @@ export default function OrganizerAccount() {
           )}
         </Pressable>
 
-        <Text style={styles.footer}>
-          {t("organizerAccount.footer")}
-        </Text>
+        <Text style={styles.footer}>{t("organizerAccount.footer")}</Text>
       </ScrollView>
     </View>
   );
@@ -1405,10 +1342,7 @@ function PaymentSummaryCard({
           ]}
         >
           <View
-            style={[
-              styles.switchThumb,
-              enabled && styles.switchThumbEnabled,
-            ]}
+            style={[styles.switchThumb, enabled && styles.switchThumbEnabled]}
           />
         </Pressable>
       </View>
@@ -1442,11 +1376,7 @@ function PaymentSummaryCard({
               <Text style={styles.paymentEditActionText}>Edit</Text>
             </View>
 
-            <Ionicons
-              name="chevron-forward"
-              size={19}
-              color={COLORS.primary}
-            />
+            <Ionicons name="chevron-forward" size={19} color={COLORS.primary} />
           </Pressable>
         </>
       ) : (
@@ -1458,11 +1388,7 @@ function PaymentSummaryCard({
           ]}
         >
           <Text style={styles.paymentSetupText}>Set up {title}</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={19}
-            color={COLORS.primary}
-          />
+          <Ionicons name="chevron-forward" size={19} color={COLORS.primary} />
         </Pressable>
       )}
     </View>
@@ -1525,24 +1451,13 @@ function LanguageOption({
       ]}
     >
       <View style={styles.languageCode}>
-        <Text style={styles.languageCodeText}>
-          {code}
-        </Text>
+        <Text style={styles.languageCodeText}>{code}</Text>
       </View>
 
-      <Text style={styles.languageLabel}>
-        {label}
-      </Text>
+      <Text style={styles.languageLabel}>{label}</Text>
 
-      <View
-        style={[
-          styles.radio,
-          selected && styles.radioSelected,
-        ]}
-      >
-        {selected && (
-          <View style={styles.radioInner} />
-        )}
+      <View style={[styles.radio, selected && styles.radioSelected]}>
+        {selected && <View style={styles.radioInner} />}
       </View>
     </Pressable>
   );
@@ -2062,7 +1977,7 @@ const styles = StyleSheet.create({
   },
 
   pickerBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0, 0, 0, 0.18)",
   },
 

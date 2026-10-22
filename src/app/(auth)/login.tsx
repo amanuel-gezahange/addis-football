@@ -371,7 +371,7 @@ export default function LoginScreen() {
 
           {/* LANGUAGE */}
 
-          <View style={styles.languageArea}>
+          {/* <View style={styles.languageArea}>
             <Pressable
               style={styles.languageButton}
               onPress={() => setLanguageMenuOpen((open) => !open)}
@@ -436,7 +436,7 @@ export default function LoginScreen() {
                 })}
               </View>
             )}
-          </View>
+          </View> */}
 
           {/* BRAND */}
 
