@@ -1,9 +1,6 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  View,
-} from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { COLORS } from "../constants/colors";
 import { supabase } from "../lib/supabase";
@@ -12,19 +9,22 @@ type UserRole = "player" | "organizer" | "admin";
 
 export default function Index() {
   const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] =
-    useState(false);
-
-  const [role, setRole] =
-    useState<UserRole>("player");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState<UserRole>("player");
 
   useEffect(() => {
-    checkSession();
+    let active = true;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    async function initializeAuth() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!active) {
+          return;
+        }
+
         if (!session?.user) {
           setIsLoggedIn(false);
           setRole("player");
@@ -33,41 +33,40 @@ export default function Index() {
         }
 
         setIsLoggedIn(true);
-        loadRole(session.user.id);
+
+        await loadRole(session.user.id);
+      } catch (error) {
+        console.error("Error checking session:", error);
+
+        if (active) {
+          setIsLoggedIn(false);
+          setRole("player");
+          setLoading(false);
+        }
       }
-    );
+    }
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    initializeAuth();
 
-  async function checkSession() {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.user) {
-        setIsLoggedIn(false);
-        setRole("player");
-        setLoading(false);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) {
         return;
       }
 
-      setIsLoggedIn(true);
+      if (event === "SIGNED_OUT") {
+        setIsLoggedIn(false);
+        setRole("player");
+        setLoading(false);
+      }
+    });
 
-      await loadRole(session.user.id);
-    } catch (error) {
-      console.error(
-        "Error checking session:",
-        error
-      );
-
-      setIsLoggedIn(false);
-      setLoading(false);
-    }
-  }
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   async function loadRole(userId: string) {
     try {
@@ -78,12 +77,7 @@ export default function Index() {
         .maybeSingle();
 
       if (error) {
-        console.error(
-          "Error loading user role:",
-          error
-        );
-
-        // Safest fallback for an existing account.
+        console.error("Error loading user role:", error);
         setRole("player");
         return;
       }
@@ -98,11 +92,7 @@ export default function Index() {
         setRole("player");
       }
     } catch (error) {
-      console.error(
-        "Error loading user role:",
-        error
-      );
-
+      console.error("Error loading user role:", error);
       setRole("player");
     } finally {
       setLoading(false);
@@ -119,10 +109,7 @@ export default function Index() {
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primary}
-        />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -135,8 +122,6 @@ export default function Index() {
     return <Redirect href="/(organizer)" />;
   }
 
-  // Keep admins in the existing experience for now.
-  // We will build the dedicated admin experience separately.
   if (role === "admin") {
     return <Redirect href="/(tabs)" />;
   }

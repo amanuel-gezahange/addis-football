@@ -67,12 +67,6 @@ export default function CreateGameForm({
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("organizer");
 
-  const [paymentProvider, setPaymentProvider] = useState("Telebirr");
-
-  const [paymentPhone, setPaymentPhone] = useState("");
-
-  const [paymentAccountName, setPaymentAccountName] = useState("");
-
   const [creating, setCreating] = useState(false);
 
   function showMessage(title: string, message: string) {
@@ -196,34 +190,7 @@ export default function CreateGameForm({
       return;
     }
 
-    if (paymentMethod === "organizer") {
-      if (!paymentProvider.trim()) {
-        showMessage(
-          t("createGame.missingPaymentMethod"),
-          t("createGame.enterPaymentProvider"),
-        );
 
-        return;
-      }
-
-      if (!paymentPhone.trim()) {
-        showMessage(
-          t("createGame.missingPaymentNumber"),
-          t("createGame.enterOrganizerPaymentNumber"),
-        );
-
-        return;
-      }
-
-      if (!paymentAccountName.trim()) {
-        showMessage(
-          t("createGame.missingAccountName"),
-          t("createGame.enterPaymentAccountName"),
-        );
-
-        return;
-      }
-    }
 
     const numericPrice = paymentMethod === "free" ? 0 : Number(price);
 
@@ -292,6 +259,64 @@ export default function CreateGameForm({
     try {
       setCreating(true);
 
+      let organizerPayment = {
+        accepts_telebirr: false,
+        accepts_mobile_banking: false,
+        telebirr_phone: null as string | null,
+        telebirr_account_name: null as string | null,
+        bank_name: null as string | null,
+        bank_account_number: null as string | null,
+        bank_account_name: null as string | null,
+      };
+
+      if (paymentMethod === "organizer") {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          showMessage(
+            t("createGame.couldNotCreateGame"),
+            "You must be logged in.",
+          );
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select(
+            "accepts_telebirr, accepts_mobile_banking, telebirr_phone, telebirr_account_name, bank_name, bank_account_number, bank_account_name",
+          )
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          showMessage(
+            t("createGame.couldNotCreateGame"),
+            profileError.message,
+          );
+          return;
+        }
+
+        if (!profile.accepts_telebirr && !profile.accepts_mobile_banking) {
+          showMessage(
+            "Payment setup required",
+            "Add at least one payment method in your Account before creating a game with Pay Organizer Directly.",
+          );
+          return;
+        }
+
+        organizerPayment = {
+          accepts_telebirr: Boolean(profile.accepts_telebirr),
+          accepts_mobile_banking: Boolean(profile.accepts_mobile_banking),
+          telebirr_phone: profile.telebirr_phone,
+          telebirr_account_name: profile.telebirr_account_name,
+          bank_name: profile.bank_name,
+          bank_account_number: profile.bank_account_number,
+          bank_account_name: profile.bank_account_name,
+        };
+      }
+
       const { error } = await supabase.rpc("create_game", {
         p_title: title.trim(),
 
@@ -324,13 +349,47 @@ export default function CreateGameForm({
         p_payment_method: paymentMethod,
 
         p_payment_provider:
-          paymentMethod === "organizer" ? paymentProvider.trim() : null,
+          paymentMethod === "organizer" && organizerPayment.accepts_telebirr
+            ? "Telebirr"
+            : null,
 
         p_payment_phone:
-          paymentMethod === "organizer" ? paymentPhone.trim() : null,
+          paymentMethod === "organizer" && organizerPayment.accepts_telebirr
+            ? organizerPayment.telebirr_phone
+            : null,
 
         p_payment_account_name:
-          paymentMethod === "organizer" ? paymentAccountName.trim() : null,
+          paymentMethod === "organizer" && organizerPayment.accepts_telebirr
+            ? organizerPayment.telebirr_account_name
+            : null,
+
+        p_accepts_telebirr:
+          paymentMethod === "organizer"
+            ? organizerPayment.accepts_telebirr
+            : false,
+
+        p_accepts_mobile_banking:
+          paymentMethod === "organizer"
+            ? organizerPayment.accepts_mobile_banking
+            : false,
+
+        p_bank_name:
+          paymentMethod === "organizer" &&
+          organizerPayment.accepts_mobile_banking
+            ? organizerPayment.bank_name
+            : null,
+
+        p_bank_account_number:
+          paymentMethod === "organizer" &&
+          organizerPayment.accepts_mobile_banking
+            ? organizerPayment.bank_account_number
+            : null,
+
+        p_bank_account_name:
+          paymentMethod === "organizer" &&
+          organizerPayment.accepts_mobile_banking
+            ? organizerPayment.bank_account_name
+            : null,
       });
 
       if (error) {
@@ -531,34 +590,13 @@ export default function CreateGameForm({
           {paymentMethod === "organizer" && (
             <View style={styles.paymentDetails}>
               <Text style={styles.paymentDetailsTitle}>
-                {t("createGame.organizerPaymentDetails")}
+                Uses your saved payment methods
               </Text>
 
               <Text style={styles.paymentDetailsHint}>
-                {t("createGame.organizerPaymentDetailsHint")}
+                Players will pay using the Telebirr or Mobile Banking details
+                saved in your Account.
               </Text>
-
-              <Field
-                label={t("createGame.paymentMethod")}
-                value={paymentProvider}
-                onChangeText={setPaymentProvider}
-                placeholder="Telebirr"
-              />
-
-              <Field
-                label={t("createGame.paymentNumber")}
-                value={paymentPhone}
-                onChangeText={setPaymentPhone}
-                placeholder="0912345678"
-                keyboardType="phone-pad"
-              />
-
-              <Field
-                label={t("createGame.accountName")}
-                value={paymentAccountName}
-                onChangeText={setPaymentAccountName}
-                placeholder="Abebe Kebede"
-              />
             </View>
           )}
 
@@ -678,6 +716,7 @@ function PaymentOption({
     </Pressable>
   );
 }
+
 
 const styles = StyleSheet.create({
   flex: {

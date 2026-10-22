@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
-  Image,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
+
+import { Image } from "expo-image";
 import Animated, {
   cancelAnimation,
   runOnJS,
@@ -25,25 +26,22 @@ import { Game } from "../types/game";
 
 type Props = {
   game: Game;
+  initialIsFavorite?: boolean;
 };
 
-const fallbackImages = [
-  require("../../assets/images/game-fallback-1.png"),
-  require("../../assets/images/game-fallback-2.png"),
-  require("../../assets/images/game-fallback-3.png"),
-  require("../../assets/images/game-fallback-4.png"),
-  require("../../assets/images/game-fallback-5.png"),
-];
-
-export default function GameCard({ game }: Props) {
+function GameCard({ game, initialIsFavorite = false }: Props) {
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
 
   const isSmallScreen = width < 375;
   const isLargeScreen = width >= 768;
 
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    setIsFavorite(initialIsFavorite);
+  }, [initialIsFavorite]);
 
   /*
    * CARD INTERACTION
@@ -71,14 +69,6 @@ export default function GameCard({ game }: Props) {
   const spotsLeft = Number(game.spotsLeft ?? 0);
   const price = Number(game.price ?? 0);
 
-  const numericGameId = Number(game.id);
-
-  const fallbackIndex = Number.isFinite(numericGameId)
-    ? Math.abs(numericGameId) % fallbackImages.length
-    : 0;
-
-  const fallbackImage = fallbackImages[fallbackIndex];
-
   const isFull = game.status === "full" || spotsLeft <= 0;
   const isLowSpots = !isFull && spotsLeft > 0 && spotsLeft <= 3;
 
@@ -93,44 +83,6 @@ export default function GameCard({ game }: Props) {
     city && !area.toLowerCase().includes(city.toLowerCase())
       ? `${area}, ${city}`
       : area;
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadFavorite() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user || !active) {
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("favorites")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("game_id", game.id)
-        .maybeSingle();
-
-      if (!active) {
-        return;
-      }
-
-      if (error) {
-        console.log("Favorite lookup error:", error);
-        return;
-      }
-
-      setIsFavorite(Boolean(data));
-    }
-
-    loadFavorite();
-
-    return () => {
-      active = false;
-    };
-  }, [game.id]);
 
   function pressCardIn() {
     cancelAnimation(cardScale);
@@ -259,13 +211,36 @@ export default function GameCard({ game }: Props) {
           game.title,
         )}
       >
-        <Image
-          source={game.image ? { uri: game.image } : fallbackImage}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {game.image ? (
+          <>
+            <Image
+              source={{ uri: game.image }}
+              style={styles.image}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={150}
+            />
 
-        <View style={styles.imageOverlay} />
+            <View style={styles.imageOverlay} />
+          </>
+        ) : (
+          <View style={styles.fallback}>
+            <View style={styles.fallbackCenterCircle} />
+            <View style={styles.fallbackCenterLine} />
+
+            <Ionicons
+              name="football-outline"
+              size={54}
+              color="rgba(255,255,255,0.10)"
+            />
+
+            <View style={styles.fallbackAccent} />
+
+            <Text style={styles.fallbackTitle} numberOfLines={2}>
+              {game.title}
+            </Text>
+          </View>
+        )}
       </Pressable>
 
       {/* HEART */}
@@ -309,16 +284,18 @@ export default function GameCard({ game }: Props) {
         )}
       >
         {/* TITLE */}
-        <Text
-          style={[
-            styles.title,
-            isSmallScreen && styles.titleSmall,
-            isLargeScreen && styles.titleLarge,
-          ]}
-          numberOfLines={2}
-        >
-          {game.title}
-        </Text>
+     {!!game.image && (
+  <Text
+    style={[
+      styles.title,
+      isSmallScreen && styles.titleSmall,
+      isLargeScreen && styles.titleLarge,
+    ]}
+    numberOfLines={2}
+  >
+    {game.title}
+  </Text>
+)}
 
         {/* LOCATION */}
         <View style={styles.metaRow}>
@@ -340,10 +317,7 @@ export default function GameCard({ game }: Props) {
 
         {/* BOTTOM */}
         <View
-          style={[
-            styles.bottomRow,
-            isSmallScreen && styles.bottomRowSmall,
-          ]}
+          style={[styles.bottomRow, isSmallScreen && styles.bottomRowSmall]}
         >
           <View style={styles.spotsRow}>
             <Ionicons
@@ -363,10 +337,7 @@ export default function GameCard({ game }: Props) {
           </View>
 
           <View
-            style={[
-              styles.priceBadge,
-              price === 0 && styles.freePriceBadge,
-            ]}
+            style={[styles.priceBadge, price === 0 && styles.freePriceBadge]}
           >
             <Text style={styles.priceText} numberOfLines={1}>
               {price === 0 ? t("gameCard.free") : `${price} ETB`}
@@ -564,4 +535,55 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
   },
+  fallback: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#12333A",
+    justifyContent: "flex-end",
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    overflow: "hidden",
+  },
+
+  fallbackCenterLine: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "50%",
+    width: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+
+  fallbackCenterCircle: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    top: "50%",
+    left: "50%",
+    marginLeft: -60,
+    marginTop: -60,
+  },
+
+  fallbackAccent: {
+    width: 28,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#18BFF2",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+
+  fallbackTitle: {
+    color: "#FFFFFF",
+    fontSize: 21,
+    lineHeight: 26,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    paddingRight: 52,
+  },
 });
+
+export default memo(GameCard);

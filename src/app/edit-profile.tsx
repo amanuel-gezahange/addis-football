@@ -21,11 +21,7 @@ import { COLORS } from "../constants/colors";
 import { useLanguage } from "../i18n/LanguageContext";
 import { supabase } from "../lib/supabase";
 
-const skillLevels = [
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-] as const;
+const skillLevels = ["Beginner", "Intermediate", "Advanced"] as const;
 
 type SkillLevel = (typeof skillLevels)[number];
 
@@ -65,15 +61,13 @@ export default function EditProfileScreen() {
       setLoading(true);
 
       const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (userError || !user) {
-        Alert.alert(
-          t("editProfile.error"),
-          userError?.message || t("editProfile.notLoggedIn"),
-        );
+      const user = session?.user;
+
+      if (!user) {
+        Alert.alert(t("editProfile.error"), t("editProfile.notLoggedIn"));
         return;
       }
 
@@ -137,10 +131,7 @@ export default function EditProfileScreen() {
     } catch (error) {
       console.log("Image picker error:", error);
 
-      Alert.alert(
-        t("editProfile.error"),
-        "Could not select profile picture.",
-      );
+      Alert.alert(t("editProfile.error"), "Could not select profile picture.");
     }
   }
 
@@ -181,9 +172,7 @@ export default function EditProfileScreen() {
       throw uploadError;
     }
 
-    const { data } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
+    const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
     // Add a version query so React Native doesn't show
     // an old cached avatar after the user replaces it.
@@ -227,10 +216,7 @@ export default function EditProfileScreen() {
 
       if (selectedAvatarUri) {
         try {
-          nextAvatarUrl = await uploadAvatar(
-            user.id,
-            selectedAvatarUri,
-          );
+          nextAvatarUrl = await uploadAvatar(user.id, selectedAvatarUri);
         } catch (uploadError: any) {
           console.log(
             "Avatar upload error:",
@@ -239,8 +225,7 @@ export default function EditProfileScreen() {
 
           Alert.alert(
             t("editProfile.error"),
-            uploadError?.message ||
-              "Could not upload profile picture.",
+            uploadError?.message || "Could not upload profile picture.",
           );
 
           return;
@@ -260,10 +245,7 @@ export default function EditProfileScreen() {
       if (error) {
         console.log("Profile save error:", error.message);
 
-        Alert.alert(
-          t("editProfile.couldNotSaveProfile"),
-          error.message,
-        );
+        Alert.alert(t("editProfile.couldNotSaveProfile"), error.message);
 
         return;
       }
@@ -287,10 +269,7 @@ export default function EditProfileScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       </SafeAreaView>
     );
@@ -317,16 +296,10 @@ export default function EditProfileScreen() {
               }
             }}
           >
-            <Ionicons
-              name="arrow-back"
-              size={23}
-              color="#FFFFFF"
-            />
+            <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
           </Pressable>
 
-          <Text style={styles.headerTitle}>
-            {t("editProfile.title")}
-          </Text>
+          <Text style={styles.headerTitle}>{t("editProfile.title")}</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -353,20 +326,12 @@ export default function EditProfileScreen() {
                     style={styles.avatarImage}
                   />
                 ) : (
-                  <Ionicons
-                    name="person"
-                    size={42}
-                    color={COLORS.primary}
-                  />
+                  <Ionicons name="person" size={42} color={COLORS.primary} />
                 )}
               </View>
 
               <View style={styles.avatarBadge}>
-                <Ionicons
-                  name="camera"
-                  size={14}
-                  color="#07111F"
-                />
+                <Ionicons name="camera" size={14} color="#07111F" />
               </View>
             </Pressable>
 
@@ -374,9 +339,7 @@ export default function EditProfileScreen() {
               {t("editProfile.playerProfile")}
             </Text>
 
-            <Text style={styles.avatarHint}>
-              Tap photo to change
-            </Text>
+            <Text style={styles.avatarHint}>Tap photo to change</Text>
           </View>
 
           {/* PERSONAL INFORMATION */}
@@ -400,9 +363,7 @@ export default function EditProfileScreen() {
                 style={styles.input}
                 value={fullName}
                 onChangeText={setFullName}
-                placeholder={t(
-                  "editProfile.fullNamePlaceholder",
-                )}
+                placeholder={t("editProfile.fullNamePlaceholder")}
                 placeholderTextColor="#667786"
                 autoCapitalize="words"
                 returnKeyType="done"
@@ -430,9 +391,7 @@ export default function EditProfileScreen() {
                 style={styles.input}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder={t(
-                  "editProfile.phonePlaceholder",
-                )}
+                placeholder={t("editProfile.phonePlaceholder")}
                 placeholderTextColor="#667786"
                 keyboardType="phone-pad"
                 returnKeyType="done"
@@ -482,8 +441,7 @@ export default function EditProfileScreen() {
                       minimumFontScale={0.75}
                       style={[
                         styles.skillButtonText,
-                        selected &&
-                          styles.skillButtonTextSelected,
+                        selected && styles.skillButtonTextSelected,
                       ]}
                     >
                       {skillLabel(level)}
@@ -499,9 +457,7 @@ export default function EditProfileScreen() {
             style={({ pressed }) => [
               styles.saveButton,
               saving && styles.saveButtonDisabled,
-              pressed &&
-                !saving &&
-                styles.saveButtonPressed,
+              pressed && !saving && styles.saveButtonPressed,
             ]}
             onPress={handleSave}
             disabled={saving}

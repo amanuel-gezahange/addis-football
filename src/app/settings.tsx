@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Linking,
@@ -29,6 +29,50 @@ export default function SettingsScreen() {
   const { language, setLanguage, t } = useLanguage();
 
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [isOrganizer, setIsOrganizer] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      async function loadRole() {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const userId = session?.user?.id;
+
+        if (!userId) {
+          if (active) {
+            setIsOrganizer(false);
+          }
+
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (error) {
+          console.log("Settings role error:", error);
+          return;
+        }
+
+        setIsOrganizer(data?.role === "organizer");
+      }
+
+      loadRole();
+
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   async function changeLanguage(nextLanguage: Language) {
     await setLanguage(nextLanguage);
@@ -39,10 +83,7 @@ export default function SettingsScreen() {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      Alert.alert(
-        t("settings.signOutFailed"),
-        error.message,
-      );
+      Alert.alert(t("settings.signOutFailed"), error.message);
       return;
     }
 
@@ -58,6 +99,7 @@ export default function SettingsScreen() {
           t("settings.unableToOpenLink"),
           t("settings.unableToOpenLinkMessage"),
         );
+
         return;
       }
 
@@ -77,8 +119,7 @@ export default function SettingsScreen() {
       t("settings.supportEmailSubject"),
     );
 
-    const url =
-      `mailto:${SUPPORT_EMAIL}?subject=${subject}`;
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${subject}`;
 
     try {
       const supported = await Linking.canOpenURL(url);
@@ -88,6 +129,7 @@ export default function SettingsScreen() {
           t("settings.contactSupport"),
           `${t("settings.emailUsAt")} ${SUPPORT_EMAIL}`,
         );
+
         return;
       }
 
@@ -261,6 +303,38 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* ORGANIZE */}
+        <Text style={styles.sectionTitle}>
+          Organize
+        </Text>
+
+        <View style={styles.card}>
+          <SettingsRow
+            icon={
+              isOrganizer
+                ? "grid-outline"
+                : "football-outline"
+            }
+            title={
+              isOrganizer
+                ? "Organizer Dashboard"
+                : "Become an Organizer"
+            }
+            subtitle={
+              isOrganizer
+                ? "Manage your games and players"
+                : "Host games and reach more players"
+            }
+            onPress={() => {
+              if (isOrganizer) {
+                router.push("/(organizer)");
+              } else {
+                router.push("/become-organizer");
+              }
+            }}
+          />
+        </View>
+
         {/* SUPPORT */}
         <Text style={styles.sectionTitle}>
           {t("settings.support")}
@@ -332,7 +406,9 @@ type SettingsRowProps = {
     | "help-circle-outline"
     | "document-text-outline"
     | "trash-outline"
-    | "log-out-outline";
+    | "log-out-outline"
+    | "football-outline"
+    | "grid-outline";
   title: string;
   subtitle?: string;
   danger?: boolean;

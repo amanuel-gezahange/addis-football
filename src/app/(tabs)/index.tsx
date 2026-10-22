@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Calendar } from "react-native-calendars";
 import { Modal } from "react-native";
 import {
   ActivityIndicator,
+  FlatList,
   Image,
   Platform,
   Pressable,
@@ -93,6 +94,7 @@ export default function HomeScreen() {
 
   const [games, setGames] = useState<DiscoverGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedGamesRef = useRef(false);
   const [search, setSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -108,7 +110,12 @@ export default function HomeScreen() {
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [formatFilter, setFormatFilter] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<"free" | "paid" | null>(null);
+
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+  const [favoriteGameIds, setFavoriteGameIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const isSearchMode = searchFocused || search.trim().length > 0;
 
@@ -184,42 +191,52 @@ export default function HomeScreen() {
   */
   useFocusEffect(
     useCallback(() => {
-      fetchGames();
-      fetchUnreadNotifications();
+      fetchGames(!hasLoadedGamesRef.current);
+
+      async function refreshUserData() {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const userId = session?.user?.id;
+
+        await Promise.all([
+          fetchUnreadNotifications(userId),
+          fetchFavorites(userId),
+        ]);
+      }
+
+      refreshUserData();
     }, []),
   );
 
-  async function fetchGames() {
-    setLoading(true);
+  async function fetchGames(showLoading: boolean) {
+    if (showLoading) {
+      setLoading(true);
+    }
 
     const now = new Date().toISOString();
 
     const { data, error } = await supabase
       .from("games")
-      .select(
-        `
-          id,
-          title,
-          organizer,
-          area,
-          city,
-          maps_url,
-          distance,
-          time,
-          format,
-          skill,
-          price,
-          spots_left,
-          status,
-          image_url,
-          starts_at,
-          ends_at,
-          payment_method,
-          payment_provider,
-          payment_phone,
-          payment_account_name
-        `,
-      )
+   .select(
+  `
+    id,
+    title,
+    organizer,
+    area,
+    city,
+    time,
+    format,
+    skill,
+    price,
+    spots_left,
+    status,
+    image_url,
+    starts_at,
+    payment_method
+  `,
+)
       .neq("status", "cancelled")
       .not("starts_at", "is", null)
       .gte("starts_at", now)
@@ -230,8 +247,14 @@ export default function HomeScreen() {
     if (error) {
       console.log("Error loading games:", error.message);
 
-      setGames([]);
-      setLoading(false);
+      if (!hasLoadedGamesRef.current) {
+        setGames([]);
+      }
+
+      if (showLoading) {
+        setLoading(false);
+      }
+
       return;
     }
 
@@ -246,15 +269,15 @@ export default function HomeScreen() {
     })) as DiscoverGame[];
 
     setGames(mappedGames);
-    setLoading(false);
+    hasLoadedGamesRef.current = true;
+
+    if (showLoading) {
+      setLoading(false);
+    }
   }
 
-  async function fetchUnreadNotifications() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+  async function fetchUnreadNotifications(userId?: string) {
+    if (!userId) {
       setHasUnreadNotifications(false);
       return;
     }
@@ -262,7 +285,7 @@ export default function HomeScreen() {
     const { count, error } = await supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("is_read", false);
 
     if (error) {
@@ -271,6 +294,26 @@ export default function HomeScreen() {
     }
 
     setHasUnreadNotifications((count ?? 0) > 0);
+  }
+  async function fetchFavorites(userId?: string) {
+    if (!userId) {
+      setFavoriteGameIds(new Set());
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("favorites")
+      .select("game_id")
+      .eq("user_id", userId);
+
+    if (error) {
+      console.log("Favorites error:", error.message);
+      return;
+    }
+
+    setFavoriteGameIds(
+      new Set((data ?? []).map((favorite) => String(favorite.game_id))),
+    );
   }
 
   function getAddisDateKey(timestamp: string) {
@@ -432,6 +475,22 @@ export default function HomeScreen() {
     sortBy,
   ]);
 
+  const playingSoonGames = isSearchMode ? [] : visibleGames.slice(0, 3);
+
+  const listGames = isSearchMode ? visibleGames : visibleGames.slice(3);
+
+  const listColumnCount = isDesktopLayout ? 3 : isTabletLayout ? 2 : 1;
+
+  const listRows = useMemo(() => {
+    const rows: DiscoverGame[][] = [];
+
+    for (let index = 0; index < listGames.length; index += listColumnCount) {
+      rows.push(listGames.slice(index, index + listColumnCount));
+    }
+
+    return rows;
+  }, [listGames, listColumnCount]);
+
   const selectedDateLabel = useMemo(() => {
     const quickDate = dates.find((item) => item.key === selectedDate);
 
@@ -466,7 +525,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
-        <ScrollView
+        <FlatList
+          data={listRows}
+          key={`games-${listColumnCount}-${isSearchMode ? "search" : "browse"}`}
+          keyExtractor={(row) => row.map((game) => game.id).join("-")}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
@@ -476,374 +538,401 @@ export default function HomeScreen() {
           keyboardDismissMode={
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
-        >
-          {/* CINEMATIC HERO / PHONE SEARCH MODE */}
-
-          {isSearchMode ? (
-            <View style={styles.searchModeHeader}>
-              <View style={styles.searchModeBox}>
-                <Ionicons name="search" size={21} color="#222222" />
-                <TextInput
-                  value={search}
-                  onChangeText={(text) => {
-                    setSearch(text);
-
-                    if (text.length === 0) {
-                      setSearchFocused(false);
-                    }
-                  }}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  placeholder={t("discover.searchPlaceholder")}
-                  placeholderTextColor="#8A8A8A"
-                  style={styles.searchModeInput}
-                  autoFocus
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="search"
-                  blurOnSubmit
-                  clearButtonMode="never"
-                  selectionColor={COLORS.primary}
-                />
-                {search.length > 0 && (
-                  <Pressable
-                    style={styles.searchActionButton}
-                    onPress={() => {
-                      setSearch("");
-                      setSearchFocused(false);
-                    }}
-                    hitSlop={8}
-                  >
-                    <Ionicons
-                      name="close"
-                      size={22}
-                      color={COLORS.textSecondary}
-                    />
-                  </Pressable>
-                )}
-                <View style={styles.heroSearchDivider} />
-                <Pressable
+          initialNumToRender={4}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS !== "web"}
+          renderItem={({ item: row }) => (
+            <View style={styles.gameGrid}>
+              {row.map((game) => (
+                <View
+                  key={game.id}
                   style={[
-                    styles.heroFilterButton,
-                    (skillFilter ||
-                      formatFilter ||
-                      priceFilter ||
-                      sortBy !== "soonest") &&
-                      styles.heroFilterButtonActive,
+                    styles.gameWrapper,
+                    isTabletLayout && styles.gameWrapperTablet,
+                    isDesktopLayout && styles.gameWrapperDesktop,
                   ]}
-                  onPress={() => setFilterModalVisible(true)}
-                  hitSlop={6}
                 >
-                  <Ionicons
-                    name="options-outline"
-                    size={21}
-                    color={
-                      skillFilter ||
-                      formatFilter ||
-                      priceFilter ||
-                      sortBy !== "soonest"
-                        ? "#FFFFFF"
-                        : COLORS.primary
-                    }
+                  <GameCard
+                    game={game}
+                    initialIsFavorite={favoriteGameIds.has(String(game.id))}
                   />
-                </Pressable>
-              </View>
+                </View>
+              ))}
             </View>
-          ) : (
-            <View
-              style={[
-                styles.hero,
-                isSmallScreen && styles.heroSmall,
-                isLargeScreen && styles.heroLarge,
-              ]}
-            >
-              <Image
-                source={require("../../../assets/images/discover-hero.png")}
-                style={styles.heroArtwork}
-                resizeMode="cover"
-              />
-              <View style={styles.heroOverlay} />
-              <View
-                style={[
-                  styles.heroContent,
-                  isSmallScreen && styles.heroContentSmall,
-                  isLargeScreen && styles.heroContentLarge,
-                ]}
-              >
-                <View style={styles.heroTopBar}>
-                  <View>
-                    <Text style={styles.heroBrand}>
-                      Addis <Text style={styles.heroBrandAccent}>Football</Text>
-                    </Text>
+          )}
+          ListHeaderComponent={
+            <>
+              {/* CINEMATIC HERO / PHONE SEARCH MODE */}
+
+              {isSearchMode ? (
+                <View style={styles.searchModeHeader}>
+                  <View style={styles.searchModeBox}>
+                    <Ionicons name="search" size={21} color="#222222" />
+                    <TextInput
+                      value={search}
+                      onChangeText={(text) => {
+                        setSearch(text);
+
+                        if (text.length === 0) {
+                          setSearchFocused(false);
+                        }
+                      }}
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() => setSearchFocused(false)}
+                      placeholder={t("discover.searchPlaceholder")}
+                      placeholderTextColor="#8A8A8A"
+                      style={styles.searchModeInput}
+                      autoFocus
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="search"
+                      blurOnSubmit
+                      clearButtonMode="never"
+                      selectionColor={COLORS.primary}
+                    />
+                    {search.length > 0 && (
+                      <Pressable
+                        style={styles.searchActionButton}
+                        onPress={() => {
+                          setSearch("");
+                          setSearchFocused(false);
+                        }}
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name="close"
+                          size={22}
+                          color={COLORS.textSecondary}
+                        />
+                      </Pressable>
+                    )}
+                    <View style={styles.heroSearchDivider} />
                     <Pressable
-                      style={styles.heroLocation}
-                      onPress={() => setCityModalVisible(true)}
+                      style={[
+                        styles.heroFilterButton,
+                        (skillFilter ||
+                          formatFilter ||
+                          priceFilter ||
+                          sortBy !== "soonest") &&
+                          styles.heroFilterButtonActive,
+                      ]}
+                      onPress={() => setFilterModalVisible(true)}
+                      hitSlop={6}
                     >
                       <Ionicons
-                        name="location-outline"
-                        size={16}
-                        color="rgba(255,255,255,0.85)"
-                      />
-                      <Text style={styles.heroLocationText}>
-                        {selectedCity === "All Ethiopia"
-                          ? t("discover.allEthiopia")
-                          : selectedCity}
-                      </Text>
-                      <Ionicons
-                        name="chevron-down"
-                        size={15}
-                        color="rgba(255,255,255,0.85)"
+                        name="options-outline"
+                        size={21}
+                        color={
+                          skillFilter ||
+                          formatFilter ||
+                          priceFilter ||
+                          sortBy !== "soonest"
+                            ? "#FFFFFF"
+                            : COLORS.primary
+                        }
                       />
                     </Pressable>
                   </View>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.hero,
+                    isSmallScreen && styles.heroSmall,
+                    isLargeScreen && styles.heroLarge,
+                  ]}
+                >
+                  <Image
+                    source={require("../../../assets/images/discover-hero.jpg")}
+                    style={styles.heroArtwork}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.heroOverlay} />
+                  <View
+                    style={[
+                      styles.heroContent,
+                      isSmallScreen && styles.heroContentSmall,
+                      isLargeScreen && styles.heroContentLarge,
+                    ]}
+                  >
+                    <View style={styles.heroTopBar}>
+                      <View>
+                        <Text style={styles.heroBrand}>
+                          Addis{" "}
+                          <Text style={styles.heroBrandAccent}>Football</Text>
+                        </Text>
+                        <Pressable
+                          style={styles.heroLocation}
+                          onPress={() => setCityModalVisible(true)}
+                        >
+                          <Ionicons
+                            name="location-outline"
+                            size={16}
+                            color="rgba(255,255,255,0.85)"
+                          />
+                          <Text style={styles.heroLocationText}>
+                            {selectedCity === "All Ethiopia"
+                              ? t("discover.allEthiopia")
+                              : selectedCity}
+                          </Text>
+                          <Ionicons
+                            name="chevron-down"
+                            size={15}
+                            color="rgba(255,255,255,0.85)"
+                          />
+                        </Pressable>
+                      </View>
+                      <Pressable
+                        style={styles.heroNotificationButton}
+                        onPress={() => router.push("/notifications")}
+                        accessibilityRole="button"
+                        accessibilityLabel="Notifications"
+                      >
+                        <Ionicons
+                          name="notifications-outline"
+                          size={22}
+                          color="#FFFFFF"
+                        />
+                        {hasUnreadNotifications && (
+                          <View style={styles.notificationDot} />
+                        )}
+                      </Pressable>
+                    </View>
+                    <View style={styles.heroMessage}>
+                      <Text
+                        style={[
+                          styles.heroTitle,
+                          isSmallScreen && styles.heroTitleSmall,
+                          isLargeScreen && styles.heroTitleLarge,
+                        ]}
+                      >
+                        {t("discover.findYourNextGame")}
+                      </Text>
+
+                      <Text style={styles.heroSubtitle}>
+                        {t("discover.heroSubtitle")}
+                      </Text>
+                    </View>
+                    <View style={styles.heroSearchBox}>
+                      <Ionicons name="search" size={21} color="#222222" />
+                      <TextInput
+                        value={search}
+                        onChangeText={(text) => {
+                          setSearch(text);
+
+                          if (text.length === 0) {
+                            setSearchFocused(false);
+                          }
+                        }}
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => setSearchFocused(false)}
+                        placeholder={t("discover.searchPlaceholder")}
+                        placeholderTextColor="#8A8A8A"
+                        style={styles.heroSearchInput}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        returnKeyType="search"
+                        blurOnSubmit
+                        clearButtonMode="never"
+                        selectionColor={COLORS.primary}
+                      />
+                      {search.length > 0 && (
+                        <Pressable
+                          style={styles.searchActionButton}
+                          onPress={() => {
+                            setSearch("");
+                            setSearchFocused(false);
+                          }}
+                          hitSlop={8}
+                        >
+                          <Ionicons
+                            name="close"
+                            size={22}
+                            color={COLORS.textSecondary}
+                          />
+                        </Pressable>
+                      )}
+                      <View style={styles.heroSearchDivider} />
+                      <Pressable
+                        style={[
+                          styles.heroFilterButton,
+                          (skillFilter ||
+                            formatFilter ||
+                            priceFilter ||
+                            sortBy !== "soonest") &&
+                            styles.heroFilterButtonActive,
+                        ]}
+                        onPress={() => setFilterModalVisible(true)}
+                        hitSlop={6}
+                      >
+                        <Ionicons
+                          name="options-outline"
+                          size={21}
+                          color={
+                            skillFilter ||
+                            formatFilter ||
+                            priceFilter ||
+                            sortBy !== "soonest"
+                              ? "#FFFFFF"
+                              : COLORS.primary
+                          }
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* DATE SELECTOR */}
+
+              {!isSearchMode && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.dateRow}
+                  style={styles.dateScroll}
+                >
+                  {dates.map((item) => {
+                    const active = selectedDate === item.key;
+
+                    return (
+                      <Pressable
+                        key={item.key}
+                        onPress={() => setSelectedDate(item.key)}
+                        style={({ pressed }) => [
+                          styles.dateButton,
+                          active && styles.dateButtonActive,
+                          pressed && styles.dateButtonPressed,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.dateDay,
+                            active && styles.dateTextActive,
+                          ]}
+                        >
+                          {item.day}
+                        </Text>
+
+                        <Text
+                          style={[
+                            styles.dateNumber,
+                            active && styles.dateTextActive,
+                          ]}
+                        >
+                          {item.date}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+
                   <Pressable
-                    style={styles.heroNotificationButton}
+                    style={({ pressed }) => [
+                      styles.headerNotificationButton,
+                      pressed && styles.headerNotificationButtonPressed,
+                    ]}
                     onPress={() => router.push("/notifications")}
                     accessibilityRole="button"
                     accessibilityLabel="Notifications"
                   >
                     <Ionicons
                       name="notifications-outline"
-                      size={22}
+                      size={21}
                       color="#FFFFFF"
                     />
-                    {hasUnreadNotifications && <View style={styles.notificationDot} />}
+                    {hasUnreadNotifications && (
+                      <View style={styles.notificationDot} />
+                    )}
                   </Pressable>
-                </View>
-                <View style={styles.heroMessage}>
-                  <Text
-                    style={[
-                      styles.heroTitle,
-                      isSmallScreen && styles.heroTitleSmall,
-                      isLargeScreen && styles.heroTitleLarge,
-                    ]}
-                  >
-                    {t("discover.findYourNextGame")}
-                  </Text>
+                </ScrollView>
+              )}
 
-                  <Text style={styles.heroSubtitle}>
-                    {t("discover.heroSubtitle")}
-                  </Text>
-                </View>
-                <View style={styles.heroSearchBox}>
-                  <Ionicons name="search" size={21} color="#222222" />
-                  <TextInput
-                    value={search}
-                    onChangeText={(text) => {
-                      setSearch(text);
+              {!isSearchMode && selectedDateLabel && (
+                <View style={styles.sectionHeader}>
+                  <View>
+                    <Text style={styles.sectionTitle}>
+                      {t("discover.games")}
+                    </Text>
 
-                      if (text.length === 0) {
-                        setSearchFocused(false);
-                      }
-                    }}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    placeholder={t("discover.searchPlaceholder")}
-                    placeholderTextColor="#8A8A8A"
-                    style={styles.heroSearchInput}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                    blurOnSubmit
-                    clearButtonMode="never"
-                    selectionColor={COLORS.primary}
-                  />
-                  {search.length > 0 && (
-                    <Pressable
-                      style={styles.searchActionButton}
-                      onPress={() => {
-                        setSearch("");
-                        setSearchFocused(false);
-                      }}
-                      hitSlop={8}
-                    >
-                      <Ionicons
-                        name="close"
-                        size={22}
-                        color={COLORS.textSecondary}
-                      />
-                    </Pressable>
+                    <Text style={styles.sectionDate}>
+                      {selectedDateLabel.fullDate}
+                    </Text>
+                  </View>
+
+                  {!loading && (
+                    <View style={styles.gameCountBadge}>
+                      <Text style={styles.gameCount}>
+                        {visibleGames.length}{" "}
+                        {visibleGames.length === 1
+                          ? t("discover.game")
+                          : t("discover.gamesCount")}
+                      </Text>
+                    </View>
                   )}
-                  <View style={styles.heroSearchDivider} />
-                  <Pressable
-                    style={[
-                      styles.heroFilterButton,
-                      (skillFilter ||
-                        formatFilter ||
-                        priceFilter ||
-                        sortBy !== "soonest") &&
-                        styles.heroFilterButtonActive,
-                    ]}
-                    onPress={() => setFilterModalVisible(true)}
-                    hitSlop={6}
-                  >
-                    <Ionicons
-                      name="options-outline"
-                      size={21}
-                      color={
-                        skillFilter ||
-                        formatFilter ||
-                        priceFilter ||
-                        sortBy !== "soonest"
-                          ? "#FFFFFF"
-                          : COLORS.primary
-                      }
-                    />
-                  </Pressable>
                 </View>
-              </View>
-            </View>
-          )}
+              )}
 
-          {/* DATE SELECTOR */}
+              {/* LOADING */}
 
-          {!isSearchMode && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.dateRow}
-              style={styles.dateScroll}
-            >
-              {dates.map((item) => {
-                const active = selectedDate === item.key;
+              {loading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={COLORS.primary} />
 
-                return (
-                  <Pressable
-                    key={item.key}
-                    onPress={() => setSelectedDate(item.key)}
-                    style={({ pressed }) => [
-                      styles.dateButton,
-                      active && styles.dateButtonActive,
-                      pressed && styles.dateButtonPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.dateDay, active && styles.dateTextActive]}
-                    >
-                      {item.day}
-                    </Text>
-
-                    <Text
-                      style={[
-                        styles.dateNumber,
-                        active && styles.dateTextActive,
-                      ]}
-                    >
-                      {item.date}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.headerNotificationButton,
-                  pressed && styles.headerNotificationButtonPressed,
-                ]}
-                onPress={() => router.push("/notifications")}
-                accessibilityRole="button"
-                accessibilityLabel="Notifications"
-              >
-                <Ionicons
-                  name="notifications-outline"
-                  size={21}
-                  color="#FFFFFF"
-                />
-                {hasUnreadNotifications && <View style={styles.notificationDot} />}
-              </Pressable>
-            </ScrollView>
-          )}
-
-          {!isSearchMode && selectedDateLabel && (
-            <View style={styles.sectionHeader}>
-              <View>
-                <Text style={styles.sectionTitle}>{t("discover.games")}</Text>
-
-                <Text style={styles.sectionDate}>
-                  {selectedDateLabel.fullDate}
-                </Text>
-              </View>
-
-              {!loading && (
-                <View style={styles.gameCountBadge}>
-                  <Text style={styles.gameCount}>
-                    {visibleGames.length}{" "}
-                    {visibleGames.length === 1
-                      ? t("discover.game")
-                      : t("discover.gamesCount")}
+                  <Text style={styles.loadingText}>
+                    {t("discover.findingGames")}
                   </Text>
                 </View>
               )}
-            </View>
-          )}
 
-          {/* LOADING */}
+              {/* EMPTY */}
 
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-
-              <Text style={styles.loadingText}>
-                {t("discover.findingGames")}
-              </Text>
-            </View>
-          )}
-
-          {/* EMPTY */}
-
-          {!loading && visibleGames.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIcon}>
-                <Ionicons
-                  name="football-outline"
-                  size={32}
-                  color={COLORS.primary}
-                />
-              </View>
-
-              <Text style={styles.emptyTitle}>
-                {t("discover.noGamesFound")}
-              </Text>
-
-              <Text style={styles.emptyText}>
-                {search.trim()
-                  ? t("discover.noSearchResults")
-                  : t("discover.noGamesForDay")}
-              </Text>
-            </View>
-          )}
-
-          {/* SEARCH RESULTS / NORMAL DISCOVER */}
-
-          {isSearchMode ? (
-            !loading && visibleGames.length > 0 ? (
-              <View style={styles.discoverySection}>
-                <View style={styles.discoverySectionHeader}>
-                  <View style={styles.discoverySectionTitleRow}>
-                    <Ionicons name="search" size={18} color={COLORS.primary} />
-                    <Text style={styles.discoverySectionTitle}>
-                      {t("discover.games")}
-                    </Text>
+              {!loading && visibleGames.length === 0 && (
+                <View style={styles.emptyContainer}>
+                  <View style={styles.emptyIcon}>
+                    <Ionicons
+                      name="football-outline"
+                      size={32}
+                      color={COLORS.primary}
+                    />
                   </View>
-                  <Text style={styles.discoverySectionMeta}>
-                    {visibleGames.length}{" "}
-                    {visibleGames.length === 1
-                      ? t("discover.game")
-                      : t("discover.gamesCount")}
+
+                  <Text style={styles.emptyTitle}>
+                    {t("discover.noGamesFound")}
+                  </Text>
+
+                  <Text style={styles.emptyText}>
+                    {search.trim()
+                      ? t("discover.noSearchResults")
+                      : t("discover.noGamesForDay")}
                   </Text>
                 </View>
-                <View style={styles.gameGrid}>
-                  {visibleGames.map((game) => (
-                    <View key={`search-${game.id}`} style={styles.gameWrapper}>
-                      <GameCard game={game} />
+              )}
+
+              {!loading && visibleGames.length > 0 && isSearchMode && (
+                <View style={styles.discoverySection}>
+                  <View style={styles.discoverySectionHeader}>
+                    <View style={styles.discoverySectionTitleRow}>
+                      <Ionicons
+                        name="search"
+                        size={18}
+                        color={COLORS.primary}
+                      />
+                      <Text style={styles.discoverySectionTitle}>
+                        {t("discover.games")}
+                      </Text>
                     </View>
-                  ))}
+                    <Text style={styles.discoverySectionMeta}>
+                      {visibleGames.length}{" "}
+                      {visibleGames.length === 1
+                        ? t("discover.game")
+                        : t("discover.gamesCount")}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ) : null
-          ) : (
-            <>
-              {!loading && visibleGames.length > 0 && (
+              )}
+
+              {!loading && !isSearchMode && playingSoonGames.length > 0 && (
                 <>
                   <View style={styles.discoverySection}>
                     <View style={styles.discoverySectionHeader}>
@@ -854,15 +943,15 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <Text style={styles.discoverySectionMeta}>
-                        {Math.min(visibleGames.length, 3)}{" "}
-                        {visibleGames.length === 1
+                        {playingSoonGames.length}{" "}
+                        {playingSoonGames.length === 1
                           ? t("discover.game")
                           : t("discover.gamesCount")}
                       </Text>
                     </View>
 
                     <View style={styles.gameGrid}>
-                      {visibleGames.slice(0, 3).map((game) => (
+                      {playingSoonGames.map((game) => (
                         <View
                           key={`soon-${game.id}`}
                           style={[
@@ -871,13 +960,18 @@ export default function HomeScreen() {
                             isDesktopLayout && styles.gameWrapperDesktop,
                           ]}
                         >
-                          <GameCard game={game} />
+                          <GameCard
+                            game={game}
+                            initialIsFavorite={favoriteGameIds.has(
+                              String(game.id),
+                            )}
+                          />
                         </View>
                       ))}
                     </View>
                   </View>
 
-                  {visibleGames.length > 3 && (
+                  {listGames.length > 0 && (
                     <View style={styles.discoverySection}>
                       <View style={styles.discoverySectionHeader}>
                         <View style={styles.discoverySectionTitleRow}>
@@ -891,34 +985,19 @@ export default function HomeScreen() {
                           </Text>
                         </View>
                         <Text style={styles.discoverySectionMeta}>
-                          {visibleGames.length - 3}{" "}
-                          {visibleGames.length - 3 === 1
+                          {listGames.length}{" "}
+                          {listGames.length === 1
                             ? t("discover.game")
                             : t("discover.gamesCount")}
                         </Text>
-                      </View>
-
-                      <View style={styles.gameGrid}>
-                        {visibleGames.slice(3).map((game) => (
-                          <View
-                            key={`more-${game.id}`}
-                            style={[
-                              styles.gameWrapper,
-                              isTabletLayout && styles.gameWrapperTablet,
-                              isDesktopLayout && styles.gameWrapperDesktop,
-                            ]}
-                          >
-                            <GameCard game={game} />
-                          </View>
-                        ))}
                       </View>
                     </View>
                   )}
                 </>
               )}
             </>
-          )}
-        </ScrollView>
+          }
+        />
 
         {/* CITY MODAL */}
 

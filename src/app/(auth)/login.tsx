@@ -26,7 +26,7 @@ import { supabase } from "../../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const LOGIN_HERO = require("../../../assets/images/login-hero.png");
+const LOGIN_HERO = require("../../../assets/images/login-hero.jpg");
 
 export default function LoginScreen() {
   const [loadingProvider, setLoadingProvider] = useState<

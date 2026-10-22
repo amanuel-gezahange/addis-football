@@ -90,16 +90,23 @@ type RefundRow = {
   paymentProvider: string | null;
 };
 
+type Tab = "active" | "refunds";
+
 export default function OrganizerPlayers() {
   const insets = useSafeAreaInsets();
   const { language, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>("active");
 
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [refunds, setRefunds] = useState<RefundRow[]>([]);
 
   const [confirmingBookingId, setConfirmingBookingId] = useState<number | null>(
+    null,
+  );
+
+  const [rejectingBookingId, setRejectingBookingId] = useState<number | null>(
     null,
   );
 
@@ -134,13 +141,13 @@ export default function OrganizerPlayers() {
         .from("games")
         .select(
           `
-  id,
-  title,
-  starts_at,
-  status,
-  payment_method,
-  payment_provider
-  `,
+            id,
+            title,
+            starts_at,
+            status,
+            payment_method,
+            payment_provider
+          `,
         )
         .eq("created_by", user.id)
         .order("starts_at", {
@@ -178,7 +185,7 @@ export default function OrganizerPlayers() {
             status,
             payment_status,
             created_at
-            `,
+          `,
         )
         .in("game_id", gameIds)
         .not("status", "in", "(cancelled_by_player,cancelled_by_organizer)")
@@ -202,13 +209,13 @@ export default function OrganizerPlayers() {
           .from("bookings")
           .select(
             `
-          id,
-          user_id,
-          game_id,
-          status,
-          payment_status,
-          created_at
-          `,
+              id,
+              user_id,
+              game_id,
+              status,
+              payment_status,
+              created_at
+            `,
           )
           .in("game_id", gameIds)
           .eq("status", "cancelled_by_organizer")
@@ -250,7 +257,7 @@ export default function OrganizerPlayers() {
               full_name,
               phone,
               skill_level
-              `,
+            `,
           )
           .in("id", allUserIds);
 
@@ -289,7 +296,7 @@ export default function OrganizerPlayers() {
               status,
               player_reference,
               refund_status
-              `,
+            `,
           )
           .in("booking_id", allBookingIds)
           .order("id", {
@@ -305,8 +312,6 @@ export default function OrganizerPlayers() {
 
       const paymentMap = new Map<number, OrganizerPayment>();
 
-      // Payments are newest first.
-      // Keep newest payment for each booking.
       payments.forEach((payment) => {
         if (
           payment.booking_id !== null &&
@@ -317,7 +322,7 @@ export default function OrganizerPlayers() {
       });
 
       // --------------------------------
-      // 6. Build active player rows
+      // 6. Build active rows
       // --------------------------------
 
       const rows: PlayerRow[] = bookings.map((booking) => {
@@ -370,7 +375,6 @@ export default function OrganizerPlayers() {
             booking.status !== "cancelled_by_organizer" ||
             booking.payment_status !== "refund_pending" ||
             !payment ||
-            payment.status !== "refund_pending" ||
             payment.refund_status !== "pending"
           ) {
             return null;
@@ -408,11 +412,11 @@ export default function OrganizerPlayers() {
   }
 
   // --------------------------------
-  // Confirm submitted payment
+  // Confirm payment
   // --------------------------------
 
   async function confirmPayment(bookingId: number) {
-    if (confirmingBookingId !== null || refundingPaymentId !== null) {
+    if (confirmingBookingId !== null || rejectingBookingId !== null || refundingPaymentId !== null) {
       return;
     }
 
@@ -439,11 +443,91 @@ export default function OrganizerPlayers() {
   }
 
   // --------------------------------
-  // Mark manual refund complete
+  // Payment not received
+  // --------------------------------
+
+  function requestRejectPayment(player: PlayerRow) {
+    if (
+      confirmingBookingId !== null ||
+      rejectingBookingId !== null ||
+      refundingPaymentId !== null
+    ) {
+      return;
+    }
+
+    const title = "Payment not received";
+    const message = `Cancel ${player.playerName}'s booking because you could not verify their payment?
+
+Their spot will be released.`;
+
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+
+      if (confirmed) {
+        void rejectPayment(player.bookingId);
+      }
+
+      return;
+    }
+
+    Alert.alert(title, message, [
+      {
+        text: "Keep booking",
+        style: "cancel",
+      },
+      {
+        text: "Cancel booking",
+        style: "destructive",
+        onPress: () => {
+          void rejectPayment(player.bookingId);
+        },
+      },
+    ]);
+  }
+
+  async function rejectPayment(bookingId: number) {
+    if (
+      confirmingBookingId !== null ||
+      rejectingBookingId !== null ||
+      refundingPaymentId !== null
+    ) {
+      return;
+    }
+
+    try {
+      setRejectingBookingId(bookingId);
+
+      const { data, error } = await supabase.rpc("reject_organizer_payment", {
+        p_booking_id: bookingId,
+      });
+
+      if (error) {
+        console.error("Error rejecting organizer payment:", error);
+        showMessage("Could not cancel booking", error.message);
+        return;
+      }
+
+      console.log("Organizer payment rejected:", data);
+
+      await loadPlayers(false);
+    } catch (error) {
+      console.error("Error rejecting organizer payment:", error);
+
+      showMessage(
+        "Could not cancel booking",
+        error instanceof Error ? error.message : "",
+      );
+    } finally {
+      setRejectingBookingId(null);
+    }
+  }
+
+  // --------------------------------
+  // Refund
   // --------------------------------
 
   function requestMarkRefunded(refund: RefundRow) {
-    if (refundingPaymentId !== null || confirmingBookingId !== null) {
+    if (refundingPaymentId !== null || confirmingBookingId !== null || rejectingBookingId !== null) {
       return;
     }
 
@@ -481,7 +565,7 @@ ${refund.paymentAmount} ETB${
   }
 
   async function markRefunded(paymentId: number) {
-    if (refundingPaymentId !== null || confirmingBookingId !== null) {
+    if (refundingPaymentId !== null || confirmingBookingId !== null || rejectingBookingId !== null) {
       return;
     }
 
@@ -528,12 +612,8 @@ ${refund.paymentAmount} ETB${
   }
 
   // --------------------------------
-  // Derived data
+  // Derived
   // --------------------------------
-
-  const uniquePlayers = useMemo(() => {
-    return new Set(players.map((player) => player.userId)).size;
-  }, [players]);
 
   const pendingPlayers = useMemo(() => {
     return players.filter(
@@ -552,6 +632,10 @@ ${refund.paymentAmount} ETB${
         ),
     );
   }, [players]);
+
+  const orderedPlayers = useMemo(() => {
+    return [...pendingPlayers, ...confirmedPlayers];
+  }, [pendingPlayers, confirmedPlayers]);
 
   function formatDate(value: string | null) {
     if (!value) {
@@ -578,6 +662,13 @@ ${refund.paymentAmount} ETB${
     return trimmed.charAt(0).toUpperCase();
   }
 
+  function isPaymentPending(player: PlayerRow) {
+    return (
+      player.bookingStatus === "pending_payment" &&
+      player.paymentStatus === "submitted"
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
@@ -601,9 +692,13 @@ ${refund.paymentAmount} ETB${
 
         <View style={styles.header}>
           <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>{t("organizerPlayers.eyebrow")}</Text>
+            <Text style={styles.eyebrow}>
+              {t("organizerPlayers.eyebrow")}
+            </Text>
 
-            <Text style={styles.title}>{t("organizerPlayers.title")}</Text>
+            <Text style={styles.title}>
+              {t("organizerPlayers.title")}
+            </Text>
 
             <Text style={styles.subtitle}>
               {t("organizerPlayers.subtitle")}
@@ -611,439 +706,427 @@ ${refund.paymentAmount} ETB${
           </View>
 
           <View style={styles.headerIcon}>
-            <Ionicons name="people" size={25} color={COLORS.primary} />
+            <Ionicons name="people" size={24} color={COLORS.primary} />
           </View>
         </View>
 
-        {/* SUMMARY */}
+        {/* TABS */}
 
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryNumber}>{uniquePlayers}</Text>
-
-            <Text style={styles.summaryLabel}>
-              {t("organizerPlayers.totalPlayers")}
-            </Text>
-          </View>
-
-          <View style={styles.summaryDivider} />
-
-          <View style={styles.summaryItem}>
+        <View style={styles.tabs}>
+          <Pressable
+            onPress={() => setActiveTab("active")}
+            style={[
+              styles.tab,
+              activeTab === "active" && styles.activeTab,
+            ]}
+          >
             <Text
               style={[
-                styles.summaryNumber,
-                pendingPlayers.length > 0 && styles.attentionNumber,
+                styles.tabText,
+                activeTab === "active" && styles.activeTabText,
               ]}
             >
-              {pendingPlayers.length}
+              Active
             </Text>
 
-            <Text style={styles.summaryLabel}>
-              {t("organizerPlayers.needAction")}
+            {pendingPlayers.length > 0 && (
+              <View style={styles.tabAttentionDot} />
+            )}
+          </Pressable>
+
+          <Pressable
+            onPress={() => setActiveTab("refunds")}
+            style={[
+              styles.tab,
+              activeTab === "refunds" && styles.activeTab,
+            ]}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "refunds" && styles.activeTabText,
+              ]}
+            >
+              Refunds
             </Text>
-          </View>
+
+            {refunds.length > 0 && (
+              <View style={styles.tabCount}>
+                <Text style={styles.tabCountText}>{refunds.length}</Text>
+              </View>
+            )}
+          </Pressable>
         </View>
 
-        {/* PAYMENTS TO CONFIRM */}
+        {/* ACTIVE */}
 
-        <View style={styles.prioritySection}>
-          <View style={styles.priorityHeader}>
-            <View style={styles.priorityHeaderLeft}>
-              <View style={styles.priorityHeaderIcon}>
-                <Ionicons
-                  name="wallet-outline"
-                  size={19}
-                  color={COLORS.primary}
-                />
-              </View>
+        {activeTab === "active" && (
+          <View style={styles.tabContent}>
+            {orderedPlayers.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="people-outline"
+                    size={25}
+                    color="#718691"
+                  />
+                </View>
 
-              <Text style={styles.priorityTitle}>
-                {t("organizerPlayers.paymentsToConfirm")}
-              </Text>
-            </View>
+                <Text style={styles.emptyTitle}>No active players</Text>
 
-            <View style={styles.priorityCount}>
-              <Text style={styles.priorityCountText}>
-                {pendingPlayers.length}
-              </Text>
-            </View>
-          </View>
-
-          {pendingPlayers.length === 0 ? (
-            <View style={styles.allCaughtUpCard}>
-              <View style={styles.allCaughtUpIcon}>
-                <Ionicons name="checkmark" size={18} color="#07131D" />
-              </View>
-
-              <View style={styles.allCaughtUpCopy}>
-                <Text style={styles.allCaughtUpTitle}>
-                  {t("organizerPlayers.noPaymentsToConfirm")}
-                </Text>
-
-                <Text style={styles.allCaughtUpText}>
-                  {t("organizerPlayers.noPaymentsToConfirmDescription")}
+                <Text style={styles.emptyText}>
+                  Players who join your games will appear here.
                 </Text>
               </View>
-            </View>
-          ) : (
-            <View style={styles.priorityList}>
-              {pendingPlayers.map((player) => {
-                const confirming = confirmingBookingId === player.bookingId;
+            ) : (
+              <View style={styles.list}>
+                {orderedPlayers.map((player) => {
+                  const pending = isPaymentPending(player);
+                  const confirming =
+                    confirmingBookingId === player.bookingId;
+                  const rejecting =
+                    rejectingBookingId === player.bookingId;
 
-                return (
-                  <View key={player.bookingId} style={styles.priorityCard}>
-                    <View style={styles.priorityPlayerTop}>
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                          {getInitial(player.playerName)}
-                        </Text>
-                      </View>
+                  return (
+                    <View
+                      key={player.bookingId}
+                      style={styles.playerCard}
+                    >
+                      <View style={styles.playerTop}>
+                        <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>
+                            {getInitial(player.playerName)}
+                          </Text>
+                        </View>
 
-                      <View style={styles.priorityPlayerInfo}>
-                        <Text style={styles.playerName} numberOfLines={1}>
-                          {player.playerName}
-                        </Text>
+                        <View style={styles.playerInfo}>
+                          <Text
+                            style={styles.playerName}
+                            numberOfLines={1}
+                          >
+                            {player.playerName}
+                          </Text>
 
-                        <Text
-                          style={styles.priorityGameTitle}
-                          numberOfLines={1}
+                          <Text
+                            style={styles.gameTitle}
+                            numberOfLines={1}
+                          >
+                            {player.gameTitle}
+                          </Text>
+
+                          <View style={styles.metaRow}>
+                            <Ionicons
+                              name="calendar-outline"
+                              size={13}
+                              color="#6F8591"
+                            />
+
+                            <Text style={styles.metaText}>
+                              {formatDate(player.gameStartsAt)}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.statusBadge,
+                            pending
+                              ? styles.pendingStatus
+                              : styles.bookedStatus,
+                          ]}
                         >
-                          {player.gameTitle}
-                        </Text>
-
-                        <View style={styles.dateRow}>
-                          <Ionicons
-                            name="calendar-outline"
-                            size={14}
-                            color="#78909C"
-                          />
-
-                          <Text style={styles.gameDate}>
-                            {formatDate(player.gameStartsAt)}
+                          <Text
+                            style={[
+                              styles.statusText,
+                              pending
+                                ? styles.pendingStatusText
+                                : styles.bookedStatusText,
+                            ]}
+                          >
+                            {pending
+                              ? t("organizerPlayers.pending")
+                              : player.bookingStatus === "waitlisted"
+                                ? t("organizerPlayers.waitlist")
+                                : t("organizerPlayers.booked")}
                           </Text>
                         </View>
                       </View>
 
-                      <View style={styles.pendingBadge}>
-                        <View style={styles.pendingDot} />
-
-                        <Text style={styles.pendingBadgeText}>
-                          {t("organizerPlayers.pending")}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.priorityDivider} />
-
-                    <View style={styles.paymentHeader}>
-                      <View style={styles.paymentIcon}>
-                        <Ionicons
-                          name="wallet-outline"
-                          size={19}
-                          color="#F5B942"
-                        />
-                      </View>
-
-                      <View style={styles.paymentInfo}>
-                        <Text style={styles.paymentAmount}>
-                          {player.paymentAmount ?? 0} ETB
-                          {player.paymentProvider
-                            ? ` · ${player.paymentProvider}`
-                            : ""}
-                        </Text>
-
-                        {player.phone && (
-                          <View style={styles.inlinePhoneRow}>
-                            <Ionicons
-                              name="call-outline"
-                              size={14}
-                              color="#8196A2"
-                            />
-
-                            <Text style={styles.inlinePhoneText}>
-                              {player.phone}
-                            </Text>
-                          </View>
-                        )}
-
-                        {player.paymentReference && (
-                          <Text
-                            style={styles.paymentReference}
-                            numberOfLines={1}
-                          >
-                            {t("organizerPlayers.reference")}:{" "}
-                            {player.paymentReference}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-
-                    <Pressable
-                      disabled={
-                        confirmingBookingId !== null ||
-                        refundingPaymentId !== null
-                      }
-                      onPress={() => confirmPayment(player.bookingId)}
-                      style={({ pressed }) => [
-                        styles.confirmButton,
-                        pressed && styles.confirmButtonPressed,
-                        (confirmingBookingId !== null ||
-                          refundingPaymentId !== null) &&
-                          styles.confirmButtonDisabled,
-                      ]}
-                    >
-                      {confirming ? (
-                        <ActivityIndicator size="small" color="#07131D" />
-                      ) : (
+                      {pending && (
                         <>
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={20}
-                            color="#07131D"
-                          />
+                          <View style={styles.divider} />
 
-                          <Text style={styles.confirmButtonText}>
-                            {t("organizerPlayers.confirmPayment")}
-                          </Text>
+                          <View style={styles.paymentRow}>
+                            <View style={styles.paymentCopy}>
+                              <Text style={styles.paymentAmount}>
+                                {player.paymentAmount ?? 0} ETB
+                                {player.paymentProvider
+                                  ? ` · ${player.paymentProvider}`
+                                  : ""}
+                              </Text>
+
+                              {player.paymentReference && (
+                                <Text
+                                  style={styles.paymentReference}
+                                  numberOfLines={1}
+                                >
+                                  {t("organizerPlayers.reference")}:{" "}
+                                  {player.paymentReference}
+                                </Text>
+                              )}
+
+                              {player.phone && (
+                                <Text style={styles.phoneText}>
+                                  {player.phone}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+
+                          <View style={styles.paymentActions}>
+                            <Pressable
+                              disabled={
+                                confirmingBookingId !== null ||
+                                rejectingBookingId !== null ||
+                                refundingPaymentId !== null
+                              }
+                              onPress={() =>
+                                confirmPayment(player.bookingId)
+                              }
+                              style={({ pressed }) => [
+                                styles.primaryButton,
+                                styles.paymentActionButton,
+                                pressed && styles.buttonPressed,
+                                (confirmingBookingId !== null ||
+                                  rejectingBookingId !== null ||
+                                  refundingPaymentId !== null) &&
+                                  styles.buttonDisabled,
+                              ]}
+                            >
+                              {confirming ? (
+                                <ActivityIndicator
+                                  size="small"
+                                  color="#07131D"
+                                />
+                              ) : (
+                                <>
+                                  <Ionicons
+                                    name="checkmark"
+                                    size={19}
+                                    color="#07131D"
+                                  />
+
+                                  <Text style={styles.primaryButtonText}>
+                                    {t("organizerPlayers.confirmPayment")}
+                                  </Text>
+                                </>
+                              )}
+                            </Pressable>
+
+                            <Pressable
+                              disabled={
+                                confirmingBookingId !== null ||
+                                rejectingBookingId !== null ||
+                                refundingPaymentId !== null
+                              }
+                              onPress={() => requestRejectPayment(player)}
+                              style={({ pressed }) => [
+                                styles.rejectButton,
+                                styles.paymentActionButton,
+                                pressed && styles.buttonPressed,
+                                (confirmingBookingId !== null ||
+                                  rejectingBookingId !== null ||
+                                  refundingPaymentId !== null) &&
+                                  styles.buttonDisabled,
+                              ]}
+                            >
+                              {rejecting ? (
+                                <ActivityIndicator
+                                  size="small"
+                                  color="#FF9A9A"
+                                />
+                              ) : (
+                                <>
+                                  <Ionicons
+                                    name="close"
+                                    size={18}
+                                    color="#FF9A9A"
+                                  />
+
+                                  <Text style={styles.rejectButtonText}>
+                                    Payment not received
+                                  </Text>
+                                </>
+                              )}
+                            </Pressable>
+                          </View>
                         </>
                       )}
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
-
-        {/* CONFIRMED PLAYERS */}
-
-        <View style={styles.secondarySection}>
-          <View style={styles.secondaryHeader}>
-            <View style={styles.secondaryHeaderLeft}>
-              <View style={styles.confirmedSectionIcon}>
-                <Ionicons name="checkmark" size={17} color="#07131D" />
-              </View>
-
-              <Text style={styles.secondaryTitle}>
-                {t("organizerPlayers.confirmedPlayers")}
-              </Text>
-            </View>
-
-            <Text style={styles.secondaryCount}>{confirmedPlayers.length}</Text>
-          </View>
-
-          {confirmedPlayers.length === 0 ? (
-            <View style={styles.compactEmptyCard}>
-              <Text style={styles.compactEmptyText}>
-                {t("organizerPlayers.noConfirmedPlayers")}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.confirmedList}>
-              {confirmedPlayers.map((player) => (
-                <View key={player.bookingId} style={styles.confirmedPlayerCard}>
-                  <View style={styles.compactAvatar}>
-                    <Text style={styles.compactAvatarText}>
-                      {getInitial(player.playerName)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.confirmedPlayerInfo}>
-                    <Text style={styles.confirmedPlayerName} numberOfLines={1}>
-                      {player.playerName}
-                    </Text>
-
-                    <Text style={styles.confirmedGameTitle} numberOfLines={1}>
-                      {player.gameTitle}
-                    </Text>
-
-                    <View style={styles.compactDateRow}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={13}
-                        color="#708894"
-                      />
-
-                      <Text style={styles.compactDateText}>
-                        {formatDate(player.gameStartsAt)}
-                      </Text>
                     </View>
-
-                    {player.phone && (
-                      <View style={styles.compactPhoneRow}>
-                        <Ionicons
-                          name="call-outline"
-                          size={13}
-                          color="#708894"
-                        />
-
-                        <Text style={styles.compactPhoneText}>
-                          {player.phone}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.confirmedBadge}>
-                    <View style={styles.confirmedDot} />
-
-                    <Text style={styles.confirmedText}>
-                      {player.bookingStatus === "waitlisted"
-                        ? t("organizerPlayers.waitlist")
-                        : t("organizerPlayers.booked")}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* REFUNDS */}
 
-        <View style={styles.refundSection}>
-          <View style={styles.secondaryHeader}>
-            <View style={styles.secondaryHeaderLeft}>
-              <View style={styles.refundSectionIcon}>
-                <Ionicons
-                  name="return-down-back-outline"
-                  size={19}
-                  color="#F5B942"
-                />
-              </View>
-
-              <Text style={styles.secondaryTitle}>
-                {t("organizerPlayers.refunds")}
-              </Text>
-
-              {refunds.length > 0 && (
-                <View style={styles.refundCountBadge}>
-                  <Text style={styles.refundCountText}>{refunds.length}</Text>
+        {activeTab === "refunds" && (
+          <View style={styles.tabContent}>
+            {refunds.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="return-down-back-outline"
+                    size={25}
+                    color="#718691"
+                  />
                 </View>
-              )}
-            </View>
 
-            {refunds.length > 0 && (
-              <Text style={styles.refundPendingSummary}>
-                {t("organizerPlayers.pending")}
-              </Text>
-            )}
-          </View>
+                <Text style={styles.emptyTitle}>
+                  No pending refunds
+                </Text>
 
-          {refunds.length === 0 ? (
-            <View style={styles.refundEmptyCard}>
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={21}
-                color="#65DDA5"
-              />
+                <Text style={styles.emptyText}>
+                  Refunds that require your action will appear here.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {refunds.map((refund) => {
+                  const refunding =
+                    refundingPaymentId === refund.paymentId;
 
-              <Text style={styles.refundEmptyText}>
-                {t("organizerPlayers.noPendingRefunds")}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.refundList}>
-              {refunds.map((refund) => {
-                const refunding = refundingPaymentId === refund.paymentId;
+                  return (
+                    <View
+                      key={refund.paymentId}
+                      style={styles.playerCard}
+                    >
+                      <View style={styles.playerTop}>
+                        <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>
+                            {getInitial(refund.playerName)}
+                          </Text>
+                        </View>
 
-                return (
-                  <View key={refund.paymentId} style={styles.refundCard}>
-                    <View style={styles.refundCompactTop}>
-                      <View style={styles.refundAvatar}>
-                        <Text style={styles.refundAvatarText}>
-                          {getInitial(refund.playerName)}
-                        </Text>
+                        <View style={styles.playerInfo}>
+                          <Text
+                            style={styles.playerName}
+                            numberOfLines={1}
+                          >
+                            {refund.playerName}
+                          </Text>
+
+                          <Text
+                            style={styles.gameTitle}
+                            numberOfLines={1}
+                          >
+                            {refund.gameTitle}
+                          </Text>
+
+                          {refund.phone && (
+                            <View style={styles.metaRow}>
+                              <Ionicons
+                                name="call-outline"
+                                size={13}
+                                color="#6F8591"
+                              />
+
+                              <Text style={styles.metaText}>
+                                {refund.phone}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View
+                          style={[
+                            styles.statusBadge,
+                            styles.pendingStatus,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.statusText,
+                              styles.pendingStatusText,
+                            ]}
+                          >
+                            {t("organizerPlayers.pending")}
+                          </Text>
+                        </View>
                       </View>
 
-                      <View style={styles.refundInfo}>
-                        <Text style={styles.refundPlayerName} numberOfLines={1}>
-                          {refund.playerName}
-                        </Text>
+                      <View style={styles.divider} />
 
-                        <Text style={styles.refundGameTitle} numberOfLines={1}>
-                          {refund.gameTitle}
-                        </Text>
+                      <Text style={styles.refundAmount}>
+                        {refund.paymentAmount} ETB
+                        {refund.paymentProvider
+                          ? ` · ${refund.paymentProvider}`
+                          : ""}
+                      </Text>
 
-                        <Text style={styles.refundCompactAmount}>
-                          {refund.paymentAmount} ETB
-                          {refund.paymentProvider
-                            ? ` · ${refund.paymentProvider}`
-                            : ""}
-                        </Text>
-
-                        {refund.phone && (
-                          <View style={styles.refundPhoneRow}>
+                      <Pressable
+                        disabled={
+                          refundingPaymentId !== null ||
+                          confirmingBookingId !== null ||
+                          rejectingBookingId !== null
+                        }
+                        onPress={() =>
+                          requestMarkRefunded(refund)
+                        }
+                        style={({ pressed }) => [
+                          styles.secondaryButton,
+                          pressed && styles.buttonPressed,
+                          (refundingPaymentId !== null ||
+                            confirmingBookingId !== null) &&
+                            styles.buttonDisabled,
+                        ]}
+                      >
+                        {refunding ? (
+                          <ActivityIndicator
+                            size="small"
+                            color="#FFFFFF"
+                          />
+                        ) : (
+                          <>
                             <Ionicons
-                              name="call-outline"
-                              size={13}
-                              color="#8196A2"
+                              name="checkmark"
+                              size={18}
+                              color="#FFFFFF"
                             />
 
-                            <Text style={styles.refundPhoneText}>
-                              {refund.phone}
+                            <Text style={styles.secondaryButtonText}>
+                              {t(
+                                "organizerPlayers.markAsRefunded",
+                              )}
                             </Text>
-                          </View>
+                          </>
                         )}
-                      </View>
-
-                      <View style={styles.refundPendingBadge}>
-                        <View style={styles.refundPendingDot} />
-
-                        <Text style={styles.refundPendingText}>
-                          {t("organizerPlayers.pending")}
-                        </Text>
-                      </View>
+                      </Pressable>
                     </View>
-
-                    <Pressable
-                      disabled={
-                        refundingPaymentId !== null ||
-                        confirmingBookingId !== null
-                      }
-                      onPress={() => void markRefunded(refund.paymentId)}
-                      style={({ pressed }) => [
-                        styles.refundButton,
-                        pressed && styles.refundButtonPressed,
-                        (refundingPaymentId !== null ||
-                          confirmingBookingId !== null) &&
-                          styles.refundButtonDisabled,
-                      ]}
-                    >
-                      {refunding ? (
-                        <ActivityIndicator size="small" color="#F5B942" />
-                      ) : (
-                        <>
-                          <Ionicons
-                            name="checkmark-circle-outline"
-                            size={17}
-                            color="#F5B942"
-                          />
-
-                          <Text style={styles.refundButtonText}>
-                            {t("organizerPlayers.markAsRefunded")}
-                          </Text>
-                        </>
-                      )}
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* REFRESH */}
 
         {(players.length > 0 || refunds.length > 0) && (
           <Pressable
+            onPress={() => loadPlayers()}
             style={({ pressed }) => [
               styles.refreshButton,
-              pressed && styles.refreshButtonPressed,
+              pressed && styles.buttonPressed,
             ]}
-            onPress={() => loadPlayers()}
           >
-            <Ionicons name="refresh" size={18} color={COLORS.primary} />
+            <Ionicons
+              name="refresh"
+              size={17}
+              color="#8195A0"
+            />
 
             <Text style={styles.refreshText}>
               {t("organizerPlayers.refreshPlayers")}
@@ -1082,7 +1165,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 22,
+    marginBottom: 24,
   },
 
   headerCopy: {
@@ -1093,8 +1176,8 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: COLORS.primary,
     fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.7,
+    fontWeight: "800",
+    letterSpacing: 1.5,
     marginBottom: 5,
   },
 
@@ -1106,691 +1189,347 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: "#8EA2AF",
+    color: "#8296A1",
     fontSize: 14,
     fontWeight: "500",
     marginTop: 4,
   },
 
   headerIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: "#0E2632",
-    borderWidth: 1,
-    borderColor: "#173B49",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Summary
-
-  summaryCard: {
-    minHeight: 96,
-    borderRadius: 19,
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    backgroundColor: "#0D202B",
     borderWidth: 1,
     borderColor: "#183844",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Tabs
+
+  tabs: {
+    height: 48,
     backgroundColor: "#0D202B",
+    borderRadius: 14,
+    padding: 4,
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 27,
-  },
-
-  summaryItem: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  summaryNumber: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-
-  attentionNumber: {
-    color: "#F5B942",
-  },
-
-  summaryLabel: {
-    color: "#8398A3",
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 3,
-    textAlign: "center",
-  },
-
-  summaryDivider: {
-    width: 1,
-    height: 46,
-    backgroundColor: "#1B3A47",
-  },
-
-  // Payments to confirm
-
-  prioritySection: {
-    marginBottom: 29,
-  },
-
-  priorityHeader: {
-    minHeight: 38,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-
-  priorityHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    minWidth: 0,
-  },
-
-  priorityHeaderIcon: {
-    width: 31,
-    height: 31,
-    borderRadius: 10,
-    backgroundColor: "#0D2733",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-
-  priorityTitle: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 1.15,
-    flexShrink: 1,
-  },
-
-  priorityCount: {
-    minWidth: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#F5B942",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-    marginLeft: 12,
-  },
-
-  priorityCountText: {
-    color: "#07131D",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-
-  priorityList: {
-    gap: 13,
-  },
-
-  priorityCard: {
-    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#1B4655",
-    backgroundColor: "#0D202B",
-    padding: 15,
+    borderColor: "#173540",
+    marginBottom: 22,
   },
 
-  priorityPlayerTop: {
+  tab: {
+    flex: 1,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 7,
+  },
+
+  activeTab: {
+    backgroundColor: "#17313D",
+  },
+
+  tabText: {
+    color: "#718792",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  activeTabText: {
+    color: "#FFFFFF",
+  },
+
+  tabCount: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  tabCountText: {
+    color: "#07131D",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  tabAttentionDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: COLORS.primary,
+  },
+
+  tabContent: {
+    minHeight: 220,
+  },
+
+  list: {
+    gap: 10,
+  },
+
+  // Player cards
+
+  playerCard: {
+    backgroundColor: "#0D202B",
+    borderWidth: 1,
+    borderColor: "#183844",
+    borderRadius: 16,
+    padding: 14,
+  },
+
+  playerTop: {
     flexDirection: "row",
     alignItems: "center",
   },
 
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
-    backgroundColor: COLORS.primary,
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: "#17313D",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
 
   avatarText: {
-    color: "#07131D",
-    fontSize: 20,
+    color: COLORS.primary,
+    fontSize: 17,
     fontWeight: "900",
   },
 
-  priorityPlayerInfo: {
+  playerInfo: {
     flex: 1,
     minWidth: 0,
   },
 
   playerName: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "900",
+    fontSize: 15,
+    fontWeight: "800",
   },
 
-  priorityGameTitle: {
-    color: "#A8B8C0",
+  gameTitle: {
+    color: "#91A3AC",
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     marginTop: 3,
   },
 
-  dateRow: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
     marginTop: 5,
   },
 
-  gameDate: {
-    color: "#728894",
+  metaText: {
+    color: "#6F8591",
     fontSize: 11,
     fontWeight: "500",
   },
 
-  pendingBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#302817",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 12,
-    marginLeft: 8,
+  // Status
+
+  statusBadge: {
+    marginLeft: 10,
+    borderRadius: 9,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
   },
 
-  pendingDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#F5B942",
-    marginRight: 6,
+  pendingStatus: {
+    backgroundColor: "#172832",
   },
 
-  pendingBadgeText: {
-    color: "#F5C65D",
+  bookedStatus: {
+    backgroundColor: "#142A27",
+  },
+
+  statusText: {
     fontSize: 10,
     fontWeight: "800",
   },
 
-  priorityDivider: {
+  pendingStatusText: {
+    color: "#A7BAC3",
+  },
+
+  bookedStatusText: {
+    color: "#75CFA8",
+  },
+
+  divider: {
     height: 1,
     backgroundColor: "#183844",
     marginVertical: 13,
   },
 
-  paymentHeader: {
+  // Payment
+
+  paymentRow: {
     flexDirection: "row",
     alignItems: "center",
   },
 
-  paymentIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#302817",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  paymentInfo: {
+  paymentCopy: {
     flex: 1,
-    minWidth: 0,
   },
 
   paymentAmount: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "900",
-  },
-
-  inlinePhoneRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 5,
-  },
-
-  inlinePhoneText: {
-    color: "#91A3AD",
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "800",
   },
 
   paymentReference: {
-    color: "#8196A2",
+    color: "#8296A1",
     fontSize: 11,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-
-  confirmButton: {
-    minHeight: 49,
-    borderRadius: 13,
-    backgroundColor: COLORS.primary,
-    marginTop: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-
-  confirmButtonPressed: {
-    opacity: 0.86,
-  },
-
-  confirmButtonDisabled: {
-    opacity: 0.65,
-  },
-
-  confirmButtonText: {
-    color: "#07131D",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-
-  // No pending payments
-
-  allCaughtUpCard: {
-    minHeight: 78,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#173B38",
-    backgroundColor: "#0D2225",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-
-  allCaughtUpIcon: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    backgroundColor: "#39D98A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  allCaughtUpCopy: {
-    flex: 1,
-  },
-
-  allCaughtUpTitle: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  allCaughtUpText: {
-    color: "#8196A2",
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 3,
-  },
-
-  // Confirmed players
-
-  secondarySection: {
-    marginBottom: 28,
-  },
-
-  secondaryHeader: {
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 11,
-  },
-
-  secondaryHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    minWidth: 0,
-  },
-
-  secondaryTitle: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.15,
-  },
-
-  secondaryCount: {
-    color: "#8EA2AF",
-    fontSize: 12,
-    fontWeight: "900",
-  },
-
-  confirmedSectionIcon: {
-    width: 29,
-    height: 29,
-    borderRadius: 15,
-    backgroundColor: "#39D98A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-
-  confirmedList: {
-    gap: 9,
-  },
-
-  confirmedPlayerCard: {
-    minHeight: 84,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#183844",
-    backgroundColor: "#0D202B",
-    padding: 13,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  compactAvatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 14,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  compactAvatarText: {
-    color: "#07131D",
-    fontSize: 17,
-    fontWeight: "900",
-  },
-
-  confirmedPlayerInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  confirmedPlayerName: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  confirmedGameTitle: {
-    color: "#8EA2AF",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 3,
-  },
-
-  compactDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 4,
-  },
-
-  compactDateText: {
-    color: "#708894",
-    fontSize: 10,
     fontWeight: "500",
-  },
-
-  compactPhoneRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
     marginTop: 4,
   },
 
-  compactPhoneText: {
-    color: "#7F929C",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-
-  confirmedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#102A26",
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 10,
-    marginLeft: 8,
-  },
-
-  confirmedDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#39D98A",
-    marginRight: 5,
-  },
-
-  confirmedText: {
-    color: "#65DDA5",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  compactEmptyCard: {
-    minHeight: 58,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#183844",
-    backgroundColor: "#0D202B",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-
-  compactEmptyText: {
-    color: "#8196A2",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  // Refunds
-
-  refundSection: {
-    marginBottom: 8,
-  },
-
-  refundSectionIcon: {
-    width: 29,
-    height: 29,
-    borderRadius: 15,
-    backgroundColor: "#302817",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-
-  refundCountBadge: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#302817",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-    marginLeft: 8,
-  },
-
-  refundCountText: {
-    color: "#F5C65D",
+  phoneText: {
+    color: "#718792",
     fontSize: 11,
-    fontWeight: "900",
-  },
-
-  refundPendingSummary: {
-    color: "#9A7C3E",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  refundList: {
-    gap: 9,
-  },
-
-  refundCard: {
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "#3C351F",
-    backgroundColor: "#111C20",
-    padding: 13,
-  },
-
-  refundCompactTop: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  refundAvatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 14,
-    backgroundColor: "#302817",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  refundAvatarText: {
-    color: "#F5B942",
-    fontSize: 17,
-    fontWeight: "900",
-  },
-
-  refundInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  refundPlayerName: {
-    color: "#E7ECEF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  refundGameTitle: {
-    color: "#8196A2",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-
-  refundCompactAmount: {
-    color: "#AAB8BE",
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 5,
-  },
-
-  refundPhoneRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
+    fontWeight: "500",
     marginTop: 4,
   },
 
-  refundPhoneText: {
-    color: "#8196A2",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-
-  refundPendingBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#302817",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginLeft: 8,
-  },
-
-  refundPendingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#F5B942",
-    marginRight: 5,
-  },
-
-  refundPendingText: {
-    color: "#F5C65D",
-    fontSize: 9,
+  refundAmount: {
+    color: "#FFFFFF",
+    fontSize: 15,
     fontWeight: "800",
   },
 
-  refundButton: {
-    minHeight: 40,
+  // Buttons
+
+  primaryButton: {
+    minHeight: 45,
     borderRadius: 11,
-    borderWidth: 1,
-    borderColor: "#6A5323",
-    backgroundColor: "#1E211A",
-    marginTop: 12,
+    backgroundColor: COLORS.primary,
+    marginTop: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 7,
   },
 
-  refundButtonPressed: {
-    opacity: 0.82,
+  primaryButtonText: {
+    color: "#07131D",
+    fontSize: 13,
+    fontWeight: "900",
   },
 
-  refundButtonDisabled: {
-    opacity: 0.55,
-  },
-
-  refundButtonText: {
-    color: "#F5B942",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  refundEmptyCard: {
-    minHeight: 58,
-    borderRadius: 15,
+  secondaryButton: {
+    minHeight: 44,
+    borderRadius: 11,
+    backgroundColor: "#17313D",
     borderWidth: 1,
-    borderColor: "#173B38",
-    backgroundColor: "#0E2424",
+    borderColor: "#234756",
+    marginTop: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 16,
+    gap: 7,
   },
 
-  refundEmptyText: {
-    color: "#65DDA5",
+  secondaryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  paymentActions: {
+    marginTop: 13,
+    gap: 9,
+  },
+
+  paymentActionButton: {
+    marginTop: 0,
+  },
+
+  rejectButton: {
+    minHeight: 44,
+    borderRadius: 11,
+    backgroundColor: "#241A1D",
+    borderWidth: 1,
+    borderColor: "#563039",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  rejectButtonText: {
+    color: "#FF9A9A",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  buttonPressed: {
+    opacity: 0.82,
+  },
+
+  buttonDisabled: {
+    opacity: 0.55,
+  },
+
+  // Empty
+
+  emptyState: {
+    minHeight: 220,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 17,
+    backgroundColor: "#0D202B",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 13,
+  },
+
+  emptyTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  emptyText: {
+    color: "#718792",
     fontSize: 12,
-    fontWeight: "700",
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 5,
   },
 
   // Refresh
 
   refreshButton: {
-    minHeight: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#1B4655",
-    backgroundColor: "#0D202B",
-    marginTop: 20,
+    minHeight: 44,
+    marginTop: 24,
+    alignSelf: "center",
+    paddingHorizontal: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-  },
-
-  refreshButtonPressed: {
-    opacity: 0.8,
+    gap: 7,
   },
 
   refreshText: {
-    color: COLORS.primary,
-    fontSize: 13,
-    fontWeight: "800",
+    color: "#8195A0",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

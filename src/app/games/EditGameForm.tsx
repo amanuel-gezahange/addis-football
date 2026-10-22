@@ -1378,16 +1378,6 @@ ends_at
             </>
           )}
 
-          {isCancelled && (
-            <View style={styles.cancelledBox}>
-              <Ionicons name="close-circle" size={21} color="#C13515" />
-
-              <Text style={styles.cancelledText}>
-                {t("editGame.thisGameCancelled")}
-              </Text>
-            </View>
-          )}
-
           <View style={{ height: 50 }} />
         </ScrollView>
       </KeyboardAvoidingView>

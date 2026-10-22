@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  ImageSourcePropType,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,14 +22,54 @@ import { supabase } from "../../lib/supabase";
 
 type Language = "en" | "am" | "om";
 
+type BankOption = {
+  name: string;
+  logo?: ImageSourcePropType;
+  short: string;
+};
+
+const TOP_BANKS: BankOption[] = [
+  {
+    name: "Commercial Bank of Ethiopia (CBE)",
+    short: "CBE",
+    logo: require("../../../assets/images/cbe.png"),
+  },
+  {
+    name: "Awash Bank",
+    short: "AW",
+    logo: require("../../../assets/images/awash.png"),
+  },
+  {
+    name: "Bank of Abyssinia",
+    short: "BOA",
+    logo: require("../../../assets/images/abyssinia.png"),
+  },
+  {
+    name: "Dashen Bank",
+    short: "DB",
+    logo: require("../../../assets/images/dashen.png"),
+  },
+  {
+    name: "Cooperative Bank of Oromia",
+    short: "COOP",
+    logo: require("../../../assets/images/coop.png"),
+  },
+];
+
+const OTHER_BANKS: BankOption[] = [];
+
+const TELEBIRR_LOGO =
+  "https://raw.githubusercontent.com/Chapa-Et/ethiopianlogos/main/logos/tele_birr/tele_birr.png";
+
+function getBankOption(name: string) {
+  return [...TOP_BANKS, ...OTHER_BANKS].find((bank) => bank.name === name);
+}
+
+
 export default function OrganizerAccount() {
   const insets = useSafeAreaInsets();
 
-  const {
-    language,
-    setLanguage,
-    t,
-  } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,6 +77,26 @@ export default function OrganizerAccount() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+
+  const [acceptsTelebirr, setAcceptsTelebirr] = useState(false);
+  const [acceptsMobileBanking, setAcceptsMobileBanking] = useState(false);
+  const [telebirrPhone, setTelebirrPhone] = useState("");
+  const [telebirrAccountName, setTelebirrAccountName] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
+  const [savingPayments, setSavingPayments] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<
+    "telebirr" | "mobile_banking" | null
+  >(null);
+  const [bankPickerOpen, setBankPickerOpen] = useState(false);
+  const [showOtherBanks, setShowOtherBanks] = useState(false);
+
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  const [originalName, setOriginalName] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
 
   useEffect(() => {
     loadAccount();
@@ -44,35 +107,73 @@ export default function OrganizerAccount() {
       setLoading(true);
 
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
 
       if (!user) {
         router.replace("/login");
         return;
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name, phone, role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const [profileResult, applicationResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, phone, role, accepts_telebirr, accepts_mobile_banking, telebirr_phone, telebirr_account_name, bank_name, bank_account_number, bank_account_name")
+          .eq("id", user.id)
+          .maybeSingle(),
 
-      if (error) {
+        supabase
+          .from("organizer_applications")
+          .select("organizer_name, phone")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
+
+      if (profileResult.error) {
         console.error(
-          "Error loading organizer account:",
-          error
+          "Error loading organizer profile:",
+          profileResult.error,
         );
-        return;
       }
 
-      setFullName(data?.full_name ?? "");
-      setPhone(data?.phone ?? user.phone ?? "");
+      if (applicationResult.error) {
+        console.error(
+          "Error loading organizer application:",
+          applicationResult.error,
+        );
+      }
+
+      const profile = profileResult.data;
+      const application = applicationResult.data;
+
+      const resolvedName =
+        profile?.full_name?.trim() ||
+        application?.organizer_name?.trim() ||
+        "";
+
+      const resolvedPhone =
+        profile?.phone?.trim() ||
+        application?.phone?.trim() ||
+        user.phone ||
+        "";
+
+      setFullName(resolvedName);
+      setPhone(resolvedPhone);
+
+      setAcceptsTelebirr(Boolean(profile?.accepts_telebirr));
+      setAcceptsMobileBanking(Boolean(profile?.accepts_mobile_banking));
+      setTelebirrPhone(profile?.telebirr_phone?.trim() || "");
+      setTelebirrAccountName(profile?.telebirr_account_name?.trim() || "");
+      setBankName(profile?.bank_name?.trim() || "");
+      setBankAccountNumber(profile?.bank_account_number?.trim() || "");
+      setBankAccountName(profile?.bank_account_name?.trim() || "");
+
+      setOriginalName(resolvedName);
+      setOriginalPhone(resolvedPhone);
     } catch (error) {
-      console.error(
-        "Error loading organizer account:",
-        error
-      );
+      console.error("Error loading organizer account:", error);
     } finally {
       setLoading(false);
     }
@@ -91,11 +192,14 @@ export default function OrganizerAccount() {
         return;
       }
 
+      const savedName = fullName.trim();
+      const savedPhone = phone.trim();
+
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: fullName.trim() || null,
-          phone: phone.trim() || null,
+          full_name: savedName || null,
+          phone: savedPhone || null,
         })
         .eq("id", user.id);
 
@@ -103,23 +207,345 @@ export default function OrganizerAccount() {
         throw error;
       }
 
+      setFullName(savedName);
+      setPhone(savedPhone);
+
+      setOriginalName(savedName);
+      setOriginalPhone(savedPhone);
+
+      setEditing(false);
+
       Alert.alert(
         t("organizerAccount.accountSaved"),
-        t("organizerAccount.accountUpdated")
+        t("organizerAccount.accountUpdated"),
       );
     } catch (error) {
-      console.error(
-        "Error saving organizer account:",
-        error
-      );
+      console.error("Error saving organizer account:", error);
 
       Alert.alert(
         t("organizerAccount.couldNotSave"),
-        t("organizerAccount.tryAgain")
+        t("organizerAccount.tryAgain"),
       );
     } finally {
       setSaving(false);
     }
+  }
+
+  async function updatePaymentProfile(
+    updates: Record<string, string | boolean | null>,
+  ) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.replace("/login");
+      throw new Error("Not signed in");
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async function saveTelebirr() {
+    if (!telebirrPhone.trim()) {
+      Alert.alert("Missing Telebirr number", "Enter your Telebirr number.");
+      return;
+    }
+
+    if (!telebirrAccountName.trim()) {
+      Alert.alert(
+        "Missing account name",
+        "Enter the name on your Telebirr account.",
+      );
+      return;
+    }
+
+    try {
+      setSavingPayments(true);
+
+      await updatePaymentProfile({
+        accepts_telebirr: true,
+        telebirr_phone: telebirrPhone.trim(),
+        telebirr_account_name: telebirrAccountName.trim(),
+      });
+
+      setAcceptsTelebirr(true);
+      setEditingPayment(null);
+
+      Alert.alert(
+        "Telebirr saved",
+        "Players can now pay you using your Telebirr account.",
+      );
+    } catch (error) {
+      console.error("Error saving Telebirr details:", error);
+      Alert.alert("Could not save Telebirr", "Please try again.");
+    } finally {
+      setSavingPayments(false);
+    }
+  }
+
+  async function saveMobileBanking() {
+    if (!bankName.trim()) {
+      Alert.alert("Missing bank", "Enter your bank name.");
+      return;
+    }
+
+    if (!bankAccountNumber.trim()) {
+      Alert.alert("Missing account number", "Enter your bank account number.");
+      return;
+    }
+
+    if (!bankAccountName.trim()) {
+      Alert.alert("Missing account name", "Enter your bank account name.");
+      return;
+    }
+
+    try {
+      setSavingPayments(true);
+
+      await updatePaymentProfile({
+        accepts_mobile_banking: true,
+        bank_name: bankName.trim(),
+        bank_account_number: bankAccountNumber.trim(),
+        bank_account_name: bankAccountName.trim(),
+      });
+
+      setAcceptsMobileBanking(true);
+      setEditingPayment(null);
+
+      Alert.alert(
+        "Mobile Banking saved",
+        "Players can now pay you using your bank account.",
+      );
+    } catch (error) {
+      console.error("Error saving Mobile Banking details:", error);
+      Alert.alert("Could not save Mobile Banking", "Please try again.");
+    } finally {
+      setSavingPayments(false);
+    }
+  }
+
+  async function toggleTelebirr() {
+    if (savingPayments) return;
+
+    if (acceptsTelebirr) {
+      if (!acceptsMobileBanking) {
+        Alert.alert(
+          "Keep one payment method",
+          "Enable Mobile Banking before turning off Telebirr.",
+        );
+        return;
+      }
+
+      try {
+        setSavingPayments(true);
+        await updatePaymentProfile({
+          accepts_telebirr: false,
+        });
+        setAcceptsTelebirr(false);
+      } catch (error) {
+        console.error("Error disabling Telebirr:", error);
+        Alert.alert("Could not update Telebirr", "Please try again.");
+      } finally {
+        setSavingPayments(false);
+      }
+
+      return;
+    }
+
+    if (!telebirrPhone.trim() || !telebirrAccountName.trim()) {
+      setEditingPayment("telebirr");
+      return;
+    }
+
+    try {
+      setSavingPayments(true);
+      await updatePaymentProfile({
+        accepts_telebirr: true,
+        telebirr_phone: telebirrPhone.trim(),
+        telebirr_account_name: telebirrAccountName.trim(),
+      });
+      setAcceptsTelebirr(true);
+    } catch (error) {
+      console.error("Error enabling Telebirr:", error);
+      Alert.alert("Could not update Telebirr", "Please try again.");
+    } finally {
+      setSavingPayments(false);
+    }
+  }
+
+  async function toggleMobileBanking() {
+    if (savingPayments) return;
+
+    if (acceptsMobileBanking) {
+      if (!acceptsTelebirr) {
+        Alert.alert(
+          "Keep one payment method",
+          "Enable Telebirr before turning off Mobile Banking.",
+        );
+        return;
+      }
+
+      try {
+        setSavingPayments(true);
+
+        await updatePaymentProfile({
+          accepts_mobile_banking: false,
+        });
+
+        setAcceptsMobileBanking(false);
+      } catch (error) {
+        console.error("Error disabling Mobile Banking:", error);
+        Alert.alert("Could not update Mobile Banking", "Please try again.");
+      } finally {
+        setSavingPayments(false);
+      }
+
+      return;
+    }
+
+    // If details are already loaded, simply turn the method back on.
+    if (
+      bankName.trim() &&
+      bankAccountNumber.trim() &&
+      bankAccountName.trim()
+    ) {
+      try {
+        setSavingPayments(true);
+
+        await updatePaymentProfile({
+          accepts_mobile_banking: true,
+          bank_name: bankName.trim(),
+          bank_account_number: bankAccountNumber.trim(),
+          bank_account_name: bankAccountName.trim(),
+        });
+
+        setAcceptsMobileBanking(true);
+      } catch (error) {
+        console.error("Error enabling Mobile Banking:", error);
+        Alert.alert("Could not update Mobile Banking", "Please try again.");
+      } finally {
+        setSavingPayments(false);
+      }
+
+      return;
+    }
+
+    // First-time setup: open the Mobile Banking form.
+    setEditingPayment("mobile_banking");
+  }
+
+  function confirmRemoveTelebirr() {
+    if (!acceptsMobileBanking) {
+      Alert.alert(
+        "Keep one payment method",
+        "Add Mobile Banking before removing Telebirr.",
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Remove Telebirr?",
+      "Players will no longer see Telebirr as a payment option.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setSavingPayments(true);
+              await updatePaymentProfile({
+                accepts_telebirr: false,
+                telebirr_phone: null,
+                telebirr_account_name: null,
+              });
+              setAcceptsTelebirr(false);
+              setTelebirrPhone("");
+              setTelebirrAccountName("");
+              setEditingPayment(null);
+            } catch (error) {
+              console.error("Error removing Telebirr:", error);
+              Alert.alert("Could not remove Telebirr", "Please try again.");
+            } finally {
+              setSavingPayments(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  function confirmRemoveMobileBanking() {
+    if (!acceptsTelebirr) {
+      Alert.alert(
+        "Keep one payment method",
+        "Add Telebirr before removing Mobile Banking.",
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Remove Mobile Banking?",
+      "Players will no longer see Mobile Banking as a payment option.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setSavingPayments(true);
+              await updatePaymentProfile({
+                accepts_mobile_banking: false,
+                bank_name: null,
+                bank_account_number: null,
+                bank_account_name: null,
+              });
+              setAcceptsMobileBanking(false);
+              setBankName("");
+              setBankAccountNumber("");
+              setBankAccountName("");
+              setEditingPayment(null);
+            } catch (error) {
+              console.error("Error removing Mobile Banking:", error);
+              Alert.alert("Could not remove Mobile Banking", "Please try again.");
+            } finally {
+              setSavingPayments(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  function maskAccountNumber(value: string) {
+    const clean = value.trim();
+
+    if (clean.length <= 4) {
+      return clean;
+    }
+
+    return `${"•".repeat(Math.min(8, clean.length - 4))}${clean.slice(-4)}`;
+  }
+
+  function startEditing() {
+    setOriginalName(fullName);
+    setOriginalPhone(phone);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    setFullName(originalName);
+    setPhone(originalPhone);
+    setEditing(false);
   }
 
   async function signOut() {
@@ -138,7 +564,7 @@ export default function OrganizerAccount() {
 
       Alert.alert(
         t("organizerAccount.couldNotSignOut"),
-        t("organizerAccount.tryAgain")
+        t("organizerAccount.tryAgain"),
       );
     } finally {
       setSigningOut(false);
@@ -148,10 +574,7 @@ export default function OrganizerAccount() {
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
-        <ActivityIndicator
-          size="large"
-          color={COLORS.primary}
-        />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -168,6 +591,7 @@ export default function OrganizerAccount() {
           },
         ]}
       >
+        {/* HEADER */}
         <View style={styles.header}>
           <View>
             <Text style={styles.eyebrow}>
@@ -192,6 +616,7 @@ export default function OrganizerAccount() {
           </View>
         </View>
 
+        {/* ORGANIZER IDENTITY */}
         <View style={styles.identityCard}>
           <View style={styles.avatar}>
             <Ionicons
@@ -226,130 +651,594 @@ export default function OrganizerAccount() {
           />
         </View>
 
+        {/* PERSONAL INFORMATION */}
         <Text style={styles.sectionLabel}>
-          {t("organizerAccount.personalInformation")}
+          PERSONAL INFORMATION
         </Text>
 
         <View style={styles.card}>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>
-              {t("organizerAccount.fullName")}
-            </Text>
+          {!editing ? (
+            <>
+              {/* ORGANIZER NAME */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}>
+                  <Ionicons
+                    name="business-outline"
+                    size={19}
+                    color="#718894"
+                  />
+                </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="person-outline"
-                size={19}
-                color="#718894"
-              />
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>
+                    Organizer Name
+                  </Text>
 
-              <TextInput
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder={t(
-                  "organizerAccount.namePlaceholder"
-                )}
-                placeholderTextColor="#5F7480"
-                style={styles.input}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
+                  <Text style={styles.infoValue}>
+                    {fullName || "Not provided"}
+                  </Text>
+                </View>
+              </View>
 
-          <View style={styles.fieldDivider} />
+              <View style={styles.fieldDivider} />
 
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>
-              {t("organizerAccount.phone")}
-            </Text>
+              {/* PHONE */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}>
+                  <Ionicons
+                    name="call-outline"
+                    size={19}
+                    color="#718894"
+                  />
+                </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="call-outline"
-                size={19}
-                color="#718894"
-              />
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>
+                    Phone
+                  </Text>
 
-              <TextInput
-                value={phone}
-                onChangeText={setPhone}
-                placeholder={t(
-                  "organizerAccount.phonePlaceholder"
-                )}
-                placeholderTextColor="#5F7480"
-                style={styles.input}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
+                  <Text style={styles.infoValue}>
+                    {phone || "Not provided"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.fieldDivider} />
+
+              {/* EDIT */}
+              <Pressable
+                onPress={startEditing}
+                style={({ pressed }) => [
+                  styles.editButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Ionicons
+                  name="pencil-outline"
+                  size={18}
+                  color={COLORS.primary}
+                />
+
+                <Text style={styles.editButtonText}>
+                  Edit Profile
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              {/* ORGANIZER NAME INPUT */}
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>
+                  Organizer Name
+                </Text>
+
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="business-outline"
+                    size={19}
+                    color="#718894"
+                  />
+
+                  <TextInput
+                    value={fullName}
+                    onChangeText={setFullName}
+                    placeholder="Organizer name"
+                    placeholderTextColor="#5F7480"
+                    style={styles.input}
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldDivider} />
+
+              {/* PHONE INPUT */}
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>
+                  Phone
+                </Text>
+
+                <View style={styles.inputContainer}>
+                  <Ionicons
+                    name="call-outline"
+                    size={19}
+                    color="#718894"
+                  />
+
+                  <TextInput
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="Phone number"
+                    placeholderTextColor="#5F7480"
+                    style={styles.input}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
+
+              {/* EDIT ACTIONS */}
+              <View style={styles.editActions}>
+                <Pressable
+                  disabled={saving}
+                  onPress={cancelEditing}
+                  style={({ pressed }) => [
+                    styles.cancelButton,
+                    pressed && styles.buttonPressed,
+                    saving && styles.buttonDisabled,
+                  ]}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    Cancel
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  disabled={saving}
+                  onPress={saveAccount}
+                  style={({ pressed }) => [
+                    styles.saveChangesButton,
+                    pressed && styles.buttonPressed,
+                    saving && styles.buttonDisabled,
+                  ]}
+                >
+                  {saving ? (
+                    <ActivityIndicator
+                      size="small"
+                      color="#07131D"
+                    />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="checkmark"
+                        size={19}
+                        color="#07131D"
+                      />
+
+                      <Text style={styles.saveChangesText}>
+                        Save Changes
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
+            </>
+          )}
         </View>
 
+        {/* PAYMENT METHODS */}
+        <Text style={styles.sectionLabel}>PAYMENT METHODS</Text>
+
+        <View style={styles.paymentSection}>
+          <Text style={styles.paymentIntro}>
+            Choose how players can pay you for games. You can enable one or both
+            methods.
+          </Text>
+
+          {editingPayment !== "telebirr" && (
+            <PaymentSummaryCard
+              icon="wallet-outline"
+              logoUri={TELEBIRR_LOGO}
+              title="Telebirr"
+              description="Players can send payments to your Telebirr account."
+              enabled={acceptsTelebirr}
+              rows={
+                acceptsTelebirr
+                  ? [
+                      {
+                        icon: "call-outline",
+                        value: telebirrPhone || "No number",
+                      },
+                      {
+                        icon: "person-outline",
+                        value: telebirrAccountName || "No account name",
+                      },
+                    ]
+                  : []
+              }
+              onEdit={() => setEditingPayment("telebirr")}
+              onToggle={toggleTelebirr}
+              disabled={savingPayments}
+            />
+          )}
+
+          {editingPayment === "telebirr" && (
+            <View style={styles.paymentEditCard}>
+              <View style={styles.paymentEditHeader}>
+                <Pressable
+                  onPress={() => setEditingPayment(null)}
+                  style={({ pressed }) => [
+                    styles.paymentBackButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+                </Pressable>
+
+                <View style={styles.paymentEditHeaderText}>
+                  <Text style={styles.paymentEditTitle}>Edit Telebirr</Text>
+                  <Text style={styles.paymentEditSubtitle}>
+                    Players can send payments to your Telebirr account.
+                  </Text>
+                </View>
+              </View>
+
+              <PaymentField
+                label="Telebirr number"
+                icon="call-outline"
+                value={telebirrPhone}
+                onChangeText={setTelebirrPhone}
+                placeholder="0912345678"
+                keyboardType="phone-pad"
+              />
+
+              <PaymentField
+                label="Account name"
+                icon="person-outline"
+                value={telebirrAccountName}
+                onChangeText={setTelebirrAccountName}
+                placeholder="Abebe Kebede"
+              />
+
+              <Pressable
+                disabled={savingPayments}
+                onPress={saveTelebirr}
+                style={({ pressed }) => [
+                  styles.paymentSaveButton,
+                  pressed && styles.buttonPressed,
+                  savingPayments && styles.buttonDisabled,
+                ]}
+              >
+                {savingPayments ? (
+                  <ActivityIndicator size="small" color="#07131D" />
+                ) : (
+                  <Text style={styles.paymentSaveText}>Save Changes</Text>
+                )}
+              </Pressable>
+
+              {acceptsTelebirr && (
+                <Pressable
+                  disabled={savingPayments}
+                  onPress={confirmRemoveTelebirr}
+                  style={({ pressed }) => [
+                    styles.removePaymentButton,
+                    pressed && styles.buttonPressed,
+                    savingPayments && styles.buttonDisabled,
+                  ]}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+                  <Text style={styles.removePaymentText}>Remove Telebirr</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          {editingPayment !== "mobile_banking" && (
+            <PaymentSummaryCard
+              icon="business-outline"
+              logoSource={getBankOption(bankName)?.logo}
+              logoFallback={getBankOption(bankName)?.short}
+              title="Mobile Banking"
+              description="Players can transfer payments to your bank account."
+              enabled={acceptsMobileBanking}
+              rows={
+                acceptsMobileBanking
+                  ? [
+                      {
+                        icon: "business-outline",
+                        value: bankName || "No bank",
+                      },
+                      {
+                        icon: "card-outline",
+                        value: maskAccountNumber(bankAccountNumber),
+                      },
+                      {
+                        icon: "person-outline",
+                        value: bankAccountName || "No account name",
+                      },
+                    ]
+                  : []
+              }
+              onEdit={() => setEditingPayment("mobile_banking")}
+              onToggle={toggleMobileBanking}
+              disabled={savingPayments}
+            />
+          )}
+
+          {editingPayment === "mobile_banking" && (
+            <View style={styles.paymentEditCard}>
+              <View style={styles.paymentEditHeader}>
+                <Pressable
+                  onPress={() => setEditingPayment(null)}
+                  style={({ pressed }) => [
+                    styles.paymentBackButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+                </Pressable>
+
+                <View style={styles.paymentEditHeaderText}>
+                  <Text style={styles.paymentEditTitle}>Edit Mobile Banking</Text>
+                  <Text style={styles.paymentEditSubtitle}>
+                    Players can transfer payments to your bank account.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.paymentField}>
+                <Text style={styles.fieldLabel}>Bank</Text>
+
+                <Pressable
+                  onPress={() => {
+                    if (!bankName) setBankName(TOP_BANKS[0].name);
+                    setBankPickerOpen(true);
+                  }}
+                  style={({ pressed }) => [
+                    styles.bankSelector,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <BankLogo bankName={getBankOption(bankName)?.name || TOP_BANKS[0].name} size={36} />
+
+                  <View style={styles.bankSelectorContent}>
+                    <Text
+                      style={[
+                        styles.bankSelectorText,
+                        !bankName && styles.bankSelectorPlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {getBankOption(bankName)?.name || TOP_BANKS[0].name}
+                    </Text>
+                    <Text style={styles.bankSelectorHint}>
+                      Tap to change bank
+                    </Text>
+                  </View>
+
+                  <Ionicons
+                    name="chevron-forward"
+                    size={19}
+                    color="#718894"
+                  />
+                </Pressable>
+              </View>
+
+              <Modal
+                visible={bankPickerOpen}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setBankPickerOpen(false)}
+              >
+                <View style={styles.pickerOverlay}>
+                  <Pressable
+                    style={styles.pickerBackdrop}
+                    onPress={() => setBankPickerOpen(false)}
+                  />
+
+                  <View style={styles.bankPickerSheet}>
+
+
+                    <ScrollView
+                      horizontal
+                      style={styles.bankPickerScroll}
+                      contentContainerStyle={[
+                        styles.bankPickerScrollContent,
+                        styles.bankLogoStrip,
+                      ]}
+                      showsHorizontalScrollIndicator={false}
+                      showsVerticalScrollIndicator={false}
+                      bounces
+                    >
+                    {TOP_BANKS.map((bank) => (
+                      <BankPickerRow
+                        key={bank.name}
+                        bank={bank}
+                        selected={bankName === bank.name}
+                        onPress={() => {
+                          setBankName(bank.name);
+                          setBankPickerOpen(false);
+                        }}
+                      />
+                    ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
+
+              <PaymentField
+                label="Account number"
+                icon="card-outline"
+                value={bankAccountNumber}
+                onChangeText={setBankAccountNumber}
+                placeholder="1000123456789"
+                keyboardType="number-pad"
+              />
+
+              <PaymentField
+                label="Account name"
+                icon="person-outline"
+                value={bankAccountName}
+                onChangeText={setBankAccountName}
+                placeholder="Abebe Kebede"
+              />
+
+              <Pressable
+                disabled={savingPayments}
+                onPress={saveMobileBanking}
+                style={({ pressed }) => [
+                  styles.paymentSaveButton,
+                  pressed && styles.buttonPressed,
+                  savingPayments && styles.buttonDisabled,
+                ]}
+              >
+                {savingPayments ? (
+                  <ActivityIndicator size="small" color="#07131D" />
+                ) : (
+                  <Text style={styles.paymentSaveText}>Save Changes</Text>
+                )}
+              </Pressable>
+
+              {acceptsMobileBanking && (
+                <Pressable
+                  disabled={savingPayments}
+                  onPress={confirmRemoveMobileBanking}
+                  style={({ pressed }) => [
+                    styles.removePaymentButton,
+                    pressed && styles.buttonPressed,
+                    savingPayments && styles.buttonDisabled,
+                  ]}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+                  <Text style={styles.removePaymentText}>
+                    Remove Mobile Banking
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          {!editingPayment && (!acceptsTelebirr || !acceptsMobileBanking) && (
+            <Pressable
+              onPress={() =>
+                setEditingPayment(
+                  !acceptsTelebirr ? "telebirr" : "mobile_banking",
+                )
+              }
+              style={({ pressed }) => [
+                styles.addPaymentButton,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={21}
+                color={COLORS.primary}
+              />
+              <Text style={styles.addPaymentText}>Add a payment method</Text>
+            </Pressable>
+          )}
+
+          {!editingPayment && (
+            <View style={styles.paymentHint}>
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color={COLORS.primary}
+              />
+              <Text style={styles.paymentHintText}>
+                Players will see the payment methods you enable when joining your
+                games.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* LANGUAGE */}
         <Text style={styles.sectionLabel}>
           {t("organizerAccount.language")}
         </Text>
 
         <View style={styles.card}>
-          <LanguageOption
-            label={t("languages.english")}
-            code="EN"
-            selected={language === "en"}
+          <Pressable
             onPress={() =>
-              setLanguage("en" as Language)
+              setLanguageOpen((current) => !current)
             }
-          />
+            style={({ pressed }) => [
+              styles.languageSelector,
+              pressed && styles.languagePressed,
+            ]}
+          >
+            <View style={styles.languageCode}>
+              <Text style={styles.languageCodeText}>
+                {language === "en"
+                  ? "EN"
+                  : language === "am"
+                    ? "AM"
+                    : "OM"}
+              </Text>
+            </View>
 
-          <View style={styles.optionDivider} />
+            <Text style={styles.languageLabel}>
+              {language === "en"
+                ? t("languages.english")
+                : language === "am"
+                  ? t("languages.amharic")
+                  : t("languages.oromo")}
+            </Text>
 
-          <LanguageOption
-            label={t("languages.amharic")}
-            code="AM"
-            selected={language === "am"}
-            onPress={() =>
-              setLanguage("am" as Language)
-            }
-          />
-
-          <View style={styles.optionDivider} />
-
-          <LanguageOption
-            label={t("languages.oromo")}
-            code="OM"
-            selected={language === "om"}
-            onPress={() =>
-              setLanguage("om" as Language)
-            }
-          />
-        </View>
-
-        <Pressable
-          disabled={saving}
-          onPress={saveAccount}
-          style={({ pressed }) => [
-            styles.saveButton,
-            pressed && styles.buttonPressed,
-            saving && styles.buttonDisabled,
-          ]}
-        >
-          {saving ? (
-            <ActivityIndicator
-              size="small"
-              color="#07131D"
+            <Ionicons
+              name={
+                languageOpen
+                  ? "chevron-up"
+                  : "chevron-down"
+              }
+              size={20}
+              color="#718894"
             />
-          ) : (
+          </Pressable>
+
+          {languageOpen && (
             <>
-              <Ionicons
-                name="checkmark-circle"
-                size={21}
-                color="#07131D"
+              <View style={styles.optionDivider} />
+
+              <LanguageOption
+                label={t("languages.english")}
+                code="EN"
+                selected={language === "en"}
+                onPress={() => {
+                  setLanguage("en" as Language);
+                  setLanguageOpen(false);
+                }}
               />
 
-              <Text style={styles.saveButtonText}>
-                {t("organizerAccount.saveAccount")}
-              </Text>
+              <View style={styles.optionDivider} />
+
+              <LanguageOption
+                label={t("languages.amharic")}
+                code="AM"
+                selected={language === "am"}
+                onPress={() => {
+                  setLanguage("am" as Language);
+                  setLanguageOpen(false);
+                }}
+              />
+
+              <View style={styles.optionDivider} />
+
+              <LanguageOption
+                label={t("languages.oromo")}
+                code="OM"
+                selected={language === "om"}
+                onPress={() => {
+                  setLanguage("om" as Language);
+                  setLanguageOpen(false);
+                }}
+              />
             </>
           )}
-        </Pressable>
+        </View>
 
+        {/* SIGN OUT */}
         <Pressable
           disabled={signingOut}
           onPress={signOut}
@@ -383,6 +1272,235 @@ export default function OrganizerAccount() {
           {t("organizerAccount.footer")}
         </Text>
       </ScrollView>
+    </View>
+  );
+}
+
+function BankLogo({
+  bankName,
+  size = 40,
+}: {
+  bankName: string;
+  size?: number;
+}) {
+  const bank = getBankOption(bankName) || TOP_BANKS[0];
+
+  return (
+    <View
+      style={[
+        styles.bankLogoFrame,
+        { width: size, height: size, borderRadius: Math.round(size / 3) },
+      ]}
+    >
+      <Image
+        source={bank.logo}
+        style={{ width: size - 8, height: size - 8 }}
+        resizeMode="contain"
+      />
+    </View>
+  );
+}
+
+function BankPickerRow({
+  bank,
+  selected,
+  onPress,
+}: {
+  bank: BankOption;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={bank.name}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.logoOnlyBankRow,
+        selected && styles.logoOnlyBankRowSelected,
+        pressed && styles.buttonPressed,
+      ]}
+    >
+      <BankLogo bankName={bank.name} size={38} />
+      {selected && (
+        <View style={styles.logoSelectedDot}>
+          <Ionicons name="checkmark" size={11} color="#07131D" />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+function PaymentSummaryCard({
+  icon,
+  logoUri,
+  logoSource,
+  logoFallback,
+  title,
+  description,
+  enabled,
+  rows,
+  onEdit,
+  onToggle,
+  disabled,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  logoUri?: string;
+  logoSource?: ImageSourcePropType;
+  logoFallback?: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  rows: {
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+    value: string;
+  }[];
+  onEdit: () => void;
+  onToggle: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <View style={styles.paymentSummaryCard}>
+      <View style={styles.paymentSummaryTop}>
+        <View style={styles.paymentIcon}>
+          {logoSource ? (
+            <Image
+              source={logoSource}
+              style={styles.paymentBrandLogo}
+              resizeMode="contain"
+            />
+          ) : logoUri ? (
+            <Image
+              source={{ uri: logoUri }}
+              style={styles.paymentBrandLogo}
+              resizeMode="contain"
+            />
+          ) : logoFallback ? (
+            <Text style={styles.paymentLogoFallback}>{logoFallback}</Text>
+          ) : (
+            <Ionicons
+              name={icon}
+              size={21}
+              color={enabled ? COLORS.primary : "#718894"}
+            />
+          )}
+        </View>
+
+        <View style={styles.paymentToggleContent}>
+          <Text style={styles.paymentToggleTitle}>{title}</Text>
+          <Text style={styles.paymentToggleDescription}>{description}</Text>
+        </View>
+
+        <Pressable
+          onPress={onToggle}
+          disabled={disabled}
+          hitSlop={14}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: enabled, disabled }}
+          style={({ pressed }) => [
+            styles.switchTrack,
+            enabled && styles.switchTrackEnabled,
+            pressed && styles.buttonPressed,
+            disabled && styles.buttonDisabled,
+          ]}
+        >
+          <View
+            style={[
+              styles.switchThumb,
+              enabled && styles.switchThumbEnabled,
+            ]}
+          />
+        </Pressable>
+      </View>
+
+      {enabled ? (
+        <>
+          <View style={styles.paymentSummaryDetails}>
+            {rows.map((row, index) => (
+              <View key={`${title}-${index}`} style={styles.paymentSummaryRow}>
+                <Ionicons name={row.icon} size={19} color="#7E95A1" />
+                <Text style={styles.paymentSummaryValue} numberOfLines={1}>
+                  {row.value}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable
+            onPress={onEdit}
+            style={({ pressed }) => [
+              styles.paymentEditAction,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <View style={styles.paymentEditActionLeft}>
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={COLORS.primary}
+              />
+              <Text style={styles.paymentEditActionText}>Edit</Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward"
+              size={19}
+              color={COLORS.primary}
+            />
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          onPress={onEdit}
+          style={({ pressed }) => [
+            styles.paymentSetupAction,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.paymentSetupText}>Set up {title}</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={19}
+            color={COLORS.primary}
+          />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function PaymentField({
+  label,
+  icon,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType = "default",
+}: {
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  keyboardType?: "default" | "number-pad" | "phone-pad";
+}) {
+  return (
+    <View style={styles.paymentField}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name={icon} size={19} color="#718894" />
+
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="#5F7480"
+          style={styles.input}
+          keyboardType={keyboardType}
+          autoCapitalize={keyboardType === "default" ? "words" : "none"}
+        />
+      </View>
     </View>
   );
 }
@@ -562,6 +1680,58 @@ const styles = StyleSheet.create({
     marginBottom: 27,
   },
 
+  /* READ-ONLY PROFILE */
+
+  infoRow: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+
+  infoIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: "#091923",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  infoContent: {
+    flex: 1,
+  },
+
+  infoLabel: {
+    color: "#718894",
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+
+  infoValue: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  editButton: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  editButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  /* EDIT PROFILE */
+
   field: {
     paddingVertical: 15,
   },
@@ -596,6 +1766,593 @@ const styles = StyleSheet.create({
   fieldDivider: {
     height: 1,
     backgroundColor: "#183844",
+  },
+
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
+    paddingVertical: 15,
+  },
+
+  cancelButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#294652",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cancelButtonText: {
+    color: "#A6B5BD",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  saveChangesButton: {
+    flex: 1.4,
+    minHeight: 48,
+    borderRadius: 13,
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  saveChangesText: {
+    color: "#07131D",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  /* PAYMENT METHODS */
+
+  paymentSection: {
+    marginBottom: 27,
+  },
+
+  paymentIntro: {
+    color: "#8196A2",
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+
+  paymentSummaryCard: {
+    backgroundColor: "#0D202B",
+    borderWidth: 1,
+    borderColor: "#183844",
+    borderRadius: 19,
+    padding: 15,
+    marginBottom: 12,
+  },
+
+  paymentSummaryTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  paymentIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: "#091923",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  paymentToggleContent: {
+    flex: 1,
+    paddingRight: 10,
+  },
+
+  paymentToggleTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+
+  paymentToggleDescription: {
+    color: "#718894",
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  switchTrack: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    padding: 3,
+    backgroundColor: "#29404B",
+    justifyContent: "center",
+  },
+
+  switchTrackEnabled: {
+    backgroundColor: COLORS.primary,
+  },
+
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#A7B6BD",
+  },
+
+  switchThumbEnabled: {
+    backgroundColor: "#FFFFFF",
+    alignSelf: "flex-end",
+  },
+
+  paymentSummaryDetails: {
+    marginTop: 14,
+    backgroundColor: "#091923",
+    borderWidth: 1,
+    borderColor: "#173744",
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    gap: 10,
+  },
+
+  paymentSummaryRow: {
+    minHeight: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  paymentSummaryValue: {
+    flex: 1,
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  paymentEditAction: {
+    minHeight: 47,
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  paymentEditActionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+
+  paymentEditActionText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  paymentSetupAction: {
+    minHeight: 44,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#183844",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 8,
+  },
+
+  paymentSetupText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  paymentEditCard: {
+    backgroundColor: "#0D202B",
+    borderWidth: 1,
+    borderColor: "#1A4555",
+    borderRadius: 19,
+    padding: 15,
+    marginBottom: 12,
+  },
+
+  paymentEditHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+
+  paymentBackButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#091923",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+
+  paymentEditHeaderText: {
+    flex: 1,
+    paddingTop: 1,
+  },
+
+  paymentEditTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "900",
+  },
+
+  paymentEditSubtitle: {
+    color: "#718894",
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 4,
+  },
+
+  paymentField: {
+    paddingVertical: 7,
+  },
+
+  bankSelector: {
+    minHeight: 64,
+    borderRadius: 15,
+    backgroundColor: "#091923",
+    borderWidth: 1,
+    borderColor: "#173744",
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  bankSelectorContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  bankSelectorText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  bankSelectorPlaceholder: {
+    color: "#7B909B",
+  },
+
+  bankSelectorHint: {
+    color: "#5F7480",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+
+  bankLogoFrame: {
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  bankLogoFallback: {
+    color: "#0A7189",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  paymentBrandLogo: {
+    width: 34,
+    height: 34,
+  },
+
+  paymentLogoFallback: {
+    color: COLORS.primary,
+    fontSize: 9,
+    fontWeight: "900",
+  },
+
+  pickerOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+
+  pickerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.18)",
+  },
+
+  bankPickerSheet: {
+    width: "100%",
+    maxWidth: 360,
+    maxHeight: 150,
+    backgroundColor: "#0D202B",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#1A4555",
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    shadowColor: "#000000",
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 14,
+  },
+
+  pickerHandle: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#35515E",
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+
+  bankPickerScroll: {
+    flexGrow: 0,
+  },
+
+  bankPickerScrollContent: {
+    paddingBottom: 8,
+  },
+
+  pickerHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+
+  pickerTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  pickerSubtitle: {
+    color: "#718894",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+
+  pickerClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#091923",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bankLogoStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 0,
+  },
+
+  logoOnlyBankRow: {
+    width: 52,
+    height: 52,
+    borderRadius: 13,
+    backgroundColor: "#091923",
+    borderWidth: 1,
+    borderColor: "#173744",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+    position: "relative",
+  },
+
+  logoOnlyBankRowSelected: {
+    borderColor: COLORS.primary,
+    borderWidth: 2,
+  },
+
+  logoSelectedDot: {
+    position: "absolute",
+    right: -3,
+    top: -3,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  otherLogoTile: {
+    backgroundColor: "#0D2632",
+  },
+
+  compactBackButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "#091923",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 7,
+  },
+
+  pickerBankRow: {
+    minHeight: 46,
+    borderRadius: 12,
+    paddingHorizontal: 9,
+    marginBottom: 5,
+    backgroundColor: "#091923",
+    borderWidth: 1,
+    borderColor: "#173744",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  pickerBankRowSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: "#0B2834",
+  },
+
+  pickerBankName: {
+    flex: 1,
+    color: "#DCE7EC",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  pickerBankNameSelected: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+  },
+
+  selectedBankCheck: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  otherBanksRow: {
+    minHeight: 46,
+    borderRadius: 12,
+    paddingHorizontal: 11,
+    marginTop: 2,
+    backgroundColor: "#0D2632",
+    borderWidth: 1,
+    borderColor: "#1A4555",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  otherBanksIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "#102D38",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  otherBanksContent: {
+    flex: 1,
+  },
+
+  otherBanksRowTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  otherBanksRowSubtitle: {
+    color: "#718894",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+
+  backToTopBanks: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginBottom: 8,
+  },
+
+  backToTopBanksText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  paymentSaveButton: {
+    minHeight: 50,
+    borderRadius: 13,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+
+  paymentSaveText: {
+    color: "#07131D",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  removePaymentButton: {
+    minHeight: 48,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "#5A2B31",
+    backgroundColor: "#1C171D",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    marginTop: 10,
+  },
+
+  removePaymentText: {
+    color: "#FF6B6B",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  addPaymentButton: {
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 2,
+  },
+
+  addPaymentText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  paymentHint: {
+    marginTop: 12,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#183844",
+    backgroundColor: "#0D202B",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+
+  paymentHintText: {
+    flex: 1,
+    color: "#8196A2",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
+  /* LANGUAGE */
+
+  languageSelector: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   languageRow: {
@@ -657,22 +2414,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
 
-  saveButton: {
-    minHeight: 55,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  saveButtonText: {
-    color: "#07131D",
-    fontSize: 15,
-    fontWeight: "900",
-  },
+  /* SIGN OUT */
 
   signOutButton: {
     minHeight: 53,

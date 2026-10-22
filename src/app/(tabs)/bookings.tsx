@@ -174,13 +174,13 @@ export default function BookingsScreen() {
 
     try {
       const {
-        data: { user },
+        data: { session },
+      } = await supabase.auth.getSession();
 
-        error: userError,
-      } = await supabase.auth.getUser();
+      const user = session?.user;
 
-      if (userError || !user) {
-        console.log("Booking user error:", userError?.message || "No user");
+      if (!user) {
+        console.log("Booking user error: No session user");
 
         setBookings([]);
 

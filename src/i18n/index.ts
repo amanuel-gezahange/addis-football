@@ -15,6 +15,10 @@ export const languageOptions = [
     code: "en" as Language,
     label: "English",
   },
+
+  // Temporarily hidden until translations are updated.
+  // Do not delete — re-enable later.
+  /*
   {
     code: "am" as Language,
     label: "አማርኛ",
@@ -23,6 +27,7 @@ export const languageOptions = [
     code: "om" as Language,
     label: "Afaan Oromoo",
   },
+  */
 ];
 
 export function translate(

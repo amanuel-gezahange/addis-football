@@ -35,7 +35,15 @@ type GameDetails = {
   image_url: string | null;
   starts_at: string | null;
   ends_at: string | null;
-  payment_method: string | null;
+  payment_method: "organizer" | "venue" | "free" | null;
+  payment_provider: string | null;
+  payment_phone: string | null;
+  payment_account_name: string | null;
+  accepts_telebirr: boolean;
+  accepts_mobile_banking: boolean;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_account_name: string | null;
   city: string | null;
   maps_url: string | null;
 };
@@ -76,17 +84,19 @@ export default function GameDetailsScreen() {
       if (!id) return;
 
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!user || !active) {
+      const userId = session?.user?.id;
+
+      if (!userId || !active) {
         return;
       }
 
       const { data, error: favoriteError } = await supabase
         .from("favorites")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("game_id", Number(id))
         .maybeSingle();
 
@@ -138,6 +148,14 @@ export default function GameDetailsScreen() {
           starts_at,
           ends_at,
           payment_method,
+          payment_provider,
+          payment_phone,
+          payment_account_name,
+          accepts_telebirr,
+          accepts_mobile_banking,
+          bank_name,
+          bank_account_number,
+          bank_account_name,
           city,
           maps_url
         `,
@@ -517,13 +535,10 @@ export default function GameDetailsScreen() {
     bookingState.paymentStatus === "submitted";
 
   const isPayAtVenue =
-    isBookingConfirmed &&
-    !isFree &&
-    bookingState.paymentMethod === "venue";
+    isBookingConfirmed && !isFree && bookingState.paymentMethod === "venue";
 
   const isPaymentConfirmed =
-    isBookingConfirmed &&
-    (isFree || bookingState.paymentStatus === "paid");
+    isBookingConfirmed && (isFree || bookingState.paymentStatus === "paid");
 
   const heroImage = game.image_url
     ? { uri: game.image_url }
@@ -939,6 +954,15 @@ export default function GameDetailsScreen() {
         price={Number(game.price ?? 0)}
         spotsLeft={Number(game.spots_left ?? 0)}
         status={game.status}
+        paymentMethod={game.payment_method}
+        paymentProvider={game.payment_provider}
+        paymentPhone={game.payment_phone}
+        paymentAccountName={game.payment_account_name}
+        acceptsTelebirr={game.accepts_telebirr}
+        acceptsMobileBanking={game.accepts_mobile_banking}
+        bankName={game.bank_name}
+        bankAccountNumber={game.bank_account_number}
+        bankAccountName={game.bank_account_name}
         onBookingStateChange={setBookingState}
         onDirectionsPress={location ? openLocation : undefined}
         onSpotsChange={(nextSpotsLeft) => {
@@ -1075,13 +1099,184 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
-  /* HERO */
-
   hero: {
     position: "relative",
     width: "100%",
-    height: 330,
+    height: 235,
     backgroundColor: "#07131D",
+  },
+
+  sheet: {
+    position: "relative",
+    marginTop: -20,
+
+    backgroundColor: "#FFFFFF",
+
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+
+    overflow: "hidden",
+  },
+
+  titleSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 14,
+  },
+
+  title: {
+    color: "#17202A",
+    fontSize: 25,
+    lineHeight: 30,
+    fontWeight: "900",
+    letterSpacing: -0.6,
+  },
+
+  titleLocationRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginTop: 6,
+  },
+
+  heroLocation: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "600",
+  },
+
+  scheduleCard: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+
+    borderRadius: 15,
+
+    backgroundColor: "#F5F9FB",
+
+    borderWidth: 1,
+    borderColor: "#E5EDF1",
+  },
+
+  scheduleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  scheduleIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#E4F8FE",
+  },
+
+  scheduleText: {
+    flex: 1,
+  },
+
+  scheduleLabel: {
+    color: "#17202A",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+
+  scheduleValue: {
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  quickDetails: {
+    flexDirection: "row",
+
+    marginHorizontal: 20,
+    marginBottom: 17,
+
+    paddingVertical: 13,
+
+    borderRadius: 16,
+
+    backgroundColor: "#FFFFFF",
+
+    borderWidth: 1,
+    borderColor: "#E4E8EC",
+  },
+
+  quickDetail: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+
+  quickDivider: {
+    width: 1,
+    backgroundColor: "#E8EDF1",
+    marginVertical: 3,
+  },
+
+  quickIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#E4F8FE",
+    marginBottom: 6,
+  },
+
+  quickIconDanger: {
+    backgroundColor: "#FFE7E9",
+  },
+
+  quickValue: {
+    color: "#17202A",
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  quickValueDanger: {
+    color: "#D92D3A",
+  },
+
+  quickLabel: {
+    color: "#7B8794",
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 2,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E8EDF1",
+    marginHorizontal: 20,
+  },
+
+  section: {
+    paddingHorizontal: 20,
+    paddingVertical: 19,
+  },
+
+  sectionTitle: {
+    color: "#17202A",
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.25,
+    marginBottom: 12,
   },
 
   heroImage: {
@@ -1125,189 +1320,6 @@ const styles = StyleSheet.create({
     opacity: 0.75,
     transform: [{ scale: 0.94 }],
   },
-
-  /* WHITE CONTENT SHEET */
-
-  sheet: {
-    position: "relative",
-    marginTop: -26,
-
-    backgroundColor: "#FFFFFF",
-
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-
-    overflow: "hidden",
-  },
-
-  titleSection: {
-    paddingHorizontal: 20,
-    paddingTop: 25,
-    paddingBottom: 20,
-  },
-
-  title: {
-    color: "#17202A",
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "900",
-    letterSpacing: -0.7,
-  },
-
-  titleLocationRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    marginTop: 9,
-  },
-
-  heroLocation: {
-    flex: 1,
-    color: "#64748B",
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: "600",
-  },
-
-  /* DATE */
-
-  scheduleCard: {
-    marginHorizontal: 20,
-    marginBottom: 18,
-
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-
-    borderRadius: 16,
-
-    backgroundColor: "#F5F9FB",
-
-    borderWidth: 1,
-    borderColor: "#E5EDF1",
-  },
-
-  scheduleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  scheduleIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: "#E4F8FE",
-  },
-
-  scheduleText: {
-    flex: 1,
-  },
-
-  scheduleLabel: {
-    color: "#17202A",
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "800",
-  },
-
-  scheduleValue: {
-    color: "#64748B",
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 3,
-  },
-
-  /* QUICK DETAILS */
-
-  quickDetails: {
-    flexDirection: "row",
-
-    marginHorizontal: 20,
-    marginBottom: 24,
-
-    paddingVertical: 17,
-
-    borderRadius: 18,
-
-    backgroundColor: "#FFFFFF",
-
-    borderWidth: 1,
-    borderColor: "#E4E8EC",
-  },
-
-  quickDetail: {
-    flex: 1,
-    alignItems: "center",
-    paddingHorizontal: 5,
-  },
-
-  quickDivider: {
-    width: 1,
-    backgroundColor: "#E8EDF1",
-    marginVertical: 4,
-  },
-
-  quickIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: "#E4F8FE",
-    marginBottom: 8,
-  },
-
-  quickIconDanger: {
-    backgroundColor: "#FFE7E9",
-  },
-
-  quickValue: {
-    color: "#17202A",
-    fontSize: 14,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  quickValueDanger: {
-    color: "#D92D3A",
-  },
-
-  quickLabel: {
-    color: "#7B8794",
-    fontSize: 11,
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 3,
-  },
-
-  /* COMMON */
-
-  divider: {
-    height: 1,
-    backgroundColor: "#E8EDF1",
-    marginHorizontal: 20,
-  },
-
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-
-  sectionTitle: {
-    color: "#17202A",
-    fontSize: 19,
-    fontWeight: "800",
-    letterSpacing: -0.25,
-    marginBottom: 16,
-  },
-
-  /* ORGANIZER */
 
   organizerCard: {
     flexDirection: "row",

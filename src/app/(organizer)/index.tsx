@@ -45,23 +45,46 @@ export default function OrganizerDashboard() {
       setLoading(true);
 
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
 
       if (!user) {
         router.replace("/login");
         return;
       }
+      const [profileResult, applicationResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, role")
+          .eq("id", user.id)
+          .maybeSingle(),
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, role")
-        .eq("id", user.id)
-        .maybeSingle();
+        supabase
+          .from("organizer_applications")
+          .select("organizer_name")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
 
-      if (profile?.full_name) {
-        setOrganizerName(profile.full_name);
+      if (profileResult.error) {
+        console.error("Error loading organizer profile:", profileResult.error);
       }
+
+      if (applicationResult.error) {
+        console.error(
+          "Error loading organizer application:",
+          applicationResult.error,
+        );
+      }
+
+      const resolvedOrganizerName =
+        profileResult.data?.full_name?.trim() ||
+        applicationResult.data?.organizer_name?.trim() ||
+        "";
+
+      setOrganizerName(resolvedOrganizerName);
 
       const { data: games, error: gamesError } = await supabase
         .from("games")

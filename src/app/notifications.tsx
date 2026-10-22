@@ -31,8 +31,7 @@ type Notification = {
 };
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -47,8 +46,10 @@ export default function NotificationsScreen() {
       setLoading(true);
 
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
 
       if (!user) {
         setNotifications([]);
@@ -77,41 +78,27 @@ export default function NotificationsScreen() {
         });
 
       if (error) {
-        console.log(
-          "Load notifications error:",
-          error.message,
-        );
+        console.log("Load notifications error:", error.message);
         return;
       }
 
-      const loadedNotifications =
-        (data ?? []) as unknown as Notification[];
+      const loadedNotifications = (data ?? []) as unknown as Notification[];
 
       setNotifications(loadedNotifications);
 
       const unreadIds = loadedNotifications
-        .filter(
-          (notification) =>
-            !notification.is_read,
-        )
-        .map(
-          (notification) =>
-            notification.id,
-        );
+        .filter((notification) => !notification.is_read)
+        .map((notification) => notification.id);
 
       if (unreadIds.length > 0) {
-        const { error: updateError } =
-          await supabase
-            .from("notifications")
-            .update({ is_read: true })
-            .eq("user_id", user.id)
-            .in("id", unreadIds);
+        const { error: updateError } = await supabase
+          .from("notifications")
+          .update({ is_read: true })
+          .eq("user_id", user.id)
+          .in("id", unreadIds);
 
         if (updateError) {
-          console.log(
-            "Mark notifications read error:",
-            updateError.message,
-          );
+          console.log("Mark notifications read error:", updateError.message);
         }
       }
     } finally {
@@ -123,11 +110,7 @@ export default function NotificationsScreen() {
     const date = new Date(createdAt);
 
     const locale =
-      language === "am"
-        ? "am-ET"
-        : language === "om"
-          ? "om-ET"
-          : "en-US";
+      language === "am" ? "am-ET" : language === "om" ? "om-ET" : "en-US";
 
     try {
       return new Intl.DateTimeFormat(locale, {
@@ -137,28 +120,21 @@ export default function NotificationsScreen() {
         minute: "2-digit",
       }).format(date);
     } catch {
-      return new Intl.DateTimeFormat(
-        "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        },
-      ).format(date);
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(date);
     }
   }
 
-  function handleNotificationPress(
-    notification: Notification,
-  ) {
+  function handleNotificationPress(notification: Notification) {
     if (!notification.game_id) {
       return;
     }
 
-    router.push(
-      `/game/${notification.game_id}`,
-    );
+    router.push(`/game/${notification.game_id}`);
   }
 
   function getNotificationIcon(type: string) {
@@ -180,83 +156,56 @@ export default function NotificationsScreen() {
     }
   }
 
-  function getNotificationTitle(
-    notification: Notification,
-  ) {
+  function getNotificationTitle(notification: Notification) {
     switch (notification.type) {
       case "game_updated":
-        return t(
-          "notifications.gameUpdated",
-        );
+        return t("notifications.gameUpdated");
 
       case "booking_confirmed":
-        return t(
-          "notifications.bookingConfirmed",
-        );
+        return t("notifications.bookingConfirmed");
 
       case "game_cancelled":
-        return t(
-          "notifications.gameCancelled",
-        );
+        return t("notifications.gameCancelled");
 
       case "game_reminder":
-        return t(
-          "notifications.gameReminder",
-        );
+        return t("notifications.gameReminder");
 
       default:
         return notification.title;
     }
   }
 
-  function getNotificationMessage(
-    notification: Notification,
-  ) {
-    const gameTitle =
-      notification.games?.title;
+  function getNotificationMessage(notification: Notification) {
+    const gameTitle = notification.games?.title;
 
-    // Keep the original database message as a
-    // safe fallback if the related game is missing.
     if (!gameTitle) {
       return notification.message;
     }
 
+    let message: string;
+
     switch (notification.type) {
       case "game_updated":
-        return t(
-          "notifications.gameUpdatedMessage",
-          {
-            game: gameTitle,
-          },
-        );
+        message = t("notifications.gameUpdatedMessage");
+        break;
 
       case "booking_confirmed":
-        return t(
-          "notifications.bookingConfirmedMessage",
-          {
-            game: gameTitle,
-          },
-        );
+        message = t("notifications.bookingConfirmedMessage");
+        break;
 
       case "game_cancelled":
-        return t(
-          "notifications.gameCancelledMessage",
-          {
-            game: gameTitle,
-          },
-        );
+        message = t("notifications.gameCancelledMessage");
+        break;
 
       case "game_reminder":
-        return t(
-          "notifications.gameReminderMessage",
-          {
-            game: gameTitle,
-          },
-        );
+        message = t("notifications.gameReminderMessage");
+        break;
 
       default:
         return notification.message;
     }
+
+    return message.replace("{game}", gameTitle);
   }
 
   return (
@@ -273,34 +222,21 @@ export default function NotificationsScreen() {
           }}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel={t(
-            "common.back",
-          )}
+          accessibilityLabel={t("common.back")}
         >
-          <Ionicons
-            name="arrow-back"
-            size={23}
-            color="#FFFFFF"
-          />
+          <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
         </Pressable>
 
-        <Text style={styles.headerTitle}>
-          {t("notifications.title")}
-        </Text>
+        <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
 
         <View style={styles.headerSpacer} />
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} />
 
-          <Text style={styles.loadingText}>
-            {t("notifications.loading")}
-          </Text>
+          <Text style={styles.loadingText}>{t("notifications.loading")}</Text>
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.center}>
@@ -312,14 +248,10 @@ export default function NotificationsScreen() {
             />
           </View>
 
-          <Text style={styles.emptyTitle}>
-            {t("notifications.empty")}
-          </Text>
+          <Text style={styles.emptyTitle}>{t("notifications.empty")}</Text>
 
           <Text style={styles.emptyText}>
-            {t(
-              "notifications.emptyDescription",
-            )}
+            {t("notifications.emptyDescription")}
           </Text>
         </View>
       ) : (
@@ -327,109 +259,55 @@ export default function NotificationsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
         >
-          {notifications.map(
-            (notification) => {
-              const title =
-                getNotificationTitle(
-                  notification,
-                );
+          {notifications.map((notification) => {
+            const title = getNotificationTitle(notification);
 
-              const message =
-                getNotificationMessage(
-                  notification,
-                );
+            const message = getNotificationMessage(notification);
 
-              return (
-                <Pressable
-                  key={notification.id}
-                  onPress={() =>
-                    handleNotificationPress(
-                      notification,
-                    )
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel={`${title}. ${message}`}
-                  style={({ pressed }) => [
-                    styles.notificationCard,
-                    !notification.is_read &&
-                      styles.unreadCard,
-                    pressed &&
-                      styles.notificationCardPressed,
-                  ]}
-                >
-                  <View
-                    style={
-                      styles.iconContainer
-                    }
-                  >
-                    <Ionicons
-                      name={getNotificationIcon(
-                        notification.type,
-                      )}
-                      size={22}
-                      color={COLORS.primary}
-                    />
+            return (
+              <Pressable
+                key={notification.id}
+                onPress={() => handleNotificationPress(notification)}
+                accessibilityRole="button"
+                accessibilityLabel={`${title}. ${message}`}
+                style={({ pressed }) => [
+                  styles.notificationCard,
+                  !notification.is_read && styles.unreadCard,
+                  pressed && styles.notificationCardPressed,
+                ]}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name={getNotificationIcon(notification.type)}
+                    size={22}
+                    color={COLORS.primary}
+                  />
+                </View>
+
+                <View style={styles.notificationContent}>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.notificationTitle}>{title}</Text>
+
+                    {!notification.is_read && <View style={styles.unreadDot} />}
                   </View>
 
-                  <View
-                    style={
-                      styles.notificationContent
-                    }
-                  >
-                    <View
-                      style={styles.titleRow}
-                    >
-                      <Text
-                        style={
-                          styles.notificationTitle
-                        }
-                      >
-                        {title}
-                      </Text>
+                  <Text style={styles.notificationMessage}>{message}</Text>
 
-                      {!notification.is_read && (
-                        <View
-                          style={
-                            styles.unreadDot
-                          }
-                        />
-                      )}
-                    </View>
-
-                    <Text
-                      style={
-                        styles.notificationMessage
-                      }
-                    >
-                      {message}
+                  <View style={styles.notificationFooter}>
+                    <Text style={styles.notificationTime}>
+                      {formatTime(notification.created_at)}
                     </Text>
 
-                    <View
-                      style={
-                        styles.notificationFooter
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.notificationTime
-                        }
-                      >
-                        {formatTime(
-                          notification.created_at,
-                        )}
-                      </Text>
-
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color="#718894"
-                      />
-                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color="#718894"
+                    />
                   </View>
-                </Pressable>
-              );
-            },
-          )}
+                </View>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
     </SafeAreaView>
