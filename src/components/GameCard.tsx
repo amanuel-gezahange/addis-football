@@ -12,7 +12,6 @@ import {
 import { Image } from "expo-image";
 import Animated, {
   cancelAnimation,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -56,7 +55,7 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
    *   scale = 1.018
    *   then spring back to 1
    *
-   * This gives the card a noticeable physical press/pop effect.
+   * Navigation itself is immediate.
    */
   const cardScale = useSharedValue(1);
 
@@ -107,35 +106,21 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
     );
   }
 
-  function navigateToGame() {
-    router.push(`/game/${game.id}`);
-  }
-
+  /*
+   * Open the game immediately.
+   *
+   * Previously navigation waited for a spring animation
+   * to completely finish, which made taps feel slow on
+   * physical devices.
+   */
   function openGameDetails() {
-    /*
-     * Give the pop animation a moment to become visible
-     * before changing screens.
-     */
     cancelAnimation(cardScale);
 
-    cardScale.value = withSequence(
-      withTiming(1.018, {
-        duration: 100,
-      }),
-      withSpring(
-        1,
-        {
-          damping: 10,
-          stiffness: 260,
-          mass: 0.45,
-        },
-        (finished) => {
-          if (finished) {
-            runOnJS(navigateToGame)();
-          }
-        },
-      ),
-    );
+    cardScale.value = withTiming(1, {
+      duration: 80,
+    });
+
+    router.push(`/game/${game.id}`);
   }
 
   async function toggleFavorite() {
@@ -256,8 +241,14 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
         accessibilityRole="button"
         accessibilityLabel={
           isFavorite
-            ? t("gameCard.removeFromFavorites").replace("{game}", game.title)
-            : t("gameCard.saveToFavorites").replace("{game}", game.title)
+            ? t("gameCard.removeFromFavorites").replace(
+                "{game}",
+                game.title,
+              )
+            : t("gameCard.saveToFavorites").replace(
+                "{game}",
+                game.title,
+              )
         }
       >
         <Ionicons
@@ -284,22 +275,26 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
         )}
       >
         {/* TITLE */}
-     {!!game.image && (
-  <Text
-    style={[
-      styles.title,
-      isSmallScreen && styles.titleSmall,
-      isLargeScreen && styles.titleLarge,
-    ]}
-    numberOfLines={2}
-  >
-    {game.title}
-  </Text>
-)}
+        {!!game.image && (
+          <Text
+            style={[
+              styles.title,
+              isSmallScreen && styles.titleSmall,
+              isLargeScreen && styles.titleLarge,
+            ]}
+            numberOfLines={2}
+          >
+            {game.title}
+          </Text>
+        )}
 
         {/* LOCATION */}
         <View style={styles.metaRow}>
-          <Ionicons name="location" size={15} color="#536273" />
+          <Ionicons
+            name="location"
+            size={15}
+            color="#536273"
+          />
 
           <Text style={styles.metaText} numberOfLines={2}>
             {location}
@@ -308,7 +303,11 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
 
         {/* TIME */}
         <View style={styles.metaRow}>
-          <Ionicons name="time-outline" size={15} color="#536273" />
+          <Ionicons
+            name="time-outline"
+            size={15}
+            color="#536273"
+          />
 
           <Text style={styles.metaText} numberOfLines={2}>
             {game.time}
@@ -317,7 +316,10 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
 
         {/* BOTTOM */}
         <View
-          style={[styles.bottomRow, isSmallScreen && styles.bottomRowSmall]}
+          style={[
+            styles.bottomRow,
+            isSmallScreen && styles.bottomRowSmall,
+          ]}
         >
           <View style={styles.spotsRow}>
             <Ionicons
@@ -327,7 +329,10 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
             />
 
             <Text
-              style={[styles.spotsText, isFull && styles.fullText]}
+              style={[
+                styles.spotsText,
+                isFull && styles.fullText,
+              ]}
               numberOfLines={2}
             >
               {isFull
@@ -337,10 +342,18 @@ function GameCard({ game, initialIsFavorite = false }: Props) {
           </View>
 
           <View
-            style={[styles.priceBadge, price === 0 && styles.freePriceBadge]}
+            style={[
+              styles.priceBadge,
+              price === 0 && styles.freePriceBadge,
+            ]}
           >
-            <Text style={styles.priceText} numberOfLines={1}>
-              {price === 0 ? t("gameCard.free") : `${price} ETB`}
+            <Text
+              style={styles.priceText}
+              numberOfLines={1}
+            >
+              {price === 0
+                ? t("gameCard.free")
+                : `${price} ETB`}
             </Text>
           </View>
         </View>
@@ -535,6 +548,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
   },
+
   fallback: {
     width: "100%",
     height: "100%",

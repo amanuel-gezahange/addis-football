@@ -465,11 +465,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 22,
     right: 22,
-    bottom: 32,
+    bottom: Platform.OS === "web" ? 52 : 32,
 
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+
+    ...(Platform.OS === "web"
+      ? {
+          maxWidth: 520,
+          width: "calc(100% - 44px)" as any,
+          alignSelf: "center",
+          left: "50%" as any,
+          right: "auto" as any,
+          transform: [{ translateX: "-50%" as any }],
+        }
+      : {}),
   },
 
   googleButton: {

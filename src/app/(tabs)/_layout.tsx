@@ -20,10 +20,14 @@ export default function TabLayout() {
   const isDesktopWeb =
     Platform.OS === "web" && width >= 900;
 
-  const bottomInset = insets.bottom;
+  // Native devices use their real safe-area inset.
+  // Web does not need mobile OS safe-area spacing.
+  const bottomInset =
+    Platform.OS === "web" ? 0 : insets.bottom;
 
   return (
     <View style={styles.root}>
+      {/* Desktop web branding */}
       {isDesktopWeb && (
         <View style={styles.brand}>
           <View style={styles.brandIcon}>
@@ -50,16 +54,22 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
 
-          // Keep Addis Football cyan as the brand accent.
           tabBarActiveTintColor: COLORS.primary,
-
-          // Neutral Airbnb-style inactive color.
           tabBarInactiveTintColor: "#717171",
 
           tabBarPosition: isDesktopWeb
             ? "left"
             : "bottom",
 
+          /*
+           * DESKTOP:
+           * Left-side navigation.
+           *
+           * MOBILE:
+           * Bottom navigation extends through the
+           * device safe area while keeping the actual
+           * controls above the home indicator.
+           */
           tabBarStyle: isDesktopWeb
             ? {
                 backgroundColor: "#FFFFFF",
@@ -77,17 +87,23 @@ export default function TabLayout() {
                 backgroundColor: "#FFFFFF",
 
                 borderTopColor: "#E5E5E5",
-                borderTopWidth: 1,
+                borderTopWidth:
+                  StyleSheet.hairlineWidth,
 
-                height: 60 + bottomInset,
+                height: 58 + bottomInset,
 
-                paddingTop: 4,
-                paddingBottom:
-                  bottomInset + 8,
+                paddingTop: 6,
+                paddingBottom: bottomInset,
 
                 elevation: 0,
+                shadowColor: "transparent",
               },
 
+          /*
+           * Don't force a fixed mobile item height.
+           * This prevents labels from being clipped
+           * on different phone sizes.
+           */
           tabBarItemStyle: isDesktopWeb
             ? {
                 width: "100%",
@@ -96,7 +112,7 @@ export default function TabLayout() {
                 marginVertical: 4,
               }
             : {
-                paddingTop: 0,
+                paddingTop: 2,
               },
 
           tabBarIconStyle: isDesktopWeb
@@ -104,7 +120,7 @@ export default function TabLayout() {
                 marginRight: 8,
               }
             : {
-                marginTop: -3,
+                marginTop: 0,
               },
 
           tabBarLabelStyle: isDesktopWeb
@@ -115,7 +131,8 @@ export default function TabLayout() {
             : {
                 fontSize: 11,
                 fontWeight: "600",
-                marginTop: -2,
+                marginTop: 0,
+                marginBottom: 4,
               },
 
           sceneStyle: {
@@ -126,7 +143,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-           title: t("tabs.games"),
+            title: t("tabs.games"),
 
             tabBarIcon: ({
               color,

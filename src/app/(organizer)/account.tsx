@@ -73,6 +73,8 @@ export default function OrganizerAccount() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -541,6 +543,70 @@ export default function OrganizerAccount() {
     setFullName(originalName);
     setPhone(originalPhone);
     setEditing(false);
+  }
+
+  async function deleteAccount() {
+    if (deletingAccount) return;
+
+    try {
+      setDeletingAccount(true);
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      if (!session?.access_token) {
+        setDeleteModalOpen(false);
+        router.replace("/login");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Delete account function error:", error);
+        throw error;
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Unable to delete account.");
+      }
+
+      setDeleteModalOpen(false);
+
+      // The Auth user has already been deleted by the Edge Function.
+      // Clear the local client session. A remote/global sign-out can return
+      // user_not_found after successful deletion, so it is intentionally
+      // not required for this flow.
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (signOutError) {
+        console.log(
+          "Local session cleanup after account deletion:",
+          signOutError,
+        );
+      }
+
+      router.replace("/login");
+    } catch (error) {
+      console.error("Delete organizer account error:", error);
+
+      Alert.alert(
+        "Could not delete account",
+        "Your account could not be deleted. Please try again.",
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
   }
 
   async function signOut() {
@@ -1184,28 +1250,136 @@ export default function OrganizerAccount() {
 
         */}
 
-        {/* SIGN OUT */}
-        <Pressable
-          disabled={signingOut}
-          onPress={signOut}
-          style={({ pressed }) => [
-            styles.signOutButton,
-            pressed && styles.buttonPressed,
-            signingOut && styles.buttonDisabled,
-          ]}
-        >
-          {signingOut ? (
-            <ActivityIndicator size="small" color="#FF6B6B" />
-          ) : (
-            <>
-              <Ionicons name="log-out-outline" size={20} color="#FF6B6B" />
+        {/* ACCOUNT ACTIONS */}
+        <Text style={styles.sectionLabel}>ACCOUNT</Text>
 
+        <View style={styles.accountActionsCard}>
+          <Pressable
+            disabled={deletingAccount || signingOut}
+            onPress={() => setDeleteModalOpen(true)}
+            style={({ pressed }) => [
+              styles.deleteAccountButton,
+              pressed && styles.buttonPressed,
+              (deletingAccount || signingOut) && styles.buttonDisabled,
+            ]}
+          >
+            <View style={styles.accountActionIconDanger}>
+              <Ionicons name="trash-outline" size={20} color="#FF5B63" />
+            </View>
+
+            <View style={styles.accountActionContent}>
+              <Text style={styles.deleteAccountText}>Delete Account</Text>
+              <Text style={styles.accountActionSubtitle}>
+                Permanently delete your account
+              </Text>
+            </View>
+
+            <Ionicons name="chevron-forward" size={20} color="#718894" />
+          </Pressable>
+
+          <View style={styles.accountActionDivider} />
+
+          <Pressable
+            disabled={signingOut || deletingAccount}
+            onPress={signOut}
+            style={({ pressed }) => [
+              styles.accountSignOutButton,
+              pressed && styles.buttonPressed,
+              (signingOut || deletingAccount) && styles.buttonDisabled,
+            ]}
+          >
+            <View style={styles.accountActionIconDanger}>
+              {signingOut ? (
+                <ActivityIndicator size="small" color="#FF5B63" />
+              ) : (
+                <Ionicons name="log-out-outline" size={20} color="#FF5B63" />
+              )}
+            </View>
+
+            <View style={styles.accountActionContent}>
               <Text style={styles.signOutText}>
                 {t("organizerAccount.signOut")}
               </Text>
-            </>
-          )}
-        </Pressable>
+            </View>
+
+            <Ionicons name="chevron-forward" size={20} color="#718894" />
+          </Pressable>
+        </View>
+
+        <Modal
+          visible={deleteModalOpen}
+          transparent
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={() => {
+            if (!deletingAccount) {
+              setDeleteModalOpen(false);
+            }
+          }}
+        >
+          <View style={styles.deleteModalOverlay}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              disabled={deletingAccount}
+              onPress={() => setDeleteModalOpen(false)}
+            />
+
+            <View style={styles.deleteModalCard}>
+              <View style={styles.deleteModalIcon}>
+                <Ionicons name="trash-outline" size={34} color="#FF5B63" />
+              </View>
+
+              <Text style={styles.deleteModalTitle}>Delete your account?</Text>
+
+              <Text style={styles.deleteModalDescription}>
+                This will permanently delete your Addis Football organizer
+                account and associated personal data.
+              </Text>
+
+              <View style={styles.deleteWarning}>
+                <Ionicons name="warning-outline" size={21} color="#FFB454" />
+                <Text style={styles.deleteWarningText}>
+                  This action cannot be undone.
+                </Text>
+              </View>
+
+              <View style={styles.deleteModalActions}>
+                <Pressable
+                  disabled={deletingAccount}
+                  onPress={() => setDeleteModalOpen(false)}
+                  style={({ pressed }) => [
+                    styles.deleteCancelButton,
+                    pressed && styles.buttonPressed,
+                    deletingAccount && styles.buttonDisabled,
+                  ]}
+                >
+                  <Text style={styles.deleteCancelText}>Cancel</Text>
+                </Pressable>
+
+                <Pressable
+                  disabled={deletingAccount}
+                  onPress={deleteAccount}
+                  style={({ pressed }) => [
+                    styles.deleteConfirmButton,
+                    pressed && styles.buttonPressed,
+                    deletingAccount && styles.buttonDisabled,
+                  ]}
+                >
+                  {deletingAccount ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
+                      <Text style={styles.deleteConfirmText}>
+                        Delete Account
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <Text style={styles.footer}>{t("organizerAccount.footer")}</Text>
       </ScrollView>
@@ -2327,6 +2501,172 @@ const styles = StyleSheet.create({
     height: 11,
     borderRadius: 6,
     backgroundColor: COLORS.primary,
+  },
+
+  /* ACCOUNT ACTIONS */
+
+  accountActionsCard: {
+    backgroundColor: "#0D202B",
+    borderWidth: 1,
+    borderColor: "#183844",
+    borderRadius: 19,
+    paddingHorizontal: 15,
+  },
+
+  deleteAccountButton: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  accountSignOutButton: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  accountActionIconDanger: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#211B24",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  accountActionContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  deleteAccountText: {
+    color: "#FF5B63",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  accountActionSubtitle: {
+    color: "#718894",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+
+  accountActionDivider: {
+    height: 1,
+    backgroundColor: "#183844",
+    marginLeft: 52,
+  },
+
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+
+  deleteModalCard: {
+    width: "100%",
+    maxWidth: 520,
+    backgroundColor: "#0D202B",
+    borderWidth: 1,
+    borderColor: "#214654",
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 30,
+    paddingBottom: 24,
+    alignItems: "center",
+  },
+
+  deleteModalIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#2A222B",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+
+  deleteModalTitle: {
+    color: "#FFFFFF",
+    fontSize: 25,
+    fontWeight: "900",
+    textAlign: "center",
+    letterSpacing: -0.5,
+  },
+
+  deleteModalDescription: {
+    color: "#91A6B2",
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 22,
+    textAlign: "center",
+    marginTop: 14,
+  },
+
+  deleteWarning: {
+    width: "100%",
+    minHeight: 58,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#70532D",
+    backgroundColor: "#24272A",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 24,
+    paddingHorizontal: 14,
+  },
+
+  deleteWarningText: {
+    color: "#FFB454",
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  deleteModalActions: {
+    width: "100%",
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+  },
+
+  deleteCancelButton: {
+    flex: 1,
+    minHeight: 54,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#294652",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  deleteCancelText: {
+    color: "#DCE7EC",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  deleteConfirmButton: {
+    flex: 1.2,
+    minHeight: 54,
+    borderRadius: 14,
+    backgroundColor: "#E54850",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  deleteConfirmText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
   },
 
   /* SIGN OUT */

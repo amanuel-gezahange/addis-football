@@ -2,8 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,9 +22,6 @@ import { supabase } from "../lib/supabase";
 const PRIVACY_POLICY_URL =
   "https://amanuel-gezahange.github.io/addis-football/";
 
-const DELETE_ACCOUNT_URL =
-  "https://amanuel-gezahange.github.io/addis-football/delete-account.html";
-
 const SUPPORT_EMAIL = "addisfootballapp@gmail.com";
 
 export default function SettingsScreen() {
@@ -30,6 +29,16 @@ export default function SettingsScreen() {
 
   const [languageOpen, setLanguageOpen] = useState(false);
   const [isOrganizer, setIsOrganizer] = useState(false);
+
+  const [deleteModalVisible, setDeleteModalVisible] =
+    useState(false);
+
+  const [isDeletingAccount, setIsDeletingAccount] =
+    useState(false);
+
+  const [deleteError, setDeleteError] = useState<
+    string | null
+  >(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -66,7 +75,7 @@ export default function SettingsScreen() {
         setIsOrganizer(data?.role === "organizer");
       }
 
-      loadRole();
+      void loadRole();
 
       return () => {
         active = false;
@@ -80,14 +89,159 @@ export default function SettingsScreen() {
   }
 
   async function handleSignOut() {
+    if (isDeletingAccount) {
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      Alert.alert(t("settings.signOutFailed"), error.message);
+      Alert.alert(
+        t("settings.signOutFailed"),
+        error.message,
+      );
+
       return;
     }
 
     router.replace("/login");
+  }
+
+  function handleDeleteAccount() {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeleteError(null);
+    setDeleteModalVisible(true);
+  }
+
+  function closeDeleteModal() {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeleteError(null);
+    setDeleteModalVisible(false);
+  }
+
+  async function deleteAccount() {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeleteError(null);
+    setIsDeletingAccount(true);
+
+    try {
+      // -------------------------------------------------------
+      // Make sure the user still has a valid session
+      // -------------------------------------------------------
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw new Error(sessionError.message);
+      }
+
+      if (!session) {
+        setDeleteModalVisible(false);
+
+        await supabase.auth.signOut();
+
+        router.replace("/login");
+
+        return;
+      }
+
+      // -------------------------------------------------------
+      // Call our secure Supabase Edge Function
+      // -------------------------------------------------------
+
+      const { data, error } =
+        await supabase.functions.invoke("delete-account", {
+          method: "POST",
+        });
+
+      if (error) {
+        console.log(
+          "Delete account function error:",
+          error,
+        );
+
+        throw new Error(
+          error.message ||
+            "Unable to delete your account.",
+        );
+      }
+
+      if (!data?.success) {
+        console.log(
+          "Unexpected delete-account response:",
+          data,
+        );
+
+        throw new Error(
+          data?.error ||
+            "Unable to confirm account deletion.",
+        );
+      }
+
+      // -------------------------------------------------------
+      // Server deletion succeeded
+      // -------------------------------------------------------
+
+      setDeleteModalVisible(false);
+
+      /*
+       * The Auth user has already been deleted by the Edge
+       * Function. We still attempt to clear the local Supabase
+       * session.
+       *
+       * If signOut reports an error because the server-side
+       * account no longer exists, we still continue to login.
+       */
+      try {
+        const { error: signOutError } =
+          await supabase.auth.signOut();
+
+        if (signOutError) {
+          console.log(
+            "Post-deletion sign out error:",
+            signOutError,
+          );
+        }
+      } catch (signOutException) {
+        console.log(
+          "Post-deletion sign out exception:",
+          signOutException,
+        );
+      }
+
+      /*
+       * Navigate immediately instead of depending on
+       * Alert.alert(), so this also works correctly on web.
+       */
+      router.replace("/login");
+    } catch (error) {
+      console.log("Delete account error:", error);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to delete your account. Please try again.";
+
+      /*
+       * Keep the modal open and show the error directly inside
+       * it. This works on web, Android and iOS.
+       */
+      setDeleteError(message);
+    } finally {
+      setIsDeletingAccount(false);
+    }
   }
 
   async function openExternalUrl(url: string) {
@@ -154,7 +308,10 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
+
       <View style={styles.header}>
         <Pressable
           style={({ pressed }) => [
@@ -183,17 +340,24 @@ export default function SettingsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* =====================================================
+          SETTINGS CONTENT
+      ====================================================== */}
+
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         {/* GENERAL */}
+
         <Text style={styles.sectionTitle}>
           {t("settings.general")}
         </Text>
 
         <View style={styles.card}>
           {/* LANGUAGE */}
+
           <Pressable
             style={({ pressed }) => [
               styles.row,
@@ -290,7 +454,6 @@ export default function SettingsScreen() {
 
           <View style={styles.divider} />
 
-          {/* NOTIFICATIONS */}
           <SettingsRow
             icon="notifications-outline"
             title={t("settings.notifications")}
@@ -303,7 +466,10 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* ORGANIZE */}
+        {/* ===================================================
+            ORGANIZE
+        ==================================================== */}
+
         <Text style={styles.sectionTitle}>
           Organize
         </Text>
@@ -335,13 +501,15 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* SUPPORT */}
+        {/* ===================================================
+            SUPPORT
+        ==================================================== */}
+
         <Text style={styles.sectionTitle}>
           {t("settings.support")}
         </Text>
 
         <View style={styles.card}>
-          {/* HELP */}
           <SettingsRow
             icon="help-circle-outline"
             title={t("settings.helpSupport")}
@@ -353,7 +521,6 @@ export default function SettingsScreen() {
 
           <View style={styles.divider} />
 
-          {/* PRIVACY POLICY */}
           <SettingsRow
             icon="document-text-outline"
             title={t("settings.privacyPolicy")}
@@ -363,29 +530,36 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* ACCOUNT */}
+        {/* ===================================================
+            ACCOUNT
+        ==================================================== */}
+
         <Text style={styles.sectionTitle}>
           {t("settings.account")}
         </Text>
 
         <View style={styles.card}>
-          {/* DELETE ACCOUNT */}
           <SettingsRow
             icon="trash-outline"
-            title={t("settings.deleteAccount")}
-            danger
-            onPress={() =>
-              openExternalUrl(DELETE_ACCOUNT_URL)
+            title={
+              isDeletingAccount
+                ? "Deleting Account..."
+                : t("settings.deleteAccount")
             }
+            subtitle="Permanently delete your account"
+            danger
+            disabled={isDeletingAccount}
+            loading={isDeletingAccount}
+            onPress={handleDeleteAccount}
           />
 
           <View style={styles.divider} />
 
-          {/* SIGN OUT */}
           <SettingsRow
             icon="log-out-outline"
             title={t("settings.signOut")}
             danger
+            disabled={isDeletingAccount}
             onPress={handleSignOut}
           />
         </View>
@@ -396,6 +570,146 @@ export default function SettingsScreen() {
 
         <View style={styles.bottomSpace} />
       </ScrollView>
+
+      {/* =====================================================
+          DELETE ACCOUNT CONFIRMATION MODAL
+      ====================================================== */}
+
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={closeDeleteModal}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={closeDeleteModal}
+            disabled={isDeletingAccount}
+          />
+
+          <View style={styles.deleteModal}>
+            {/* Icon */}
+
+            <View style={styles.deleteModalIcon}>
+              <Ionicons
+                name="trash-outline"
+                size={30}
+                color="#FF5A62"
+              />
+            </View>
+
+            {/* Heading */}
+
+            <Text style={styles.deleteModalTitle}>
+              Delete your account?
+            </Text>
+
+            <Text style={styles.deleteModalDescription}>
+              This will permanently delete your Addis
+              Football account and associated personal data.
+            </Text>
+
+            <View style={styles.warningBox}>
+              <Ionicons
+                name="warning-outline"
+                size={20}
+                color="#FFB45A"
+              />
+
+              <Text style={styles.warningText}>
+                This action cannot be undone.
+              </Text>
+            </View>
+
+            {/* Error */}
+
+            {!!deleteError && (
+              <View style={styles.deleteErrorBox}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={19}
+                  color="#FF6B72"
+                />
+
+                <Text style={styles.deleteErrorText}>
+                  {deleteError}
+                </Text>
+              </View>
+            )}
+
+            {/* Buttons */}
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                disabled={isDeletingAccount}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  pressed &&
+                    !isDeletingAccount &&
+                    styles.pressed,
+                  isDeletingAccount &&
+                    styles.disabled,
+                ]}
+                onPress={closeDeleteModal}
+              >
+                <Text style={styles.cancelButtonText}>
+                  Cancel
+                </Text>
+              </Pressable>
+
+              <Pressable
+                disabled={isDeletingAccount}
+                style={({ pressed }) => [
+                  styles.confirmDeleteButton,
+                  pressed &&
+                    !isDeletingAccount &&
+                    styles.pressed,
+                  isDeletingAccount &&
+                    styles.disabled,
+                ]}
+                onPress={() => {
+                  void deleteAccount();
+                }}
+              >
+                {isDeletingAccount ? (
+                  <>
+                    <ActivityIndicator
+                      size="small"
+                      color="#FFFFFF"
+                    />
+
+                    <Text
+                      style={
+                        styles.confirmDeleteButtonText
+                      }
+                    >
+                      Deleting...
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons
+                      name="trash-outline"
+                      size={18}
+                      color="#FFFFFF"
+                    />
+
+                    <Text
+                      style={
+                        styles.confirmDeleteButtonText
+                      }
+                    >
+                      Delete Account
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -412,6 +726,8 @@ type SettingsRowProps = {
   title: string;
   subtitle?: string;
   danger?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
   onPress: () => void;
 };
 
@@ -420,14 +736,20 @@ function SettingsRow({
   title,
   subtitle,
   danger = false,
+  disabled = false,
+  loading = false,
   onPress,
 }: SettingsRowProps) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.row,
-        pressed && styles.pressed,
+        pressed &&
+          !disabled &&
+          styles.pressed,
+        disabled && styles.disabled,
       ]}
+      disabled={disabled}
       onPress={onPress}
     >
       <View style={styles.rowLeft}>
@@ -437,15 +759,22 @@ function SettingsRow({
             danger && styles.dangerIconBox,
           ]}
         >
-          <Ionicons
-            name={icon}
-            size={20}
-            color={
-              danger
-                ? "#FF5A62"
-                : COLORS.primary
-            }
-          />
+          {loading ? (
+            <ActivityIndicator
+              size="small"
+              color="#FF5A62"
+            />
+          ) : (
+            <Ionicons
+              name={icon}
+              size={20}
+              color={
+                danger
+                  ? "#FF5A62"
+                  : COLORS.primary
+              }
+            />
+          )}
         </View>
 
         <View style={styles.rowText}>
@@ -466,11 +795,13 @@ function SettingsRow({
         </View>
       </View>
 
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color="#708594"
-      />
+      {!loading && (
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color="#708594"
+        />
+      )}
     </Pressable>
   );
 }
@@ -479,6 +810,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#07131D",
+  },
+
+  scrollView: {
+    flex: 1,
   },
 
   header: {
@@ -637,6 +972,10 @@ const styles = StyleSheet.create({
     color: "#FF5A62",
   },
 
+  disabled: {
+    opacity: 0.55,
+  },
+
   version: {
     color: "#526B79",
     fontSize: 11,
@@ -651,5 +990,147 @@ const styles = StyleSheet.create({
 
   bottomSpace: {
     height: 40,
+  },
+
+  // =========================================================
+  // DELETE ACCOUNT MODAL
+  // =========================================================
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+  },
+
+  deleteModal: {
+    width: "100%",
+    maxWidth: 430,
+    backgroundColor: "#0C1F2B",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#244454",
+    paddingHorizontal: 22,
+    paddingTop: 26,
+    paddingBottom: 22,
+    alignItems: "center",
+  },
+
+  deleteModalIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor:
+      "rgba(255, 90, 98, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+
+  deleteModalTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+
+  deleteModalDescription: {
+    color: "#9BAEBA",
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 21,
+    textAlign: "center",
+    marginTop: 10,
+  },
+
+  warningBox: {
+    width: "100%",
+    minHeight: 48,
+    borderRadius: 13,
+    backgroundColor:
+      "rgba(255, 180, 90, 0.08)",
+    borderWidth: 1,
+    borderColor:
+      "rgba(255, 180, 90, 0.22)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    paddingHorizontal: 14,
+    marginTop: 18,
+  },
+
+  warningText: {
+    color: "#FFBE70",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  deleteErrorBox: {
+    width: "100%",
+    borderRadius: 13,
+    backgroundColor:
+      "rgba(255, 90, 98, 0.08)",
+    borderWidth: 1,
+    borderColor:
+      "rgba(255, 90, 98, 0.22)",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 9,
+    padding: 13,
+    marginTop: 14,
+  },
+
+  deleteErrorText: {
+    flex: 1,
+    color: "#FF8A90",
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 18,
+  },
+
+  modalButtons: {
+    width: "100%",
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 22,
+  },
+
+  cancelButton: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 14,
+    backgroundColor: "#132A37",
+    borderWidth: 1,
+    borderColor: "#284655",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+
+  cancelButtonText: {
+    color: "#DCE5EA",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  confirmDeleteButton: {
+    flex: 1.25,
+    minHeight: 50,
+    borderRadius: 14,
+    backgroundColor: "#D9434B",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 12,
+  },
+
+  confirmDeleteButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
   },
 });
